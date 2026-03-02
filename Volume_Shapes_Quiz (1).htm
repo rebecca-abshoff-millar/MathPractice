@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volume Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --paper: #fdfaf4;
+    --ink: #1c1a16;
+    --muted: #8a8070;
+    --border: #d4c9b0;
+    --accent: #c0392b;
+    --accent2: #2980b9;
+    --green: #27ae60;
+    --orange: #e67e22;
+    --shadow: rgba(60,50,30,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(180,170,150,0.15) 27px, rgba(180,170,150,0.15) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(180,170,150,0.08) 27px, rgba(180,170,150,0.08) 28px);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 0.7rem;
+  }
+
+  header h1 {
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-style: italic;
+    margin-top: 0.15rem;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.4rem 1.8rem;
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .top-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .shape-panel {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f4ec;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-height: 420px;
+  }
+
+  #shapeSvg {
+    width: 480px;
+    height: 400px;
+    overflow: visible;
+  }
+
+  .info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .given-box {
+    background: rgba(41,128,185,0.07);
+    border: 1.5px solid rgba(41,128,185,0.3);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .given-box h3 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent2);
+    margin-bottom: 0.4rem;
+  }
+
+  .given-item {
+    font-size: 0.9rem;
+    color: var(--ink);
+    line-height: 1.8;
+  }
+
+  .given-item .val {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--accent2);
+  }
+
+  .find-box {
+    background: rgba(192,57,43,0.06);
+    border: 1.5px solid rgba(192,57,43,0.3);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .find-box h3 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .find-box p {
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-style: italic;
+  }
+
+  .find-box p span {
+    font-style: normal;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .answer-row {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+  }
+
+  .answer-row label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+    white-space: nowrap;
+  }
+
+  .answer-wrap {
+    flex: 1;
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  input[type="number"] {
+    flex: 1;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 0.6rem 0.9rem;
+    font-size: 1.2rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: textfield;
+    -moz-appearance: textfield;
+    min-width: 0;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
+  }
+
+  .unit-label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  button {
+    flex: 1;
+    border: none;
+    border-radius: 4px;
+    padding: 0.65rem 1rem;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-check {
+    background: var(--ink);
+    color: var(--bg);
+    box-shadow: 2px 2px 0 var(--muted);
+  }
+
+  .btn-check:hover { filter: brightness(1.15); }
+
+  .btn-new {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border);
+  }
+
+  .btn-new:hover { background: var(--bg); }
+
+  .hint-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: 0.78rem;
+    padding: 0.42rem;
+    border-radius: 4px;
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    cursor: pointer;
+  }
+
+  .hint-btn:hover { border-color: var(--muted); color: var(--ink); }
+
+  .hint-text {
+    display: none;
+    background: rgba(230,126,34,0.07);
+    border: 1px solid rgba(230,126,34,0.3);
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.82rem;
+    color: #7d4c0a;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  .hint-text.show { display: block; }
+
+  .feedback {
+    border-radius: 4px;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-align: center;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .feedback.correct {
+    background: rgba(39,174,96,0.1);
+    border: 1.5px solid rgba(39,174,96,0.4);
+    color: #1a6b3a;
+  }
+
+  .feedback.wrong {
+    background: rgba(192,57,43,0.08);
+    border: 1.5px solid rgba(192,57,43,0.3);
+    color: var(--accent);
+  }
+
+  .feedback.partial {
+    background: rgba(230,126,34,0.08);
+    border: 1.5px solid rgba(230,126,34,0.3);
+    color: #8a4a00;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    border-top: 1px solid var(--border);
+    padding-top: 0.7rem;
+  }
+
+  .stat {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .stat strong {
+    display: block;
+    font-size: 1.1rem;
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .svg-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    fill: var(--ink);
+  }
+  .svg-label.dim {
+    fill: var(--accent2);
+    font-weight: 700;
+    font-size: 20px;
+  }
+  .svg-label.shape-name {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 20px;
+    fill: var(--muted);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Volume Practice</h1>
+  <p>Find the volume of the 3D shape. Round to the nearest tenth.</p>
+</header>
+
+<div class="card">
+  <div class="top-row">
+    <div class="shape-panel">
+      <svg id="shapeSvg" viewBox="0 0 480 400"></svg>
+    </div>
+    <div class="info-panel">
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Find</h3>
+        <p>Calculate the <span id="findText">Volume</span></p>
+        <p style="font-style:normal; font-size:0.78rem; color:var(--muted); margin-top:0.35rem;">Round your answer to the nearest tenth (1 decimal place).</p>
+      </div>
+      <div class="answer-row">
+        <label for="answerInput">V =</label>
+        <div class="answer-wrap">
+          <input type="number" id="answerInput" placeholder="0.00" step="any" onkeydown="handleKey(event)">
+          <span class="unit-label" id="unitLabel">units³</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new" onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show hint &amp; formula</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let prob = {};
+let attempts = 0, correct = 0, streak = 0;
+let answered = false;
+
+const cfg = { tol: 0.02 }; // 2% tolerance
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ── Shape definitions ──────────────────────────────────────────
+function makeProblem() {
+  const shapes = ['pyramid', 'rect-prism', 'tri-prism', 'cylinder', 'cone', 'sphere'];
+  const shape = randItem(shapes);
+
+  if (shape === 'pyramid') {
+    const l = rand(2, 15), w = rand(2, 15), h = rand(2, 15);
+    return {
+      shape,
+      dims: { l, w, h },
+      answer: (1/3) * l * w * h,
+      dimLabels: [`Base length = ${l} units`, `Base width = ${w} units`, `Height = ${h} units`],
+      hint: 'Volume of a square-based pyramid = ⅓ × base area × height.',
+      formula: `V = ⅓ × ${l} × ${w} × ${h}`,
+      shapeTitle: 'Square-Based Pyramid',
+    };
+  }
+
+  if (shape === 'rect-prism') {
+    const l = rand(2, 15), w = rand(2, 15), h = rand(2, 15);
+    return {
+      shape,
+      dims: { l, w, h },
+      answer: l * w * h,
+      dimLabels: [`Length = ${l} units`, `Width = ${w} units`, `Height = ${h} units`],
+      hint: 'Volume of a rectangular prism = length × width × height.',
+      formula: `V = ${l} × ${w} × ${h}`,
+      shapeTitle: 'Rectangular Prism',
+    };
+  }
+
+  if (shape === 'tri-prism') {
+    const b = rand(3, 14), triH = rand(3, 12), l = rand(3, 14);
+    return {
+      shape,
+      dims: { b, triH, l },
+      answer: 0.5 * b * triH * l,
+      dimLabels: [`Triangle base = ${b} units`, `Triangle height = ${triH} units`, `Prism length = ${l} units`],
+      hint: 'Volume of a triangular prism = ½ × base × triangle height × length.',
+      formula: `V = ½ × ${b} × ${triH} × ${l}`,
+      shapeTitle: 'Triangular Prism',
+    };
+  }
+
+  if (shape === 'cylinder') {
+    const r = rand(2, 10), h = rand(2, 15);
+    return {
+      shape,
+      dims: { r, h },
+      answer: Math.PI * r * r * h,
+      dimLabels: [`Radius = ${r} units`, `Height = ${h} units`],
+      hint: 'Volume of a cylinder = π × r² × h.',
+      formula: `V = π × ${r}² × ${h}`,
+      shapeTitle: 'Cylinder',
+    };
+  }
+
+  if (shape === 'cone') {
+    const r = rand(2, 10), h = rand(3, 15);
+    return {
+      shape,
+      dims: { r, h },
+      answer: (1/3) * Math.PI * r * r * h,
+      dimLabels: [`Radius = ${r} units`, `Height = ${h} units`],
+      hint: 'Volume of a cone = ⅓ × π × r² × h.',
+      formula: `V = ⅓ × π × ${r}² × ${h}`,
+      shapeTitle: 'Cone',
+    };
+  }
+
+  if (shape === 'sphere') {
+    const r = rand(2, 12);
+    return {
+      shape,
+      dims: { r },
+      answer: (4/3) * Math.PI * r * r * r,
+      dimLabels: [`Radius = ${r} units`],
+      hint: 'Volume of a sphere = 4/3 × π × r³.',
+      formula: `V = 4/3 × π × ${r}³`,
+      shapeTitle: 'Sphere',
+    };
+  }
+}
+
+// ── SVG Helpers ────────────────────────────────────────────────
+function svg(tag, attrs, textContent) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  if (textContent !== undefined) el.textContent = textContent;
+  return el;
+}
+
+function label(x, y, text, cls = 'svg-label dim', anchor = 'middle') {
+  return svg('text', { x, y, class: cls, 'text-anchor': anchor, 'dominant-baseline': 'middle' }, text);
+}
+
+function dimLine(x1, y1, x2, y2, labelText, lx, ly) {
+  const g = svg('g', {});
+  g.appendChild(svg('line', { x1, y1, x2, y2, stroke: 'var(--accent2)', 'stroke-width': '1', 'stroke-dasharray': '4,3' }));
+  g.appendChild(label(lx, ly, labelText));
+  return g;
+}
+
+// ── Shape Drawers ──────────────────────────────────────────────
+function drawPyramid(s, dims) {
+  const { l, w, h } = dims;
+  const cx = 240, cy = 200;
+  const bw = 160, bh = 60;
+  const apex = { x: cx, y: cy - 140 };
+
+  const fl = { x: cx - bw/2, y: cy + bh/2 };
+  const fr = { x: cx + bw/2, y: cy + bh/2 };
+  const br = { x: cx + bw/2 - 40, y: cy - bh/2 };
+  const bl = { x: cx - bw/2 - 40, y: cy - bh/2 };
+
+  s.appendChild(svg('polygon', {
+    points: `${apex.x},${apex.y} ${bl.x},${bl.y} ${br.x},${br.y}`,
+    fill: 'rgba(180,160,130,0.25)', stroke: 'var(--ink)', 'stroke-width': '1.5', 'stroke-dasharray': '6,4'
+  }));
+  s.appendChild(svg('polygon', {
+    points: `${fl.x},${fl.y} ${fr.x},${fr.y} ${br.x},${br.y} ${bl.x},${bl.y}`,
+    fill: 'rgba(245,240,232,0.5)', stroke: 'var(--ink)', 'stroke-width': '2'
+  }));
+  s.appendChild(svg('polygon', {
+    points: `${apex.x},${apex.y} ${fl.x},${fl.y} ${bl.x},${bl.y}`,
+    fill: 'rgba(200,185,160,0.4)', stroke: 'var(--ink)', 'stroke-width': '2'
+  }));
+  s.appendChild(svg('polygon', {
+    points: `${apex.x},${apex.y} ${fr.x},${fr.y} ${br.x},${br.y}`,
+    fill: 'rgba(180,165,140,0.5)', stroke: 'var(--ink)', 'stroke-width': '2'
+  }));
+  s.appendChild(svg('polygon', {
+    points: `${apex.x},${apex.y} ${fl.x},${fl.y} ${fr.x},${fr.y}`,
+    fill: 'rgba(220,210,190,0.6)', stroke: 'var(--ink)', 'stroke-width': '2'
+  }));
+
+  const baseCenter = { x: (fl.x+fr.x+br.x+bl.x)/4, y: (fl.y+fr.y+br.y+bl.y)/4 };
+  s.appendChild(svg('line', { x1: apex.x, y1: apex.y, x2: baseCenter.x, y2: baseCenter.y,
+    stroke: 'var(--accent2)', 'stroke-width': '2', 'stroke-dasharray': '6,4' }));
+
+  s.appendChild(label(fr.x + 44, (fr.y + br.y)/2, `l=${l}`, 'svg-label dim', 'start'));
+  s.appendChild(label((fr.x+fl.x)/2, fr.y + 24, `w=${w}`));
+  s.appendChild(label(apex.x + 20, (apex.y + baseCenter.y)/2, `h=${h}`, 'svg-label dim', 'start'));
+}
+
+function drawRectPrism(s, dims) {
+  const { l, w, h } = dims;
+  const ox = 80, oy = 280;
+  const dx = 160, dy = -16;
+  const ux = -36, uy = -56;
+  const hy = -150;
+
+  const p = (xi, ui, hi) => ({
+    x: ox + xi*dx + ui*ux,
+    y: oy + xi*dy + ui*uy + hi*(hy)
+  });
+
+  const pts = (arr) => arr.map(([xi,ui,hi]) => { const q=p(xi,ui,hi); return `${q.x},${q.y}`; }).join(' ');
+
+  s.appendChild(svg('polygon', { points: pts([[0,0,0],[1,0,0],[1,1,0],[0,1,0]]),
+    fill: 'rgba(200,185,160,0.3)', stroke: 'var(--ink)', 'stroke-width': '1.5', 'stroke-dasharray':'6,4' }));
+  s.appendChild(svg('polygon', { points: pts([[0,1,0],[1,1,0],[1,1,1],[0,1,1]]),
+    fill: 'rgba(185,170,148,0.35)', stroke: 'var(--ink)', 'stroke-width': '1.5', 'stroke-dasharray':'6,4' }));
+  s.appendChild(svg('polygon', { points: pts([[0,0,0],[0,1,0],[0,1,1],[0,0,1]]),
+    fill: 'rgba(200,188,170,0.4)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('polygon', { points: pts([[0,0,1],[1,0,1],[1,1,1],[0,1,1]]),
+    fill: 'rgba(240,232,215,0.7)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('polygon', { points: pts([[1,0,0],[1,1,0],[1,1,1],[1,0,1]]),
+    fill: 'rgba(215,200,178,0.55)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('polygon', { points: pts([[0,0,0],[1,0,0],[1,0,1],[0,0,1]]),
+    fill: 'rgba(230,218,198,0.65)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+
+  const fl = p(0,0,0), fr = p(1,0,0), ft = p(0,0,1), br = p(1,1,0);
+  s.appendChild(label((fl.x+fr.x)/2, fl.y + 22, `l=${l}`));
+  s.appendChild(label(fr.x + 20, (fr.y + br.y)/2, `w=${w}`, 'svg-label dim', 'start'));
+  s.appendChild(label(fl.x - 20, (fl.y + ft.y)/2, `h=${h}`, 'svg-label dim', 'end'));
+}
+
+function drawTriPrism(s, dims) {
+  const { b, triH, l } = dims;
+  const ox = 100, oy = 300;
+  const dx = 150, dy = -10;
+  const ux = -40, uy = -48;
+
+  const p = (xi, ui, vi) => {
+    const bx = ox + xi*dx + ui*ux;
+    const by = oy + xi*dy + ui*uy;
+    if (vi === 0) return { x: bx, y: by };
+    return { x: ox + xi*dx + 0.5*ux, y: oy + xi*dy + 0.5*uy - 130 };
+  };
+
+  const pts = (...arr) => arr.map(({x,y}) => `${x},${y}`).join(' ');
+
+  const A0 = p(0,0,0), B0 = p(0,1,0), C0 = p(0,0,1);
+  const A1 = p(1,0,0), B1 = p(1,1,0), C1 = p(1,0,1);
+
+  s.appendChild(svg('polygon', { points: pts(A1,B1,C1),
+    fill:'rgba(185,170,148,0.35)', stroke:'var(--ink)', 'stroke-width':'1.5', 'stroke-dasharray':'6,4' }));
+  s.appendChild(svg('polygon', { points: pts(A0,B0,B1,A1),
+    fill:'rgba(200,185,165,0.4)', stroke:'var(--ink)', 'stroke-width':'2' }));
+  s.appendChild(svg('polygon', { points: pts(A0,C0,C1,A1),
+    fill:'rgba(225,215,195,0.6)', stroke:'var(--ink)', 'stroke-width':'2' }));
+  s.appendChild(svg('polygon', { points: pts(B0,C0,C1,B1),
+    fill:'rgba(210,198,178,0.55)', stroke:'var(--ink)', 'stroke-width':'2' }));
+  s.appendChild(svg('polygon', { points: pts(A0,B0,C0),
+    fill:'rgba(235,225,208,0.75)', stroke:'var(--ink)', 'stroke-width':'2.5' }));
+
+  const midBase = { x: (A0.x+B0.x)/2, y: (A0.y+B0.y)/2 };
+  s.appendChild(svg('line', { x1: midBase.x, y1: midBase.y, x2: C0.x, y2: C0.y,
+    stroke: 'var(--accent2)', 'stroke-width': '2', 'stroke-dasharray': '6,4' }));
+
+  s.appendChild(label((A0.x+B0.x)/2, A0.y + 22, `b=${b}`));
+  s.appendChild(label(C0.x - 28, (C0.y+midBase.y)/2, `h=${triH}`, 'svg-label dim', 'end'));
+  s.appendChild(label((A0.x+A1.x)/2 + 10, A0.y - 10, `l=${l}`, 'svg-label dim', 'middle'));
+}
+
+function drawCylinder(s, dims) {
+  const { r, h } = dims;
+  const cx = 240, topY = 80, botY = 320;
+  const rx = 110, ry = 32;
+
+  s.appendChild(svg('ellipse', { cx, cy: botY, rx, ry,
+    fill: 'rgba(200,185,165,0.45)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('rect', { x: cx-rx, y: topY, width: rx*2, height: botY-topY,
+    fill: 'rgba(225,215,195,0.6)', stroke: 'none' }));
+  s.appendChild(svg('line', { x1: cx-rx, y1: topY, x2: cx-rx, y2: botY,
+    stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('line', { x1: cx+rx, y1: topY, x2: cx+rx, y2: botY,
+    stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('ellipse', { cx, cy: topY, rx, ry,
+    fill: 'rgba(240,230,212,0.85)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+
+  s.appendChild(svg('line', { x1: cx, y1: topY, x2: cx+rx, y2: topY,
+    stroke: 'var(--accent2)', 'stroke-width': '2' }));
+  s.appendChild(label(cx + rx/2, topY - 16, `r=${r}`));
+
+  s.appendChild(svg('line', { x1: cx+rx+32, y1: topY, x2: cx+rx+32, y2: botY,
+    stroke: 'var(--accent2)', 'stroke-width': '1.5', 'stroke-dasharray': '6,4' }));
+  s.appendChild(svg('line', { x1: cx+rx+20, y1: topY, x2: cx+rx+44, y2: topY,
+    stroke: 'var(--accent2)', 'stroke-width': '1.5' }));
+  s.appendChild(svg('line', { x1: cx+rx+20, y1: botY, x2: cx+rx+44, y2: botY,
+    stroke: 'var(--accent2)', 'stroke-width': '1.5' }));
+  s.appendChild(label(cx+rx+60, (topY+botY)/2, `h=${h}`, 'svg-label dim', 'start'));
+}
+
+function drawCone(s, dims) {
+  const { r, h } = dims;
+  const cx = 240, apex = 60, botY = 330;
+  const rx = 120, ry = 32;
+
+  s.appendChild(svg('ellipse', { cx, cy: botY, rx, ry,
+    fill: 'rgba(200,185,165,0.45)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('polygon', {
+    points: `${cx},${apex} ${cx-rx},${botY} ${cx+rx},${botY}`,
+    fill: 'rgba(228,218,198,0.65)', stroke: 'var(--ink)', 'stroke-width': '2', 'stroke-linejoin': 'round'
+  }));
+  const topEllipsePath = `M ${cx-rx},${botY} A ${rx} ${ry} 0 0 1 ${cx+rx},${botY}`;
+  s.appendChild(svg('path', { d: topEllipsePath, fill: 'none', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  const backPath = `M ${cx-rx},${botY} A ${rx} ${ry} 0 0 0 ${cx+rx},${botY}`;
+  s.appendChild(svg('path', { d: backPath, fill: 'none', stroke: 'var(--ink)', 'stroke-width': '1.2', 'stroke-dasharray': '6,4' }));
+
+  s.appendChild(svg('line', { x1: cx, y1: botY, x2: cx+rx, y2: botY,
+    stroke: 'var(--accent2)', 'stroke-width': '2' }));
+  s.appendChild(label(cx + rx/2, botY + 22, `r=${r}`));
+
+  s.appendChild(svg('line', { x1: cx, y1: apex, x2: cx, y2: botY,
+    stroke: 'var(--accent2)', 'stroke-width': '1.5', 'stroke-dasharray': '6,4' }));
+  s.appendChild(label(cx + 20, (apex + botY)/2, `h=${h}`, 'svg-label dim', 'start'));
+}
+
+function drawSphere(s, dims) {
+  const { r } = dims;
+  const cx = 240, cy = 210, cr = 144;
+
+  s.appendChild(svg('circle', { cx, cy, r: cr,
+    fill: 'rgba(228,218,198,0.55)', stroke: 'var(--ink)', 'stroke-width': '2.5' }));
+  s.appendChild(svg('ellipse', { cx, cy, rx: cr, ry: cr * 0.28,
+    fill: 'none', stroke: 'var(--ink)', 'stroke-width': '1.5', 'stroke-dasharray': '7,4' }));
+  s.appendChild(svg('ellipse', { cx, cy, rx: cr * 0.28, ry: cr,
+    fill: 'none', stroke: 'var(--ink)', 'stroke-width': '1.2', 'stroke-dasharray': '7,4', opacity: '0.5' }));
+
+  s.appendChild(svg('line', { x1: cx, y1: cy, x2: cx + cr * 0.707, y2: cy - cr * 0.707,
+    stroke: 'var(--accent2)', 'stroke-width': '2.5' }));
+  s.appendChild(label(cx + cr*0.42, cy - cr*0.42 - 16, `r=${r}`));
+}
+
+// ── Main draw dispatcher ───────────────────────────────────────
+function drawShape() {
+  const s = document.getElementById('shapeSvg');
+  s.innerHTML = '';
+  const { shape, dims } = prob;
+  if (shape === 'pyramid')    drawPyramid(s, dims);
+  if (shape === 'rect-prism') drawRectPrism(s, dims);
+  if (shape === 'tri-prism')  drawTriPrism(s, dims);
+  if (shape === 'cylinder')   drawCylinder(s, dims);
+  if (shape === 'cone')       drawCone(s, dims);
+  if (shape === 'sphere')     drawSphere(s, dims);
+
+  // Shape name watermark
+  s.appendChild(label(240, 390, prob.shapeTitle, 'svg-label shape-name'));
+}
+
+// ── Info panel ─────────────────────────────────────────────────
+function updateInfoPanel() {
+  const html = prob.dimLabels.map(d =>
+    `<div>${d.replace(/(=\s*[\d.]+)/, '<span class="val">$1</span>')}</div>`
+  ).join('');
+  document.getElementById('givenDims').innerHTML = html;
+  document.getElementById('findText').textContent = `Volume (${prob.shapeTitle})`;
+}
+
+// ── New problem ────────────────────────────────────────────────
+function newProblem() {
+  prob = makeProblem();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.textContent = '';
+  const hint = document.getElementById('hintText');
+  hint.className = 'hint-text';
+  hint.textContent = '';
+  updateInfoPanel();
+  drawShape();
+  document.getElementById('answerInput').focus();
+}
+
+// ── Answer check ───────────────────────────────────────────────
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function checkAnswer() {
+  if (answered) return;
+  const val = document.getElementById('answerInput').value;
+  if (val === '') { showFeedback('partial', 'Enter your answer first.'); return; }
+
+  const userAns = parseFloat(val);
+  const correctAns = prob.answer;
+  const pct = Math.abs(userAns - correctAns) / correctAns;
+
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+
+  if (pct <= cfg.tol) {
+    correct++;
+    streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent = streak;
+    const exact = correctAns.toFixed(1);
+    showFeedback('correct', streak >= 3 ? `🔥 ${streak} in a row! (Answer: ${exact} units³)` : `✓ Correct! (Answer: ${exact} units³)`);
+    answered = true;
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    const diff = Math.abs(userAns - correctAns) / correctAns;
+    if (diff < 0.35) {
+      showFeedback('partial', `Close, but not quite. Double-check your calculation.`);
+    } else {
+      showFeedback('wrong', `Not quite. Try again or use the hint.`);
+    }
+  }
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+function toggleHint() {
+  const hint = document.getElementById('hintText');
+  if (hint.classList.contains('show')) { hint.classList.remove('show'); return; }
+  hint.textContent = `${prob.hint} Formula: ${prob.formula} ≈ ${prob.answer.toFixed(1)} units³`;
+  hint.classList.add('show');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+newProblem();
+</script>
+</body>
+</html>
