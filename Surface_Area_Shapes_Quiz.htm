@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surface Area Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --paper: #fdfaf4;
+    --ink: #1c1a16;
+    --muted: #8a8070;
+    --border: #d4c9b0;
+    --accent: #c0392b;
+    --accent2: #2980b9;
+    --green: #27ae60;
+    --orange: #e67e22;
+    --shadow: rgba(60,50,30,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(180,170,150,0.15) 27px, rgba(180,170,150,0.15) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(180,170,150,0.08) 27px, rgba(180,170,150,0.08) 28px);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 0.7rem;
+  }
+
+  header h1 {
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-style: italic;
+    margin-top: 0.15rem;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.4rem 1.8rem;
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .top-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .shape-panel {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f4ec;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-height: 420px;
+  }
+
+  #shapeSvg {
+    width: 480px;
+    height: 400px;
+    overflow: visible;
+  }
+
+  .info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .given-box {
+    background: rgba(41,128,185,0.07);
+    border: 1.5px solid rgba(41,128,185,0.3);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .given-box h3 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent2);
+    margin-bottom: 0.4rem;
+  }
+
+  .given-item {
+    font-size: 0.9rem;
+    color: var(--ink);
+    line-height: 1.8;
+  }
+
+  .given-item .val {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--accent2);
+  }
+
+  .find-box {
+    background: rgba(192,57,43,0.06);
+    border: 1.5px solid rgba(192,57,43,0.3);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .find-box h3 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .find-box p {
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-style: italic;
+  }
+
+  .find-box p span {
+    font-style: normal;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .answer-row {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+  }
+
+  .answer-row label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+    white-space: nowrap;
+  }
+
+  .answer-wrap {
+    flex: 1;
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  input[type="number"] {
+    flex: 1;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 0.6rem 0.9rem;
+    font-size: 1.2rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: textfield;
+    -moz-appearance: textfield;
+    min-width: 0;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
+  }
+
+  .unit-label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  button {
+    flex: 1;
+    border: none;
+    border-radius: 4px;
+    padding: 0.65rem 1rem;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-check {
+    background: var(--ink);
+    color: var(--bg);
+    box-shadow: 2px 2px 0 var(--muted);
+  }
+
+  .btn-check:hover { filter: brightness(1.15); }
+
+  .btn-new {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border);
+  }
+
+  .btn-new:hover { background: var(--bg); }
+
+  .hint-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: 0.78rem;
+    padding: 0.42rem;
+    border-radius: 4px;
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    cursor: pointer;
+  }
+
+  .hint-btn:hover { border-color: var(--muted); color: var(--ink); }
+
+  .hint-text {
+    display: none;
+    background: rgba(230,126,34,0.07);
+    border: 1px solid rgba(230,126,34,0.3);
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.82rem;
+    color: #7d4c0a;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  .hint-text.show { display: block; }
+
+  .feedback {
+    border-radius: 4px;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-align: center;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .feedback.correct {
+    background: rgba(39,174,96,0.1);
+    border: 1.5px solid rgba(39,174,96,0.4);
+    color: #1a6b3a;
+  }
+
+  .feedback.wrong {
+    background: rgba(192,57,43,0.08);
+    border: 1.5px solid rgba(192,57,43,0.3);
+    color: var(--accent);
+  }
+
+  .feedback.partial {
+    background: rgba(230,126,34,0.08);
+    border: 1.5px solid rgba(230,126,34,0.3);
+    color: #8a4a00;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    border-top: 1px solid var(--border);
+    padding-top: 0.7rem;
+  }
+
+  .stat {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .stat strong {
+    display: block;
+    font-size: 1.1rem;
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .svg-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    fill: var(--ink);
+  }
+  .svg-label.dim {
+    fill: var(--accent2);
+    font-weight: 700;
+    font-size: 20px;
+  }
+  .svg-label.shape-name {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 20px;
+    fill: var(--muted);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Surface Area Practice</h1>
+  <p>Find the surface area of the 3D shape. Round to the nearest tenth.</p>
+</header>
+
+<div class="card">
+  <div class="top-row">
+    <div class="shape-panel">
+      <svg id="shapeSvg" viewBox="0 0 480 400"></svg>
+    </div>
+    <div class="info-panel">
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Find</h3>
+        <p>Calculate the <span id="findText">Surface Area</span></p>
+        <p style="font-style:normal; font-size:0.78rem; color:var(--muted); margin-top:0.35rem;">Round your answer to the nearest tenth (1 decimal place).</p>
+      </div>
+      <div class="answer-row">
+        <label for="answerInput">SA =</label>
+        <div class="answer-wrap">
+          <input type="number" id="answerInput" placeholder="0.00" step="any" onkeydown="handleKey(event)">
+          <span class="unit-label" id="unitLabel">units²</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new" onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show hint &amp; formula</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let prob = {};
+let attempts = 0, correct = 0, streak = 0;
+let answered = false;
+
+const cfg = { tol: 0.02 }; // 2% tolerance
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ── Shape definitions ──────────────────────────────────────────
+function makeProblem() {
+  const shapes = ['pyramid', 'rect-prism', 'tri-prism', 'cylinder', 'cone', 'sphere'];
+  const shape = randItem(shapes);
+
+  if (shape === 'pyramid') {
+    // Square base: side s, slant height l (slant height of a triangular face)
+    const s = rand(3, 14);
+    const l = rand(4, 16);
+    // SA = s² + 4 × (½ × s × l) = s² + 2sl
+    const answer = s * s + 2 * s * l;
+    return {
+      shape,
+      dims: { s, l },
+      answer,
+      dimLabels: [`Base side = ${s} units`, `Slant height = ${l} units`],
+      hint: 'SA = base area + 4 triangular faces = s² + 4 × (½ × s × l) = s² + 2sl.',
+      formula: `SA = ${s}² + 2 × ${s} × ${l}`,
+      shapeTitle: 'Square-Based Pyramid',
+    };
+  }
+
+  if (shape === 'rect-prism') {
+    const l = rand(2, 14), w = rand(2, 14), h = rand(2, 14);
+    const answer = 2 * (l*w + l*h + w*h);
+    return {
+      shape,
+      dims: { l, w, h },
+      answer,
+      dimLabels: [`Length = ${l} units`, `Width = ${w} units`, `Height = ${h} units`],
+      hint: 'SA of a rectangular prism = 2(lw + lh + wh).',
+      formula: `SA = 2(${l}×${w} + ${l}×${h} + ${w}×${h})`,
+      shapeTitle: 'Rectangular Prism',
+    };
+  }
+
+  if (shape === 'tri-prism') {
+    // Right triangle base: legs a and b, hypotenuse c = sqrt(a²+b²)
+    const a = rand(3, 10), b = rand(3, 10), len = rand(4, 14);
+    const c = Math.sqrt(a*a + b*b);
+    // SA = 2×(½×a×b) + a×len + b×len + c×len = a×b + (a+b+c)×len
+    const answer = a*b + (a + b + c) * len;
+    return {
+      shape,
+      dims: { a, b, len },
+      answer,
+      dimLabels: [`Triangle leg a = ${a} units`, `Triangle leg b = ${b} units`, `Prism length = ${len} units`],
+      hint: `This is a right-triangle prism. Hypotenuse c = √(${a}²+${b}²) ≈ ${c.toFixed(2)}. SA = a×b + (a + b + c) × length.`,
+      formula: `SA = ${a}×${b} + (${a}+${b}+${c.toFixed(2)})×${len}`,
+      shapeTitle: 'Triangular Prism',
+    };
+  }
+
+  if (shape === 'cylinder') {
+    const r = rand(2, 10), h = rand(2, 15);
+    const answer = 2 * Math.PI * r * r + 2 * Math.PI * r * h;
+    return {
+      shape,
+      dims: { r, h },
+      answer,
+      dimLabels: [`Radius = ${r} units`, `Height = ${h} units`],
+      hint: 'SA of a cylinder = 2πr² + 2πrh (two circles + lateral surface).',
+      formula: `SA = 2π×${r}² + 2π×${r}×${h}`,
+      shapeTitle: 'Cylinder',
+    };
+  }
+
+  if (shape === 'cone') {
+    const r = rand(2, 10), h = rand(3, 15);
+    const l = Math.sqrt(r*r + h*h); // slant height
+    const answer = Math.PI * r * r + Math.PI * r * l;
+    return {
+      shape,
+      dims: { r, h, l: parseFloat(l.toFixed(2)) },
+      answer,
+      dimLabels: [`Radius = ${r} units`, `Height = ${h} units`, `Slant height = ${l.toFixed(2)} units`],
+      hint: `SA of a cone = πr² + πrl. Slant height l = √(r²+h²) = √(${r}²+${h}²) ≈ ${l.toFixed(2)}.`,
+      formula: `SA = π×${r}² + π×${r}×${l.toFixed(2)}`,
+      shapeTitle: 'Cone',
+    };
+  }
+
+  if (shape === 'sphere') {
+    const r = rand(2, 12);
+    const answer = 4 * Math.PI * r * r;
+    return {
+      shape,
+      dims: { r },
+      answer,
+      dimLabels: [`Radius = ${r} units`],
+      hint: 'SA of a sphere = 4πr².',
+      formula: `SA = 4π×${r}²`,
+      shapeTitle: 'Sphere',
+    };
+  }
+}
+
+// ── SVG Helpers ────────────────────────────────────────────────
+function svg(tag, attrs, textContent) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  if (textContent !== undefined) el.textContent = textContent;
+  return el;
+}
+
+function label(x, y, text, cls = 'svg-label dim', anchor = 'middle') {
+  return svg('text', { x, y, class: cls, 'text-anchor': anchor, 'dominant-baseline': 'middle' }, text);
+}
+
+// ── Shape Drawers ──────────────────────────────────────────────
+
+// Square-based pyramid: dims = { s, l }  (s=base side, l=slant height)
+function drawPyramid(s_el, dims) {
+  const { s, l } = dims;
+  const cx = 240, cy = 200;
+  const bw = 160, bh = 60;
+  const apex = { x: cx, y: cy - 140 };
+
+  const fl = { x: cx - bw/2, y: cy + bh/2 };
+  const fr = { x: cx + bw/2, y: cy + bh/2 };
+  const br = { x: cx + bw/2 - 40, y: cy - bh/2 };
+  const bl = { x: cx - bw/2 - 40, y: cy - bh/2 };
+
+  // Back faces (dashed)
+  s_el.appendChild(svg('polygon', {
+    points: `${apex.x},${apex.y} ${bl.x},${bl.y} ${br.x},${br.y}`,
+    fill: 'rgba(180,160,130,0.25)', stroke: 'var(--ink)', 'stroke-width': '1.5', 'stroke-dasharray': '6,4'
+  }));
+  // Base
+  s_el.appendChild(svg('polygon', {
+    points: `${fl.x},${fl.y} ${fr.x},${fr.y} ${br.x},${br.y} ${bl.x},${bl.y}`,
+    fill: 'rgba(245,240,232,0.5)', stroke: 'var(--ink)', 'stroke-width': '2'
+  }));
+  // Left face
+  s_el.appendChild(svg('polygon', {
+    points: `${apex.x},${apex.y} ${fl.x},${fl.y} ${bl.x},${bl.y}`,
+    fill: 'rgba(200,185,160,0.4)', stroke: 'var(--ink)', 'stroke-width': '2'
+  }));
+  // Right face
+  s_el.appendChild(svg('polygon', {
+    points: `${apex.x},${apex.y} ${fr.x},${fr.y} ${br.x},${br.y}`,
+    fill: 'rgba(180,165,140,0.5)', stroke: 'var(--ink)', 'stroke-width': '2'
+  }));
+  // Front face
+  s_el.appendChild(svg('polygon', {
+    points: `${apex.x},${apex.y} ${fl.x},${fl.y} ${fr.x},${fr.y}`,
+    fill: 'rgba(220,210,190,0.6)', stroke: 'var(--ink)', 'stroke-width': '2'
+  }));
+
+  const baseCenter = { x: (fl.x+fr.x+br.x+bl.x)/4, y: (fl.y+fr.y+br.y+bl.y)/4 };
+  // Slant height line on front face (midpoint of front base edge to apex)
+  const frontMid = { x: (fl.x+fr.x)/2, y: (fl.y+fr.y)/2 };
+  s_el.appendChild(svg('line', { x1: apex.x, y1: apex.y, x2: frontMid.x, y2: frontMid.y,
+    stroke: 'var(--accent)', 'stroke-width': '2.5' }));
+  // Height line (dashed)
+  s_el.appendChild(svg('line', { x1: apex.x, y1: apex.y, x2: baseCenter.x, y2: baseCenter.y,
+    stroke: 'var(--accent2)', 'stroke-width': '2', 'stroke-dasharray': '6,4' }));
+
+  // Labels: base side and slant height
+  s_el.appendChild(label(fr.x + 44, (fr.y + br.y)/2, `s=${s}`, 'svg-label dim', 'start'));
+  s_el.appendChild(label((fl.x+fr.x)/2, fr.y + 24, `s=${s}`));
+  // Slant height label on front face midpoint
+  const slantMidX = (apex.x + frontMid.x)/2;
+  const slantMidY = (apex.y + frontMid.y)/2;
+  s_el.appendChild(label(slantMidX - 28, slantMidY, `l=${l}`, 'svg-label dim', 'end'));
+}
+
+function drawRectPrism(s, dims) {
+  const { l, w, h } = dims;
+  const ox = 80, oy = 280;
+  const dx = 160, dy = -16;
+  const ux = -36, uy = -56;
+  const hy = -150;
+
+  const p = (xi, ui, hi) => ({
+    x: ox + xi*dx + ui*ux,
+    y: oy + xi*dy + ui*uy + hi*(hy)
+  });
+
+  const pts = (arr) => arr.map(([xi,ui,hi]) => { const q=p(xi,ui,hi); return `${q.x},${q.y}`; }).join(' ');
+
+  s.appendChild(svg('polygon', { points: pts([[0,0,0],[1,0,0],[1,1,0],[0,1,0]]),
+    fill: 'rgba(200,185,160,0.3)', stroke: 'var(--ink)', 'stroke-width': '1.5', 'stroke-dasharray':'6,4' }));
+  s.appendChild(svg('polygon', { points: pts([[0,1,0],[1,1,0],[1,1,1],[0,1,1]]),
+    fill: 'rgba(185,170,148,0.35)', stroke: 'var(--ink)', 'stroke-width': '1.5', 'stroke-dasharray':'6,4' }));
+  s.appendChild(svg('polygon', { points: pts([[0,0,0],[0,1,0],[0,1,1],[0,0,1]]),
+    fill: 'rgba(200,188,170,0.4)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('polygon', { points: pts([[0,0,1],[1,0,1],[1,1,1],[0,1,1]]),
+    fill: 'rgba(240,232,215,0.7)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('polygon', { points: pts([[1,0,0],[1,1,0],[1,1,1],[1,0,1]]),
+    fill: 'rgba(215,200,178,0.55)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('polygon', { points: pts([[0,0,0],[1,0,0],[1,0,1],[0,0,1]]),
+    fill: 'rgba(230,218,198,0.65)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+
+  const fl = p(0,0,0), fr = p(1,0,0), ft = p(0,0,1), br = p(1,1,0);
+  s.appendChild(label((fl.x+fr.x)/2, fl.y + 22, `l=${l}`));
+  s.appendChild(label(fr.x + 20, (fr.y + br.y)/2, `w=${w}`, 'svg-label dim', 'start'));
+  s.appendChild(label(fl.x - 20, (fl.y + ft.y)/2, `h=${h}`, 'svg-label dim', 'end'));
+}
+
+function drawTriPrism(s, dims) {
+  const { a, b, len } = dims;
+  const ox = 100, oy = 300;
+  const dx = 150, dy = -10;
+  const ux = -40, uy = -48;
+
+  // Right-triangle base: leg a horizontal, leg b vertical
+  const p = (xi, ui, vi) => {
+    const bx = ox + xi*dx + ui*ux;
+    const by = oy + xi*dy + ui*uy;
+    if (vi === 0) return { x: bx, y: by };
+    // apex of right triangle: directly above the left corner
+    return { x: ox + xi*dx, y: oy + xi*dy - 130 };
+  };
+
+  const pts = (...arr) => arr.map(({x,y}) => `${x},${y}`).join(' ');
+
+  const A0 = p(0,0,0), B0 = p(0,1,0), C0 = p(0,0,1);
+  const A1 = p(1,0,0), B1 = p(1,1,0), C1 = p(1,0,1);
+
+  // Back triangle (dashed)
+  s.appendChild(svg('polygon', { points: pts(A1,B1,C1),
+    fill:'rgba(185,170,148,0.35)', stroke:'var(--ink)', 'stroke-width':'1.5', 'stroke-dasharray':'6,4' }));
+  // Bottom rect face (A0-B0-B1-A1)
+  s.appendChild(svg('polygon', { points: pts(A0,B0,B1,A1),
+    fill:'rgba(200,185,165,0.4)', stroke:'var(--ink)', 'stroke-width':'2' }));
+  // Hypotenuse rect face (B0-C0-C1-B1)
+  s.appendChild(svg('polygon', { points: pts(B0,C0,C1,B1),
+    fill:'rgba(210,198,178,0.55)', stroke:'var(--ink)', 'stroke-width':'2' }));
+  // Vertical rect face (A0-C0-C1-A1)
+  s.appendChild(svg('polygon', { points: pts(A0,C0,C1,A1),
+    fill:'rgba(225,215,195,0.6)', stroke:'var(--ink)', 'stroke-width':'2' }));
+  // Front triangle
+  s.appendChild(svg('polygon', { points: pts(A0,B0,C0),
+    fill:'rgba(235,225,208,0.75)', stroke:'var(--ink)', 'stroke-width':'2.5' }));
+
+  // Labels
+  s.appendChild(label((A0.x+B0.x)/2, A0.y + 22, `a=${a}`));
+  s.appendChild(label(A0.x - 24, (A0.y+C0.y)/2, `b=${b}`, 'svg-label dim', 'end'));
+  s.appendChild(label((A0.x+A1.x)/2 + 10, A0.y - 10, `len=${len}`, 'svg-label dim', 'middle'));
+}
+
+function drawCylinder(s, dims) {
+  const { r, h } = dims;
+  const cx = 240, topY = 80, botY = 320;
+  const rx = 110, ry = 32;
+
+  s.appendChild(svg('ellipse', { cx, cy: botY, rx, ry,
+    fill: 'rgba(200,185,165,0.45)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('rect', { x: cx-rx, y: topY, width: rx*2, height: botY-topY,
+    fill: 'rgba(225,215,195,0.6)', stroke: 'none' }));
+  s.appendChild(svg('line', { x1: cx-rx, y1: topY, x2: cx-rx, y2: botY,
+    stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('line', { x1: cx+rx, y1: topY, x2: cx+rx, y2: botY,
+    stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('ellipse', { cx, cy: topY, rx, ry,
+    fill: 'rgba(240,230,212,0.85)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+
+  s.appendChild(svg('line', { x1: cx, y1: topY, x2: cx+rx, y2: topY,
+    stroke: 'var(--accent2)', 'stroke-width': '2' }));
+  s.appendChild(label(cx + rx/2, topY - 16, `r=${r}`));
+
+  s.appendChild(svg('line', { x1: cx+rx+32, y1: topY, x2: cx+rx+32, y2: botY,
+    stroke: 'var(--accent2)', 'stroke-width': '1.5', 'stroke-dasharray': '6,4' }));
+  s.appendChild(svg('line', { x1: cx+rx+20, y1: topY, x2: cx+rx+44, y2: topY,
+    stroke: 'var(--accent2)', 'stroke-width': '1.5' }));
+  s.appendChild(svg('line', { x1: cx+rx+20, y1: botY, x2: cx+rx+44, y2: botY,
+    stroke: 'var(--accent2)', 'stroke-width': '1.5' }));
+  s.appendChild(label(cx+rx+60, (topY+botY)/2, `h=${h}`, 'svg-label dim', 'start'));
+}
+
+function drawCone(s, dims) {
+  const { r, h, l } = dims;
+  const cx = 240, apexY = 60, botY = 330;
+  const rx = 120, ry = 32;
+
+  s.appendChild(svg('ellipse', { cx, cy: botY, rx, ry,
+    fill: 'rgba(200,185,165,0.45)', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  s.appendChild(svg('polygon', {
+    points: `${cx},${apexY} ${cx-rx},${botY} ${cx+rx},${botY}`,
+    fill: 'rgba(228,218,198,0.65)', stroke: 'var(--ink)', 'stroke-width': '2', 'stroke-linejoin': 'round'
+  }));
+  const topEllipsePath = `M ${cx-rx},${botY} A ${rx} ${ry} 0 0 1 ${cx+rx},${botY}`;
+  s.appendChild(svg('path', { d: topEllipsePath, fill: 'none', stroke: 'var(--ink)', 'stroke-width': '2' }));
+  const backPath = `M ${cx-rx},${botY} A ${rx} ${ry} 0 0 0 ${cx+rx},${botY}`;
+  s.appendChild(svg('path', { d: backPath, fill: 'none', stroke: 'var(--ink)', 'stroke-width': '1.2', 'stroke-dasharray': '6,4' }));
+
+  // radius line at base
+  s.appendChild(svg('line', { x1: cx, y1: botY, x2: cx+rx, y2: botY,
+    stroke: 'var(--accent2)', 'stroke-width': '2' }));
+  s.appendChild(label(cx + rx/2, botY + 22, `r=${r}`));
+
+  // Height line (dashed)
+  s.appendChild(svg('line', { x1: cx, y1: apexY, x2: cx, y2: botY,
+    stroke: 'var(--accent2)', 'stroke-width': '1.5', 'stroke-dasharray': '6,4' }));
+  s.appendChild(label(cx + 22, (apexY + botY)/2, `h=${h}`, 'svg-label dim', 'start'));
+
+  // Slant height line (right side, in accent red)
+  s.appendChild(svg('line', { x1: cx, y1: apexY, x2: cx+rx, y2: botY,
+    stroke: 'var(--accent)', 'stroke-width': '2.5' }));
+  s.appendChild(label(cx + rx/2 + 30, (apexY + botY)/2 - 10, `l=${l}`, 'svg-label', 'start'));
+}
+
+function drawSphere(s, dims) {
+  const { r } = dims;
+  const cx = 240, cy = 210, cr = 144;
+
+  s.appendChild(svg('circle', { cx, cy, r: cr,
+    fill: 'rgba(228,218,198,0.55)', stroke: 'var(--ink)', 'stroke-width': '2.5' }));
+  s.appendChild(svg('ellipse', { cx, cy, rx: cr, ry: cr * 0.28,
+    fill: 'none', stroke: 'var(--ink)', 'stroke-width': '1.5', 'stroke-dasharray': '7,4' }));
+  s.appendChild(svg('ellipse', { cx, cy, rx: cr * 0.28, ry: cr,
+    fill: 'none', stroke: 'var(--ink)', 'stroke-width': '1.2', 'stroke-dasharray': '7,4', opacity: '0.5' }));
+
+  s.appendChild(svg('line', { x1: cx, y1: cy, x2: cx + cr * 0.707, y2: cy - cr * 0.707,
+    stroke: 'var(--accent2)', 'stroke-width': '2.5' }));
+  s.appendChild(label(cx + cr*0.42, cy - cr*0.42 - 16, `r=${r}`));
+}
+
+// ── Main draw dispatcher ───────────────────────────────────────
+function drawShape() {
+  const s = document.getElementById('shapeSvg');
+  s.innerHTML = '';
+  const { shape, dims } = prob;
+  if (shape === 'pyramid')    drawPyramid(s, dims);
+  if (shape === 'rect-prism') drawRectPrism(s, dims);
+  if (shape === 'tri-prism')  drawTriPrism(s, dims);
+  if (shape === 'cylinder')   drawCylinder(s, dims);
+  if (shape === 'cone')       drawCone(s, dims);
+  if (shape === 'sphere')     drawSphere(s, dims);
+
+  // Shape name watermark
+  s.appendChild(label(240, 390, prob.shapeTitle, 'svg-label shape-name'));
+}
+
+// ── Info panel ─────────────────────────────────────────────────
+function updateInfoPanel() {
+  const html = prob.dimLabels.map(d =>
+    `<div>${d.replace(/(=\s*[\d.]+)/, '<span class="val">$1</span>')}</div>`
+  ).join('');
+  document.getElementById('givenDims').innerHTML = html;
+  document.getElementById('findText').textContent = `Surface Area (${prob.shapeTitle})`;
+}
+
+// ── New problem ────────────────────────────────────────────────
+function newProblem() {
+  prob = makeProblem();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.textContent = '';
+  const hint = document.getElementById('hintText');
+  hint.className = 'hint-text';
+  hint.textContent = '';
+  updateInfoPanel();
+  drawShape();
+  document.getElementById('answerInput').focus();
+}
+
+// ── Answer check ───────────────────────────────────────────────
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function checkAnswer() {
+  if (answered) return;
+  const val = document.getElementById('answerInput').value;
+  if (val === '') { showFeedback('partial', 'Enter your answer first.'); return; }
+
+  const userAns = parseFloat(val);
+  const correctAns = prob.answer;
+  const pct = Math.abs(userAns - correctAns) / correctAns;
+
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+
+  if (pct <= cfg.tol) {
+    correct++;
+    streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent = streak;
+    const exact = correctAns.toFixed(1);
+    showFeedback('correct', streak >= 3 ? `🔥 ${streak} in a row! (Answer: ${exact} units²)` : `✓ Correct! (Answer: ${exact} units²)`);
+    answered = true;
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    const diff = Math.abs(userAns - correctAns) / correctAns;
+    if (diff < 0.35) {
+      showFeedback('partial', `Close, but not quite. Double-check your calculation.`);
+    } else {
+      showFeedback('wrong', `Not quite. Try again or use the hint.`);
+    }
+  }
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+function toggleHint() {
+  const hint = document.getElementById('hintText');
+  if (hint.classList.contains('show')) { hint.classList.remove('show'); return; }
+  hint.textContent = `${prob.hint} Formula: ${prob.formula} ≈ ${prob.answer.toFixed(1)} units²`;
+  hint.classList.add('show');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+newProblem();
+</script>
+</body>
+</html>
