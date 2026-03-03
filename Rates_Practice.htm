@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rates Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #e8f5ed;
+    --paper: #f4fdf7;
+    --ink: #161c18;
+    --muted: #557060;
+    --border: #a8ccb4;
+    --accent: #1e7d46;
+    --accent2: #0f5230;
+    --red: #c0392b;
+    --orange: #a05c00;
+    --shadow: rgba(20,60,30,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(80,150,100,0.10) 27px, rgba(80,150,100,0.10) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(80,150,100,0.06) 27px, rgba(80,150,100,0.06) 28px);
+  }
+
+  header { text-align: center; margin-bottom: 0.7rem; }
+  header h1 {
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    font-weight: 700; color: var(--ink); letter-spacing: -0.5px;
+  }
+  header p {
+    color: var(--muted); font-size: 0.82rem;
+    font-style: italic; margin-top: 0.15rem;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.4rem 1.8rem;
+    width: 100%; max-width: 900px;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  .top-row {
+    display: flex; flex-direction: row;
+    gap: 1.2rem; align-items: stretch;
+  }
+
+  /* Left: question panel */
+  .question-panel {
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    background: #edf7f1;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-height: 320px;
+    padding: 1.6rem 1.4rem;
+    gap: 1.2rem;
+  }
+
+  .type-badge {
+    font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: white; background: var(--accent);
+    border-radius: 3px; padding: 0.18rem 0.55rem;
+    align-self: flex-start;
+  }
+  .type-badge.comparing { background: #2e7d32; }
+  .type-badge.best-buy  { background: #558b2f; }
+  .type-badge.scaling   { background: #00695c; }
+  .type-badge.convert   { background: #1565c0; }
+  .type-badge.mixed     { background: #6a1099; }
+
+  .question-text {
+    font-size: 1.05rem;
+    color: var(--ink);
+    line-height: 1.75;
+  }
+
+  .question-text strong {
+    font-weight: 700;
+    color: var(--accent2);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.97em;
+  }
+
+  /* Rate display boxes */
+  .rate-row {
+    display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center;
+    margin-top: 0.3rem;
+  }
+
+  .rate-box {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 0.55rem 0.9rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.92rem;
+    color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0.1rem;
+  }
+
+  .rate-box .rate-val {
+    font-size: 1.1rem; font-weight: 700; color: var(--accent2);
+  }
+
+  .rate-box .rate-label {
+    font-size: 0.68rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+
+  .rate-fraction {
+    display: inline-flex; flex-direction: column; align-items: center;
+    font-family: 'DM Mono', monospace; font-size: 1rem;
+    vertical-align: middle;
+  }
+  .rate-fraction .rf-num { border-bottom: 1.5px solid var(--ink); padding: 0 0.2em 0.08em; }
+  .rate-fraction .rf-den { padding: 0.08em 0.2em 0; }
+
+  .steps-box {
+    width: 100%;
+    background: rgba(30,125,70,0.06);
+    border: 1px solid rgba(30,125,70,0.22);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.82rem; color: var(--ink);
+    line-height: 1.8; font-style: italic;
+    display: none;
+  }
+  .steps-box.show { display: block; }
+  .steps-box .step-line { font-family: 'DM Mono', monospace; font-style: normal; font-size: 0.85rem; }
+  .steps-box .step-label { color: var(--accent2); font-weight: 700; font-style: normal; }
+
+  /* Right: info panel */
+  .info-panel {
+    flex: 0 0 240px;
+    display: flex; flex-direction: column; gap: 0.7rem;
+  }
+
+  .given-box {
+    background: rgba(30,125,70,0.07);
+    border: 1.5px solid rgba(30,125,70,0.3);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .given-box h3 {
+    font-size: 0.65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--accent); margin-bottom: 0.4rem;
+  }
+  .given-item {
+    font-size: 0.88rem; color: var(--ink); line-height: 1.75;
+  }
+  .given-item .val {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500; color: var(--accent2);
+  }
+
+  .find-box {
+    background: rgba(15,82,48,0.06);
+    border: 1.5px solid rgba(15,82,48,0.28);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .find-box h3 {
+    font-size: 0.65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--accent2); margin-bottom: 0.4rem;
+  }
+  .find-box p { font-size: 0.92rem; color: var(--ink); font-style: italic; }
+  .find-box .find-question {
+    font-style: normal; font-size: 0.88rem;
+    color: var(--accent2); font-weight: 700;
+    margin-top: 0.35rem; line-height: 1.5;
+  }
+
+  .answer-row {
+    display: flex; gap: 0.7rem; align-items: center;
+  }
+  .answer-row label {
+    font-size: 0.85rem; color: var(--muted);
+    font-style: italic; white-space: nowrap;
+  }
+  .answer-wrap { flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
+
+  input[type="text"] {
+    width: 100%; background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 4px; padding: 0.6rem 0.9rem;
+    font-size: 1.1rem; font-family: 'DM Mono', monospace;
+    color: var(--ink); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(30,125,70,0.14);
+  }
+  .input-note {
+    font-size: 0.7rem; color: var(--muted); font-style: italic;
+  }
+
+  .btn-row { display: flex; gap: 0.6rem; }
+
+  button {
+    flex: 1; border: none; border-radius: 4px;
+    padding: 0.65rem 1rem;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 0.88rem; font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+  button:active { transform: scale(0.97); }
+
+  .btn-check {
+    background: var(--accent2); color: white;
+    box-shadow: 2px 2px 0 rgba(15,82,48,0.4);
+  }
+  .btn-check:hover { filter: brightness(1.2); }
+
+  .btn-new {
+    background: var(--paper); color: var(--ink);
+    border: 1.5px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border);
+  }
+  .btn-new:hover { background: var(--bg); }
+
+  .hint-btn {
+    width: 100%; background: transparent;
+    border: 1px dashed var(--border); color: var(--muted);
+    font-size: 0.78rem; padding: 0.42rem; border-radius: 4px;
+    font-family: 'Libre Baskerville', serif; font-style: italic; cursor: pointer;
+  }
+  .hint-btn:hover { border-color: var(--accent); color: var(--ink); }
+
+  .hint-text {
+    display: none;
+    background: rgba(30,125,70,0.06);
+    border: 1px solid rgba(30,125,70,0.25);
+    border-radius: 4px; padding: 0.6rem 0.8rem;
+    font-size: 0.82rem; color: #0a3d20;
+    line-height: 1.7; font-style: italic;
+  }
+  .hint-text.show { display: block; }
+
+  .feedback {
+    border-radius: 4px; padding: 0.55rem 0.9rem;
+    font-size: 0.88rem; font-weight: 700;
+    text-align: center; min-height: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .feedback.correct {
+    background: rgba(30,125,70,0.1);
+    border: 1.5px solid rgba(30,125,70,0.4); color: var(--accent2);
+  }
+  .feedback.wrong {
+    background: rgba(192,57,43,0.08);
+    border: 1.5px solid rgba(192,57,43,0.3); color: var(--red);
+  }
+  .feedback.partial {
+    background: rgba(160,92,0,0.08);
+    border: 1.5px solid rgba(160,92,0,0.3); color: var(--orange);
+  }
+
+  .stats-row {
+    display: flex; gap: 1rem; justify-content: center;
+    border-top: 1px solid var(--border); padding-top: 0.7rem;
+  }
+  .stat { text-align: center; font-size: 0.75rem; color: var(--muted); }
+  .stat strong {
+    display: block; font-size: 1.1rem; color: var(--ink);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .difficulty-row {
+    display: flex; gap: 0.5rem; align-items: center;
+    font-size: 0.78rem; color: var(--muted); font-style: italic;
+  }
+  .diff-btn {
+    flex: none; padding: 0.3rem 0.7rem;
+    font-size: 0.75rem; font-weight: 700; border-radius: 3px;
+    border: 1.5px solid var(--border); background: var(--paper);
+    color: var(--muted); cursor: pointer;
+    font-family: 'Libre Baskerville', serif; transition: all 0.15s;
+  }
+  .diff-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .diff-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Rates</h1>
+  <p>Unit rates, comparing rates, scaling, and rate problems.</p>
+</header>
+
+<div class="card">
+  <div class="difficulty-row">
+    Difficulty:
+    <button class="diff-btn active" id="dEasy"   onclick="setDiff('easy')">Easy</button>
+    <button class="diff-btn"        id="dMedium" onclick="setDiff('medium')">Medium</button>
+    <button class="diff-btn"        id="dHard"   onclick="setDiff('hard')">Hard</button>
+  </div>
+
+  <div class="top-row">
+    <div class="question-panel">
+      <div class="type-badge" id="typeBadge">Unit Rate</div>
+      <div class="question-text" id="questionText">—</div>
+      <div id="rateDisplay"></div>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+
+    <div class="info-panel">
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Find</h3>
+        <p id="findDesc">—</p>
+        <div class="find-question" id="findQuestion"></div>
+      </div>
+      <div class="answer-row">
+        <div class="answer-wrap">
+          <input type="text" id="answerInput" placeholder="e.g. 2.5" onkeydown="handleKey(event)" autocomplete="off">
+          <span class="input-note" id="inputNote">Round to 2 decimal places if needed.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new"   onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show solution</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback"   id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+let prob = {};
+let attempts = 0, correct = 0, streak = 0;
+let answered = false;
+let difficulty = 'easy';
+
+// ── Helpers ────────────────────────────────────────────────────
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randItem(arr)  { return arr[Math.floor(Math.random() * arr.length)]; }
+function r2(x)          { return Math.round(x * 100) / 100; }
+function r1(x)          { return Math.round(x * 10) / 10; }
+
+// ── Context banks ──────────────────────────────────────────────
+const contexts = {
+  speed: [
+    { thing: 'car',      dist: 'km',    time: 'hour',   timeShort: 'hr'  },
+    { thing: 'runner',   dist: 'm',     time: 'minute', timeShort: 'min' },
+    { thing: 'cyclist',  dist: 'km',    time: 'hour',   timeShort: 'hr'  },
+    { thing: 'train',    dist: 'km',    time: 'hour',   timeShort: 'hr'  },
+    { thing: 'swimmer',  dist: 'm',     time: 'minute', timeShort: 'min' },
+  ],
+  price: [
+    { item: 'apples',  unit: 'kg'   },
+    { item: 'juice',   unit: 'litre' },
+    { item: 'pencils', unit: 'pack'  },
+    { item: 'rice',    unit: 'kg'   },
+    { item: 'milk',    unit: 'litre' },
+    { item: 'flour',   unit: 'kg'   },
+    { item: 'eggs',    unit: 'dozen' },
+    { item: 'chicken', unit: 'kg'   },
+  ],
+  work: [
+    { who: 'painter',  does: 'painted', thing: 'rooms',  unit: 'room'  },
+    { who: 'typist',   does: 'typed',   thing: 'pages',  unit: 'page'  },
+    { who: 'baker',    does: 'baked',   thing: 'loaves', unit: 'loaf'  },
+    { who: 'printer',  does: 'printed', thing: 'pages',  unit: 'page'  },
+    { who: 'worker',   does: 'made',    thing: 'parts',  unit: 'part'  },
+    { who: 'gardener', does: 'planted', thing: 'trees',  unit: 'tree'  },
+  ],
+};
+
+// ── Problem types ──────────────────────────────────────────────
+
+// EASY ─────────────────────────────────────────────────────────
+
+function makeUnitRate() {
+  // Find $/unit or dist/time
+  const usePrice = Math.random() < 0.5;
+
+  if (usePrice) {
+    const ctx = randItem(contexts.price);
+    const qty  = rand(2, 10);
+    const cost = r2(qty * (rand(50, 400) / 100));  // nice total cost
+    const unitCost = r2(cost / qty);
+    return {
+      typeLabel: 'Unit Rate', typeCls: '',
+      question: `${qty} ${ctx.unit}s of ${ctx.item} cost <strong>$${cost.toFixed(2)}</strong>. What is the cost per ${ctx.unit}?`,
+      given: [`Quantity: ${qty} ${ctx.unit}s`, `Total cost: $${cost.toFixed(2)}`],
+      findDesc: 'Find the unit rate.',
+      findQ: `Cost per ${ctx.unit} = ?`,
+      answer: unitCost,
+      unit: `$/` + ctx.unit,
+      isCompare: false,
+      steps: [
+        ['Divide total by quantity', `$${cost.toFixed(2)} ÷ ${qty} = $${unitCost.toFixed(2)} per ${ctx.unit}`],
+      ],
+      hint: `Unit rate = total ÷ quantity.  $${cost.toFixed(2)} ÷ ${qty} = $${unitCost.toFixed(2)}/${ctx.unit}.`,
+    };
+  } else {
+    const ctx = randItem(contexts.speed);
+    const time = rand(2, 8);
+    const dist = time * rand(5, 25);
+    const rate = dist / time;
+    return {
+      typeLabel: 'Unit Rate', typeCls: '',
+      question: `A ${ctx.thing} travels <strong>${dist} ${ctx.dist}</strong> in <strong>${time} ${ctx.time}s</strong>. What is the speed per ${ctx.timeShort}?`,
+      given: [`Distance: ${dist} ${ctx.dist}`, `Time: ${time} ${ctx.time}s`],
+      findDesc: 'Find the unit rate.',
+      findQ: `Speed (${ctx.dist}/${ctx.timeShort}) = ?`,
+      answer: r2(rate),
+      unit: `${ctx.dist}/${ctx.timeShort}`,
+      isCompare: false,
+      steps: [
+        ['Speed = distance ÷ time', `${dist} ÷ ${time} = ${r2(rate)} ${ctx.dist}/${ctx.timeShort}`],
+      ],
+      hint: `Unit rate = distance ÷ time = ${dist} ÷ ${time} = ${r2(rate)} ${ctx.dist}/${ctx.timeShort}.`,
+    };
+  }
+}
+
+function makeScaleUp() {
+  // Given unit rate, find total for a new quantity
+  const ctx = randItem(contexts.price);
+  const unitCost = r2(rand(50, 500) / 100);
+  const qty = rand(3, 12);
+  const total = r2(unitCost * qty);
+  return {
+    typeLabel: 'Scaling', typeCls: 'scaling',
+    question: `${ctx.item.charAt(0).toUpperCase() + ctx.item.slice(1)} cost <strong>$${unitCost.toFixed(2)} per ${ctx.unit}</strong>. How much do <strong>${qty} ${ctx.unit}s</strong> cost?`,
+    given: [`Unit rate: $${unitCost.toFixed(2)}/${ctx.unit}`, `Quantity: ${qty} ${ctx.unit}s`],
+    findDesc: 'Scale the unit rate.',
+    findQ: `Total cost = ?`,
+    answer: total,
+    unit: '$',
+    isCompare: false,
+    steps: [
+      ['Multiply unit rate × quantity', `$${unitCost.toFixed(2)} × ${qty} = $${total.toFixed(2)}`],
+    ],
+    hint: `Total = unit rate × quantity = $${unitCost.toFixed(2)} × ${qty} = $${total.toFixed(2)}.`,
+  };
+}
+
+function makeTimeToFinish() {
+  const ctx = randItem(contexts.work);
+  const rate = rand(3, 12); // things per hour
+  const hours = rand(2, 8);
+  const total = rate * hours;
+  return {
+    typeLabel: 'Scaling', typeCls: 'scaling',
+    question: `A ${ctx.who} ${ctx.does} <strong>${rate} ${ctx.thing} per hour</strong>. How many ${ctx.thing} will they complete in <strong>${hours} hours</strong>?`,
+    given: [`Rate: ${rate} ${ctx.unit}s/hour`, `Time: ${hours} hours`],
+    findDesc: 'Apply the rate.',
+    findQ: `Total ${ctx.thing} = ?`,
+    answer: total,
+    unit: ctx.unit + 's',
+    isCompare: false,
+    steps: [
+      ['Multiply rate × time', `${rate} × ${hours} = ${total} ${ctx.thing}`],
+    ],
+    hint: `Total = rate × time = ${rate} × ${hours} = ${total} ${ctx.thing}.`,
+  };
+}
+
+// MEDIUM ───────────────────────────────────────────────────────
+
+function makeCompareRates() {
+  const ctx = randItem(contexts.price);
+  // Store A: qa units for $ca
+  // Store B: qb units for $cb  — different unit rates
+  let qa, ca, qb, cb, rateA, rateB;
+  do {
+    qa = rand(2, 8);
+    qb = rand(2, 8);
+    const pricePerUnit = rand(50, 300) / 100;
+    // make rates slightly different
+    rateA = r2(pricePerUnit + rand(-20, 20) / 100);
+    rateB = r2(pricePerUnit + rand(-20, 20) / 100);
+    ca = r2(rateA * qa);
+    cb = r2(rateB * qb);
+  } while (rateA === rateB || ca <= 0 || cb <= 0);
+
+  const cheaperStore = rateA < rateB ? 'Store A' : 'Store B';
+  const cheaperRate  = Math.min(rateA, rateB);
+
+  return {
+    typeLabel: 'Comparing Rates', typeCls: 'comparing',
+    question: `Two stores sell ${ctx.item}:<br>
+      <strong>Store A:</strong> ${qa} ${ctx.unit}s for $${ca.toFixed(2)}<br>
+      <strong>Store B:</strong> ${qb} ${ctx.unit}s for $${cb.toFixed(2)}<br>
+      Which store has the lower unit price? Enter the lower price per ${ctx.unit}.`,
+    given: [
+      `Store A: $${ca.toFixed(2)} for ${qa} ${ctx.unit}s`,
+      `Store B: $${cb.toFixed(2)} for ${qb} ${ctx.unit}s`,
+    ],
+    findDesc: 'Compare unit rates.',
+    findQ: `Lower price per ${ctx.unit} = ?`,
+    answer: cheaperRate,
+    unit: `$/` + ctx.unit,
+    isCompare: false,
+    steps: [
+      ['Store A unit rate', `$${ca.toFixed(2)} ÷ ${qa} = $${rateA.toFixed(2)}/${ctx.unit}`],
+      ['Store B unit rate', `$${cb.toFixed(2)} ÷ ${qb} = $${rateB.toFixed(2)}/${ctx.unit}`],
+      ['Compare', `$${rateA.toFixed(2)} vs $${rateB.toFixed(2)} → ${cheaperStore} is cheaper at $${cheaperRate.toFixed(2)}/${ctx.unit}`],
+    ],
+    hint: `Find each unit rate by dividing cost ÷ quantity. Store A: $${rateA.toFixed(2)}/${ctx.unit}, Store B: $${rateB.toFixed(2)}/${ctx.unit}. Lower = $${cheaperRate.toFixed(2)}.`,
+  };
+}
+
+function makeRateConvert() {
+  // Convert between units: km/h ↔ m/s  OR  $/kg ↔ $/100g
+  const type = Math.random() < 0.5 ? 'speed' : 'price';
+
+  if (type === 'speed') {
+    // km/h to m/s: divide by 3.6
+    const kmh = rand(18, 180);
+    // round nicely: pick multiples of 3.6
+    const clean = [36, 54, 72, 90, 108, 126, 144, 180];
+    const kmhFinal = randItem(clean);
+    const ms = r2(kmhFinal / 3.6);
+    return {
+      typeLabel: 'Unit Conversion', typeCls: 'convert',
+      question: `A car travels at <strong>${kmhFinal} km/h</strong>. What is this speed in <strong>metres per second (m/s)</strong>?`,
+      given: [`Speed: ${kmhFinal} km/h`, `1 km = 1000 m`, `1 hour = 3600 s`],
+      findDesc: 'Convert the rate.',
+      findQ: `Speed in m/s = ?`,
+      answer: ms,
+      unit: 'm/s',
+      isCompare: false,
+      steps: [
+        ['Convert km to m', `${kmhFinal} km/h × 1000 m/km = ${kmhFinal * 1000} m/h`],
+        ['Convert hours to seconds', `${kmhFinal * 1000} m/h ÷ 3600 s/h = ${ms} m/s`],
+        ['Shortcut', `km/h ÷ 3.6 = m/s → ${kmhFinal} ÷ 3.6 = ${ms} m/s`],
+      ],
+      hint: `To convert km/h to m/s, divide by 3.6.  ${kmhFinal} ÷ 3.6 = ${ms} m/s.`,
+    };
+  } else {
+    // $/kg to cents/100g
+    const pkgCents = rand(2, 15) * 10; // e.g. 200, 350 cents/kg
+    const per100g = r2(pkgCents / 10);
+    return {
+      typeLabel: 'Unit Conversion', typeCls: 'convert',
+      question: `A product costs <strong>$${(pkgCents/100).toFixed(2)} per kg</strong>. What is the cost per <strong>100 g</strong>? (in cents)`,
+      given: [`Price: $${(pkgCents/100).toFixed(2)}/kg`, `1 kg = 1000 g`],
+      findDesc: 'Convert to cost per 100 g.',
+      findQ: `Cost per 100 g (¢) = ?`,
+      answer: per100g,
+      unit: '¢',
+      isCompare: false,
+      steps: [
+        ['Convert to cents/g', `${pkgCents}¢ ÷ 1000 g = ${pkgCents/1000}¢/g`],
+        ['Multiply by 100', `${pkgCents/1000}¢/g × 100 = ${per100g}¢ per 100 g`],
+        ['Shortcut', `$/kg ÷ 10 = ¢/100g → ${pkgCents/100} ÷ 10 = ${per100g}¢/100g`],
+      ],
+      hint: `$/kg ÷ 10 = ¢/100 g.  $${(pkgCents/100).toFixed(2)}/kg → ${per100g}¢/100 g.`,
+    };
+  }
+}
+
+function makeProportional() {
+  // If A takes X hours to do Y, how long to do Z?  (proportional reasoning)
+  const ctx = randItem(contexts.work);
+  const rate = rand(3, 15); // units/hour
+  const newTotal = rate * rand(2, 8);
+  const newTime = newTotal / rate;
+  const knownTime = rand(1, 4);
+  const knownTotal = rate * knownTime;
+  return {
+    typeLabel: 'Proportional Rates', typeCls: 'comparing',
+    question: `A ${ctx.who} ${ctx.does} <strong>${knownTotal} ${ctx.thing}</strong> in <strong>${knownTime} hour${knownTime > 1 ? 's' : ''}</strong>. At the same rate, how long (in hours) to complete <strong>${newTotal} ${ctx.thing}</strong>?`,
+    given: [
+      `${knownTotal} ${ctx.thing} in ${knownTime} hr${knownTime > 1 ? 's' : ''}`,
+      `Find time for ${newTotal} ${ctx.thing}`,
+    ],
+    findDesc: 'Use proportional reasoning.',
+    findQ: `Time for ${newTotal} ${ctx.thing} = ?`,
+    answer: r2(newTime),
+    unit: 'hours',
+    isCompare: false,
+    steps: [
+      ['Find unit rate', `${knownTotal} ÷ ${knownTime} = ${rate} ${ctx.unit}s/hour`],
+      ['Divide total by rate', `${newTotal} ÷ ${rate} = ${r2(newTime)} hours`],
+    ],
+    hint: `Rate = ${knownTotal} ÷ ${knownTime} = ${rate}/hr. Time = ${newTotal} ÷ ${rate} = ${r2(newTime)} hrs.`,
+  };
+}
+
+// HARD ─────────────────────────────────────────────────────────
+
+function makeBestBuy() {
+  // Three options: find best value per unit
+  const ctx = randItem(contexts.price);
+  let options, rates;
+  do {
+    const baseRate = rand(80, 250) / 100;
+    options = [
+      { label: 'Small',  qty: rand(1, 3),      price: null },
+      { label: 'Medium', qty: rand(4, 7),      price: null },
+      { label: 'Large',  qty: rand(8, 15),     price: null },
+    ];
+    // slight discounts for bigger packs — but not always!
+    options[0].price = r2(options[0].qty * (baseRate + rand(5, 20) / 100));
+    options[1].price = r2(options[1].qty * (baseRate + rand(-5, 15) / 100));
+    options[2].price = r2(options[2].qty * (baseRate + rand(-15, 5) / 100));
+    rates = options.map(o => r2(o.price / o.qty));
+  } while (new Set(rates).size < 3); // ensure 3 distinct rates
+
+  const bestIdx = rates.indexOf(Math.min(...rates));
+  const bestRate = rates[bestIdx];
+  const bestLabel = options[bestIdx].label;
+
+  return {
+    typeLabel: 'Best Buy', typeCls: 'best-buy',
+    question: `Three sizes of ${ctx.item} are available:<br>
+      <strong>Small:</strong> ${options[0].qty} ${ctx.unit}${options[0].qty > 1 ? 's' : ''} for $${options[0].price.toFixed(2)}<br>
+      <strong>Medium:</strong> ${options[1].qty} ${ctx.unit}${options[1].qty > 1 ? 's' : ''} for $${options[1].price.toFixed(2)}<br>
+      <strong>Large:</strong> ${options[2].qty} ${ctx.unit}${options[2].qty > 1 ? 's' : ''} for $${options[2].price.toFixed(2)}<br>
+      Enter the <strong>lowest unit price</strong> ($/` + ctx.unit + `).`,
+    given: options.map(o => `${o.label}: $${o.price.toFixed(2)} / ${o.qty} ${ctx.unit}${o.qty > 1 ? 's' : ''}`),
+    findDesc: 'Find the best value.',
+    findQ: `Lowest $/` + ctx.unit + ` = ?`,
+    answer: bestRate,
+    unit: `$/` + ctx.unit,
+    isCompare: false,
+    steps: options.map((o, i) => [
+      `${o.label} unit rate`,
+      `$${o.price.toFixed(2)} ÷ ${o.qty} = $${rates[i].toFixed(2)}/${ctx.unit}` + (i === bestIdx ? ' ✓ best' : ''),
+    ]),
+    hint: `Unit rates: Small $${rates[0].toFixed(2)}, Medium $${rates[1].toFixed(2)}, Large $${rates[2].toFixed(2)}. Best = ${bestLabel} at $${bestRate.toFixed(2)}/${ctx.unit}.`,
+  };
+}
+
+function makeCombinedRate() {
+  // Two workers with different rates working together: total items in T hours
+  const ctx = randItem(contexts.work);
+  const rateA = rand(3, 10);
+  const rateB = rand(3, 10);
+  const hours = rand(2, 6);
+  const total = (rateA + rateB) * hours;
+  return {
+    typeLabel: 'Combined Rates', typeCls: 'mixed',
+    question: `Worker A ${ctx.does} <strong>${rateA} ${ctx.thing} per hour</strong>. Worker B ${ctx.does} <strong>${rateB} ${ctx.thing} per hour</strong>. Working together, how many ${ctx.thing} do they complete in <strong>${hours} hours</strong>?`,
+    given: [
+      `Worker A: ${rateA} ${ctx.unit}s/hour`,
+      `Worker B: ${rateB} ${ctx.unit}s/hour`,
+      `Time: ${hours} hours`,
+    ],
+    findDesc: 'Combine the rates.',
+    findQ: `Total ${ctx.thing} in ${hours} hrs = ?`,
+    answer: total,
+    unit: ctx.thing,
+    isCompare: false,
+    steps: [
+      ['Add rates', `${rateA} + ${rateB} = ${rateA + rateB} ${ctx.unit}s/hour`],
+      ['Multiply by time', `${rateA + rateB} × ${hours} = ${total} ${ctx.thing}`],
+    ],
+    hint: `Combined rate = ${rateA} + ${rateB} = ${rateA + rateB}/hr. Total = ${rateA + rateB} × ${hours} = ${total}.`,
+  };
+}
+
+function makeTimeToMeet() {
+  // Two travellers moving toward/away from each other
+  const ctx = randItem(contexts.speed);
+  const sA = rand(40, 100);
+  const sB = rand(30, 90);
+  const type = Math.random() < 0.5 ? 'toward' : 'away';
+  if (type === 'toward') {
+    const dist = (sA + sB) * rand(1, 4);
+    const time = r2(dist / (sA + sB));
+    return {
+      typeLabel: 'Relative Rates', typeCls: 'mixed',
+      question: `Two trains start <strong>${dist} km apart</strong> and travel <strong>toward each other</strong>. Train A travels at <strong>${sA} km/h</strong> and Train B at <strong>${sB} km/h</strong>. How many hours until they meet?`,
+      given: [`Distance apart: ${dist} km`, `Train A: ${sA} km/h`, `Train B: ${sB} km/h`],
+      findDesc: 'Find time to meeting.',
+      findQ: `Time to meet (hours) = ?`,
+      answer: time,
+      unit: 'hours',
+      isCompare: false,
+      steps: [
+        ['Combined closing speed', `${sA} + ${sB} = ${sA + sB} km/h`],
+        ['Time = distance ÷ speed', `${dist} ÷ ${sA + sB} = ${time} hours`],
+      ],
+      hint: `Closing speed = ${sA} + ${sB} = ${sA + sB} km/h. Time = ${dist} ÷ ${sA + sB} = ${time} hrs.`,
+    };
+  } else {
+    const time = rand(2, 5);
+    const dist = r2((sA + sB) * time);
+    return {
+      typeLabel: 'Relative Rates', typeCls: 'mixed',
+      question: `Two cyclists start at the same point and ride <strong>in opposite directions</strong>. Cyclist A rides at <strong>${sA} km/h</strong> and Cyclist B at <strong>${sB} km/h</strong>. How far apart are they after <strong>${time} hours</strong>?`,
+      given: [`Cyclist A: ${sA} km/h`, `Cyclist B: ${sB} km/h`, `Time: ${time} hours`],
+      findDesc: 'Find total separation.',
+      findQ: `Distance apart (km) = ?`,
+      answer: dist,
+      unit: 'km',
+      isCompare: false,
+      steps: [
+        ['Combined speed', `${sA} + ${sB} = ${sA + sB} km/h`],
+        ['Distance = speed × time', `${sA + sB} × ${time} = ${dist} km`],
+      ],
+      hint: `Total speed = ${sA} + ${sB} = ${sA + sB} km/h. Distance = ${sA + sB} × ${time} = ${dist} km.`,
+    };
+  }
+}
+
+function makeExchangeRate() {
+  // Currency conversion at a given rate
+  const pairs = [
+    { from: 'USD', to: 'CAD', rate: r2(rand(125, 140) / 100) },
+    { from: 'GBP', to: 'USD', rate: r2(rand(120, 135) / 100) },
+    { from: 'EUR', to: 'USD', rate: r2(rand(100, 115) / 100) },
+    { from: 'AUD', to: 'USD', rate: r2(rand(60, 75) / 100) },
+    { from: 'USD', to: 'MXN', rate: r2(rand(1650, 1800) / 100) },
+  ];
+  const pair = randItem(pairs);
+  const amount = rand(5, 50) * 10; // nice multiples
+  const converted = r2(amount * pair.rate);
+  const reverse = Math.random() < 0.4; // sometimes ask the reverse
+  if (!reverse) {
+    return {
+      typeLabel: 'Unit Conversion', typeCls: 'convert',
+      question: `The exchange rate is <strong>1 ${pair.from} = ${pair.rate} ${pair.to}</strong>. How much is <strong>${amount} ${pair.from}</strong> in ${pair.to}?`,
+      given: [`Rate: 1 ${pair.from} = ${pair.rate} ${pair.to}`, `Amount: ${amount} ${pair.from}`],
+      findDesc: 'Apply the exchange rate.',
+      findQ: `${amount} ${pair.from} = ? ${pair.to}`,
+      answer: converted,
+      unit: pair.to,
+      isCompare: false,
+      steps: [
+        ['Multiply by rate', `${amount} × ${pair.rate} = ${converted} ${pair.to}`],
+      ],
+      hint: `Multiply by exchange rate: ${amount} × ${pair.rate} = ${converted} ${pair.to}.`,
+    };
+  } else {
+    const revAmount = rand(3, 30) * 10;
+    const revConverted = r2(revAmount / pair.rate);
+    return {
+      typeLabel: 'Unit Conversion', typeCls: 'convert',
+      question: `The exchange rate is <strong>1 ${pair.from} = ${pair.rate} ${pair.to}</strong>. How much is <strong>${revAmount} ${pair.to}</strong> in ${pair.from}?`,
+      given: [`Rate: 1 ${pair.from} = ${pair.rate} ${pair.to}`, `Amount: ${revAmount} ${pair.to}`],
+      findDesc: 'Apply the exchange rate (reverse).',
+      findQ: `${revAmount} ${pair.to} = ? ${pair.from}`,
+      answer: revConverted,
+      unit: pair.from,
+      isCompare: false,
+      steps: [
+        ['Divide by rate', `${revAmount} ÷ ${pair.rate} = ${revConverted} ${pair.from}`],
+      ],
+      hint: `Divide by exchange rate: ${revAmount} ÷ ${pair.rate} = ${revConverted} ${pair.from}.`,
+    };
+  }
+}
+
+// ── Make problem dispatcher ────────────────────────────────────
+function makeProblem() {
+  let p;
+  if (difficulty === 'easy') {
+    p = randItem([makeUnitRate, makeUnitRate, makeScaleUp, makeTimeToFinish])();
+  } else if (difficulty === 'medium') {
+    p = randItem([makeCompareRates, makeRateConvert, makeProportional, makeExchangeRate])();
+  } else {
+    p = randItem([makeBestBuy, makeCombinedRate, makeTimeToMeet, makeExchangeRate])();
+  }
+  p.difficulty = difficulty;
+  return p;
+}
+
+// ── Difficulty ─────────────────────────────────────────────────
+function setDiff(d) {
+  difficulty = d;
+  ['easy','medium','hard'].forEach(x => {
+    const key = 'd' + x.charAt(0).toUpperCase() + x.slice(1);
+    document.getElementById(key).classList.toggle('active', x === d);
+  });
+  newProblem();
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function updatePanel() {
+  const badge = document.getElementById('typeBadge');
+  badge.textContent = prob.typeLabel;
+  badge.className   = 'type-badge ' + (prob.typeCls || '');
+
+  document.getElementById('questionText').innerHTML = prob.question;
+  document.getElementById('rateDisplay').innerHTML  = '';
+
+  const given = document.getElementById('givenDims');
+  given.innerHTML = prob.given.map(g =>
+    `<div>${g.replace(/(\$[\d.,]+|[\d.,]+\s*(km\/h|m\/s|kg|litre|hr|min|hours?|¢|units?))/g,
+    '<span class="val">$1</span>')}</div>`
+  ).join('');
+
+  document.getElementById('findDesc').textContent    = prob.findDesc;
+  document.getElementById('findQuestion').textContent = prob.findQ;
+  document.getElementById('inputNote').textContent   = `Answer in ${prob.unit}. Round to 2 decimal places if needed.`;
+}
+
+// ── New problem ────────────────────────────────────────────────
+function newProblem() {
+  prob = makeProblem();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('hintText').className = 'hint-text';
+  document.getElementById('hintText').textContent = '';
+  document.getElementById('stepsBox').className = 'steps-box';
+  document.getElementById('stepsBox').innerHTML = '';
+  updatePanel();
+  document.getElementById('answerInput').focus();
+}
+
+// ── Check ──────────────────────────────────────────────────────
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function checkAnswer() {
+  if (answered) return;
+  const raw = document.getElementById('answerInput').value.trim();
+  if (!raw) { showFeedback('partial', 'Enter your answer first.'); return; }
+
+  const userVal = parseFloat(raw);
+  if (isNaN(userVal)) { showFeedback('partial', 'Please enter a number.'); return; }
+
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+
+  const diff = Math.abs(userVal - prob.answer);
+  const tol  = Math.max(0.02 * Math.abs(prob.answer), 0.02); // 2% or 0.02 absolute
+
+  if (diff <= tol) {
+    correct++; streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent  = streak;
+    const msg = streak >= 3
+      ? `🔥 ${streak} in a row! Answer: ${prob.answer} ${prob.unit}`
+      : `✓ Correct! Answer: ${prob.answer} ${prob.unit}`;
+    showFeedback('correct', msg);
+    answered = true;
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    if (Math.abs(userVal - prob.answer) / Math.abs(prob.answer) < 0.2) {
+      showFeedback('partial', `Close! Double-check your arithmetic or rounding.`);
+    } else {
+      showFeedback('wrong', `Not quite. Try the hint for a step-by-step solution.`);
+    }
+  }
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+// ── Hint ───────────────────────────────────────────────────────
+function toggleHint() {
+  const hint  = document.getElementById('hintText');
+  const steps = document.getElementById('stepsBox');
+  if (hint.classList.contains('show')) {
+    hint.classList.remove('show');
+    steps.classList.remove('show');
+    return;
+  }
+  let html = '<strong style="font-style:normal;color:var(--accent2);font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;">Solution</strong><br>';
+  prob.steps.forEach(([label, expr], i) => {
+    html += `<span class="step-label">Step ${i+1}: ${label}</span><br>`;
+    html += `<span class="step-line">&nbsp;&nbsp;${expr}</span><br>`;
+  });
+  steps.innerHTML = html;
+  steps.classList.add('show');
+  hint.textContent = `Hint: ${prob.hint}`;
+  hint.classList.add('show');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+newProblem();
+</script>
+</body>
+</html>
