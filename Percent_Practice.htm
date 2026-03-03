@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Percent Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #f0edf8;
+    --paper:   #faf8fe;
+    --ink:     #1a1520;
+    --muted:   #7060a0;
+    --border:  #c4b8e8;
+    --accent:  #6c3fcf;
+    --accent2: #3d1a8a;
+    --green:   #2e7d32;
+    --red:     #c0392b;
+    --orange:  #a05c00;
+    --shadow:  rgba(60,30,120,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(108,63,207,0.08) 27px, rgba(108,63,207,0.08) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(108,63,207,0.05) 27px, rgba(108,63,207,0.05) 28px);
+  }
+
+  header { text-align: center; margin-bottom: 0.7rem; }
+  header h1 { font-size: clamp(1.3rem, 3vw, 1.9rem); font-weight: 700; color: var(--ink); letter-spacing: -0.5px; }
+  header p  { color: var(--muted); font-size: 0.82rem; font-style: italic; margin-top: 0.15rem; }
+
+  .card {
+    background: var(--paper); border: 1px solid var(--border); border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.4rem 1.8rem; width: 100%; max-width: 900px;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  .top-row { display: flex; flex-direction: row; gap: 1.2rem; align-items: stretch; }
+
+  /* ── Left question panel ── */
+  .question-panel {
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column; justify-content: center;
+    background: #f4f0fc; border: 1px solid var(--border); border-radius: 4px;
+    min-height: 320px; padding: 1.6rem 1.4rem; gap: 1.1rem;
+  }
+
+  .type-badge {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: white; background: var(--accent);
+    border-radius: 3px; padding: 0.18rem 0.55rem; align-self: flex-start;
+  }
+  .type-badge.percent-of   { background: #6c3fcf; }
+  .type-badge.find-percent { background: #8e24aa; }
+  .type-badge.find-whole   { background: #6a1099; }
+  .type-badge.discount     { background: #00695c; }
+  .type-badge.tax-tip      { background: #1565c0; }
+  .type-badge.increase     { background: #2e7d32; }
+  .type-badge.decrease     { background: #c62828; }
+  .type-badge.find-change  { background: #37474f; }
+
+  .question-text { font-size: 1.05rem; color: var(--ink); line-height: 1.8; }
+  .question-text strong { font-weight: 700; color: var(--accent2); font-family: 'DM Mono', monospace; font-size: 0.97em; }
+
+  /* Percent bar visual */
+  .pct-bar-wrap { width: 100%; }
+  .pct-bar-track {
+    width: 100%; height: 26px; background: #e0d8f0;
+    border-radius: 4px; overflow: hidden; position: relative;
+  }
+  .pct-bar-fill {
+    height: 100%; border-radius: 4px 0 0 4px;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 8px;
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    font-weight: 700; color: white;
+    transition: width 0.4s ease;
+    min-width: 4px;
+  }
+  .pct-bar-labels {
+    display: flex; justify-content: space-between;
+    font-size: 0.7rem; color: var(--muted); margin-top: 3px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .steps-box {
+    width: 100%; background: rgba(108,63,207,0.06);
+    border: 1px solid rgba(108,63,207,0.22); border-radius: 4px;
+    padding: 0.7rem 0.9rem; font-size: 0.82rem; color: var(--ink);
+    line-height: 1.8; font-style: italic; display: none;
+  }
+  .steps-box.show { display: block; }
+  .steps-box .step-line { font-family: 'DM Mono', monospace; font-style: normal; font-size: 0.85rem; }
+  .steps-box .step-label { color: var(--accent2); font-weight: 700; font-style: normal; }
+
+  /* ── Right info panel ── */
+  .info-panel { flex: 0 0 240px; display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .given-box {
+    background: rgba(108,63,207,0.07); border: 1.5px solid rgba(108,63,207,0.3);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .given-box h3 {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent); margin-bottom: 0.4rem;
+  }
+  .given-item { font-size: 0.88rem; color: var(--ink); line-height: 1.75; }
+  .given-item .val { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--accent2); }
+
+  .find-box {
+    background: rgba(61,26,138,0.06); border: 1.5px solid rgba(61,26,138,0.28);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .find-box h3 {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent2); margin-bottom: 0.4rem;
+  }
+  .find-box p { font-size: 0.92rem; color: var(--ink); font-style: italic; }
+  .find-box .find-question {
+    font-style: normal; font-size: 0.88rem; color: var(--accent2);
+    font-weight: 700; margin-top: 0.35rem; line-height: 1.5;
+  }
+
+  .answer-row { display: flex; gap: 0.7rem; align-items: flex-start; }
+  .answer-wrap { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+
+  input[type="text"] {
+    width: 100%; background: white; border: 1.5px solid var(--border);
+    border-radius: 4px; padding: 0.6rem 0.9rem;
+    font-size: 1.1rem; font-family: 'DM Mono', monospace;
+    color: var(--ink); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,63,207,0.14);
+  }
+  .input-note { font-size: 0.7rem; color: var(--muted); font-style: italic; }
+
+  .btn-row { display: flex; gap: 0.6rem; }
+  button {
+    flex: 1; border: none; border-radius: 4px; padding: 0.65rem 1rem;
+    font-family: 'Libre Baskerville', serif; font-size: 0.88rem;
+    font-weight: 700; cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-check { background: var(--accent2); color: white; box-shadow: 2px 2px 0 rgba(61,26,138,0.4); }
+  .btn-check:hover { filter: brightness(1.2); }
+  .btn-new { background: var(--paper); color: var(--ink); border: 1.5px solid var(--border); box-shadow: 2px 2px 0 var(--border); }
+  .btn-new:hover { background: var(--bg); }
+
+  .hint-btn {
+    width: 100%; background: transparent; border: 1px dashed var(--border);
+    color: var(--muted); font-size: 0.78rem; padding: 0.42rem; border-radius: 4px;
+    font-family: 'Libre Baskerville', serif; font-style: italic; cursor: pointer;
+  }
+  .hint-btn:hover { border-color: var(--accent); color: var(--ink); }
+
+  .hint-text {
+    display: none; background: rgba(108,63,207,0.06);
+    border: 1px solid rgba(108,63,207,0.25); border-radius: 4px;
+    padding: 0.6rem 0.8rem; font-size: 0.82rem; color: #2d1660;
+    line-height: 1.7; font-style: italic;
+  }
+  .hint-text.show { display: block; }
+
+  .feedback {
+    border-radius: 4px; padding: 0.55rem 0.9rem; font-size: 0.88rem;
+    font-weight: 700; text-align: center; min-height: 2rem;
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .feedback.correct { background: rgba(46,125,50,0.1); border: 1.5px solid rgba(46,125,50,0.4); color: var(--green); }
+  .feedback.wrong   { background: rgba(192,57,43,0.08); border: 1.5px solid rgba(192,57,43,0.3); color: var(--red); }
+  .feedback.partial { background: rgba(160,92,0,0.08); border: 1.5px solid rgba(160,92,0,0.3); color: var(--orange); }
+
+  .stats-row { display: flex; gap: 1rem; justify-content: center; border-top: 1px solid var(--border); padding-top: 0.7rem; }
+  .stat { text-align: center; font-size: 0.75rem; color: var(--muted); }
+  .stat strong { display: block; font-size: 1.1rem; color: var(--ink); font-family: 'DM Mono', monospace; }
+
+  .difficulty-row { display: flex; gap: 0.5rem; align-items: center; font-size: 0.78rem; color: var(--muted); font-style: italic; }
+  .diff-btn {
+    flex: none; padding: 0.3rem 0.7rem; font-size: 0.75rem; font-weight: 700;
+    border-radius: 3px; border: 1.5px solid var(--border); background: var(--paper);
+    color: var(--muted); cursor: pointer; font-family: 'Libre Baskerville', serif; transition: all 0.15s;
+  }
+  .diff-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .diff-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Percents</h1>
+  <p>Percent of a number, discounts, tax, tips, and percent change.</p>
+</header>
+
+<div class="card">
+  <div class="difficulty-row">
+    Difficulty:
+    <button class="diff-btn active" id="dEasy"   onclick="setDiff('easy')">Easy</button>
+    <button class="diff-btn"        id="dMedium" onclick="setDiff('medium')">Medium</button>
+    <button class="diff-btn"        id="dHard"   onclick="setDiff('hard')">Hard</button>
+  </div>
+
+  <div class="top-row">
+    <div class="question-panel">
+      <div class="type-badge" id="typeBadge">Percent of a Number</div>
+      <div class="question-text" id="questionText">—</div>
+      <div id="pctVis"></div>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+
+    <div class="info-panel">
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Find</h3>
+        <p id="findDesc">—</p>
+        <div class="find-question" id="findQuestion"></div>
+      </div>
+      <div class="answer-row">
+        <div class="answer-wrap">
+          <input type="text" id="answerInput" placeholder="e.g. 25" onkeydown="handleKey(event)" autocomplete="off">
+          <span class="input-note" id="inputNote">Round to 2 decimal places if needed.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new"   onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show solution</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback"   id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let prob = {};
+let attempts = 0, correct = 0, streak = 0;
+let answered = false;
+let difficulty = 'easy';
+
+// ── Helpers ────────────────────────────────────────────────────
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randItem(arr)  { return arr[Math.floor(Math.random() * arr.length)]; }
+function r2(x)          { return Math.round(x * 100) / 100; }
+function r1(x)          { return Math.round(x * 10) / 10; }
+function pctOf(pct, whole) { return r2(pct / 100 * whole); }
+function fmt$(n)        { return '$' + r2(n).toFixed(2); }
+
+// Nice "round-friendly" percent list
+const easyPcts  = [5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 80];
+const medPcts   = [5, 8, 12, 15, 17.5, 20, 22, 25, 30, 35, 40, 45, 60, 65, 70, 75];
+const hardPcts  = [6, 7.5, 8.5, 12.5, 13, 17, 22.5, 33, 37.5, 42, 55, 62.5, 67, 72.5, 85, 87.5];
+
+// Context pools
+const storeItems = [
+  { item: 'jacket',      base: () => rand(40,200) * 5 },
+  { item: 'laptop',      base: () => rand(400,1200) },
+  { item: 'sneakers',    base: () => rand(60,200)   },
+  { item: 'backpack',    base: () => rand(30,120)   },
+  { item: 'headphones',  base: () => rand(50,300)   },
+  { item: 'watch',       base: () => rand(80,500)   },
+  { item: 'dress',       base: () => rand(40,180)   },
+  { item: 'bike',        base: () => rand(200,800)  },
+  { item: 'tablet',      base: () => rand(150,600)  },
+  { item: 'camera',      base: () => rand(200,900)  },
+];
+
+const restaurants = ['pizza', 'burger', 'sushi', 'pasta', 'steak', 'tacos'];
+const taxLocales  = [
+  { place: 'Ontario',   rate: 13 },
+  { place: 'Alberta',   rate: 5  },
+  { place: 'BC',        rate: 12 },
+  { place: 'California',rate: 8.25 },
+  { place: 'New York',  rate: 8.875 },
+  { place: 'Texas',     rate: 8.25 },
+];
+
+const popContexts = [
+  { thing: 'town',       unit: 'residents' },
+  { thing: 'school',     unit: 'students'  },
+  { thing: 'company',    unit: 'employees' },
+  { thing: 'city',       unit: 'people'    },
+];
+const priceContexts = [
+  { thing: 'house',    unit: '$' },
+  { thing: 'car',      unit: '$' },
+  { thing: 'salary',   unit: '$' },
+  { thing: 'rent',     unit: '$' },
+  { thing: 'stock',    unit: '$' },
+];
+
+// ══════════════════════════════════════════════════════════════
+// EASY
+// ══════════════════════════════════════════════════════════════
+
+function makePercentOf() {
+  // What is X% of Y?
+  const pct = randItem(easyPcts);
+  // pick a whole that gives a clean answer
+  const wholes = [20,40,50,60,80,100,120,150,160,200,240,250,300,400,500];
+  const whole = randItem(wholes);
+  const ans = pctOf(pct, whole);
+  return {
+    typeLabel: 'Percent of a Number', typeCls: 'percent-of',
+    question: `What is <strong>${pct}%</strong> of <strong>${whole}</strong>?`,
+    given: [`Percent: ${pct}%`, `Whole: ${whole}`],
+    findDesc: 'Find the percent of the number.',
+    findQ: `${pct}% of ${whole} = ?`,
+    answerVal: ans, unit: '',
+    inputNote: 'Enter a number.',
+    vis: { pct, label: `${pct}% of ${whole}` },
+    steps: [
+      ['Convert percent to decimal', `${pct}% = ${pct}/100 = ${pct/100}`],
+      ['Multiply by the whole', `${pct/100} × ${whole} = ${ans}`],
+    ],
+    hint: `${pct}% = ${pct/100}. Multiply: ${pct/100} × ${whole} = ${ans}.`,
+  };
+}
+
+function makeFindPercent() {
+  // X is what percent of Y?
+  const pct = randItem(easyPcts);
+  const wholes = [20,40,50,80,100,120,160,200,250,400,500];
+  const whole = randItem(wholes);
+  const part  = r2(pct/100 * whole);
+  return {
+    typeLabel: 'Find the Percent', typeCls: 'find-percent',
+    question: `<strong>${part}</strong> is what percent of <strong>${whole}</strong>?`,
+    given: [`Part: ${part}`, `Whole: ${whole}`],
+    findDesc: 'Find the percent.',
+    findQ: `Percent = ?`,
+    answerVal: pct, unit: '%',
+    inputNote: 'Enter a number (e.g. 25 for 25%).',
+    vis: { pct, label: `${part} out of ${whole}` },
+    steps: [
+      ['Divide part by whole', `${part} ÷ ${whole} = ${r2(part/whole)}`],
+      ['Multiply by 100', `${r2(part/whole)} × 100 = ${pct}%`],
+    ],
+    hint: `Percent = (part ÷ whole) × 100 = (${part} ÷ ${whole}) × 100 = ${pct}%.`,
+  };
+}
+
+function makeFindWhole() {
+  // X is Y% of what?
+  const pct = randItem(easyPcts);
+  const wholes = [40,50,80,100,120,160,200,240,250,400,500];
+  const whole = randItem(wholes);
+  const part  = r2(pct/100 * whole);
+  return {
+    typeLabel: 'Find the Whole', typeCls: 'find-whole',
+    question: `<strong>${part}</strong> is <strong>${pct}%</strong> of what number?`,
+    given: [`Part: ${part}`, `Percent: ${pct}%`],
+    findDesc: 'Find the original whole.',
+    findQ: `Whole = ?`,
+    answerVal: whole, unit: '',
+    inputNote: 'Enter a number.',
+    vis: { pct, label: `${part} is ${pct}%` },
+    steps: [
+      ['Divide part by percent (as decimal)', `${part} ÷ ${pct/100} = ${whole}`],
+      ['Or: whole = part × (100/percent)', `${part} × ${100/pct} = ${whole}`],
+    ],
+    hint: `Whole = part ÷ (percent/100) = ${part} ÷ ${pct/100} = ${whole}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// MEDIUM
+// ══════════════════════════════════════════════════════════════
+
+function makeDiscount() {
+  const ctx = randItem(storeItems);
+  const orig = ctx.base();
+  const pct  = randItem(medPcts.filter(p => p <= 70));
+  const saving  = pctOf(pct, orig);
+  const salePrice = r2(orig - saving);
+  const askSale = Math.random() < 0.6;
+  return {
+    typeLabel: 'Discount', typeCls: 'discount',
+    question: askSale
+      ? `A ${ctx.item} originally costs <strong>${fmt$(orig)}</strong>. It is on sale for <strong>${pct}% off</strong>. What is the sale price?`
+      : `A ${ctx.item} originally costs <strong>${fmt$(orig)}</strong>. There is a <strong>${pct}% discount</strong>. How much do you save?`,
+    given: [`Original price: ${fmt$(orig)}`, `Discount: ${pct}%`],
+    findDesc: askSale ? 'Find the sale price.' : 'Find the savings.',
+    findQ: askSale ? 'Sale price = ?' : 'Savings = ?',
+    answerVal: askSale ? salePrice : saving,
+    unit: '$',
+    inputNote: 'Enter amount in dollars (e.g. 24.50).',
+    vis: { pct, label: `${pct}% off ${fmt$(orig)}` },
+    steps: askSale ? [
+      ['Find discount amount', `${pct}% × ${fmt$(orig)} = ${fmt$(saving)}`],
+      ['Subtract from original', `${fmt$(orig)} − ${fmt$(saving)} = ${fmt$(salePrice)}`],
+    ] : [
+      ['Find discount amount', `${pct}% × ${fmt$(orig)} = ${fmt$(saving)}`],
+    ],
+    hint: askSale
+      ? `Discount = ${pct}% × ${fmt$(orig)} = ${fmt$(saving)}. Sale price = ${fmt$(orig)} − ${fmt$(saving)} = ${fmt$(salePrice)}.`
+      : `Savings = ${pct}% × ${fmt$(orig)} = ${fmt$(saving)}.`,
+  };
+}
+
+function makeTaxTip() {
+  const isTip = Math.random() < 0.5;
+  if (isTip) {
+    const food = randItem(restaurants);
+    const bill = rand(15, 120) * 1 + rand(0,99)/100;
+    const billR = r2(Math.round(bill * 100) / 100);
+    const pct   = randItem([10, 15, 18, 20, 22]);
+    const tip   = r2(billR * pct / 100);
+    const total = r2(billR + tip);
+    const askTotal = Math.random() < 0.5;
+    return {
+      typeLabel: 'Tip', typeCls: 'tax-tip',
+      question: askTotal
+        ? `A ${food} dinner bill is <strong>${fmt$(billR)}</strong>. You leave a <strong>${pct}% tip</strong>. What is the total amount paid?`
+        : `A ${food} dinner bill is <strong>${fmt$(billR)}</strong>. You leave a <strong>${pct}% tip</strong>. How much is the tip?`,
+      given: [`Bill: ${fmt$(billR)}`, `Tip rate: ${pct}%`],
+      findDesc: askTotal ? 'Find total including tip.' : 'Find the tip amount.',
+      findQ: askTotal ? 'Total paid = ?' : 'Tip amount = ?',
+      answerVal: askTotal ? total : tip,
+      unit: '$',
+      inputNote: 'Enter amount in dollars.',
+      vis: { pct, label: `${pct}% tip on ${fmt$(billR)}` },
+      steps: askTotal ? [
+        ['Calculate tip', `${pct}% × ${fmt$(billR)} = ${fmt$(tip)}`],
+        ['Add to bill', `${fmt$(billR)} + ${fmt$(tip)} = ${fmt$(total)}`],
+      ] : [
+        ['Calculate tip', `${pct}% × ${fmt$(billR)} = ${fmt$(tip)}`],
+      ],
+      hint: askTotal
+        ? `Tip = ${pct}% × ${fmt$(billR)} = ${fmt$(tip)}. Total = ${fmt$(billR)} + ${fmt$(tip)} = ${fmt$(total)}.`
+        : `Tip = ${pct}% × ${fmt$(billR)} = ${fmt$(tip)}.`,
+    };
+  } else {
+    const locale = randItem(taxLocales);
+    const item   = randItem(storeItems);
+    const pre    = item.base();
+    const tax    = r2(pre * locale.rate / 100);
+    const total  = r2(pre + tax);
+    const askTotal = Math.random() < 0.5;
+    return {
+      typeLabel: 'Sales Tax', typeCls: 'tax-tip',
+      question: askTotal
+        ? `A ${item.item} costs <strong>${fmt$(pre)}</strong> before tax. The tax rate in ${locale.place} is <strong>${locale.rate}%</strong>. What is the total price including tax?`
+        : `A ${item.item} costs <strong>${fmt$(pre)}</strong> before tax. The tax rate is <strong>${locale.rate}%</strong>. How much tax is charged?`,
+      given: [`Pre-tax price: ${fmt$(pre)}`, `Tax rate: ${locale.rate}%`],
+      findDesc: askTotal ? 'Find total with tax.' : 'Find the tax amount.',
+      findQ: askTotal ? 'Total price = ?' : 'Tax amount = ?',
+      answerVal: askTotal ? total : tax,
+      unit: '$',
+      inputNote: 'Enter amount in dollars.',
+      vis: { pct: locale.rate, label: `${locale.rate}% tax on ${fmt$(pre)}` },
+      steps: askTotal ? [
+        ['Calculate tax', `${locale.rate}% × ${fmt$(pre)} = ${fmt$(tax)}`],
+        ['Add to price', `${fmt$(pre)} + ${fmt$(tax)} = ${fmt$(total)}`],
+      ] : [
+        ['Calculate tax', `${locale.rate}% × ${fmt$(pre)} = ${fmt$(tax)}`],
+      ],
+      hint: askTotal
+        ? `Tax = ${locale.rate}% × ${fmt$(pre)} = ${fmt$(tax)}. Total = ${fmt$(pre)} + ${fmt$(tax)} = ${fmt$(total)}.`
+        : `Tax = ${locale.rate}% × ${fmt$(pre)} = ${fmt$(tax)}.`,
+    };
+  }
+}
+
+function makePercentIncrease() {
+  const ctx = randItem([...popContexts, ...priceContexts]);
+  const pct  = randItem(medPcts);
+  const orig = rand(200, 2000) * (ctx.unit === '$' ? 10 : 1);
+  const change = r2(pct/100 * orig);
+  const newVal = r2(orig + change);
+  return {
+    typeLabel: 'Percent Increase', typeCls: 'increase',
+    question: `A ${ctx.thing} has <strong>${orig} ${ctx.unit !== '$' ? ctx.unit : ''}</strong>${ctx.unit === '$' ? ' value of $' + orig : ''}. It increases by <strong>${pct}%</strong>. What is the new value?`.replace('  ', ' '),
+    given: [`Original: ${ctx.unit === '$' ? fmt$(orig) : orig + ' ' + ctx.unit}`, `Increase: ${pct}%`],
+    findDesc: 'Find the new value after increase.',
+    findQ: 'New value = ?',
+    answerVal: newVal,
+    unit: ctx.unit === '$' ? '$' : ctx.unit,
+    inputNote: ctx.unit === '$' ? 'Enter amount in dollars.' : 'Enter a number.',
+    vis: { pct, label: `+${pct}%`, isIncrease: true },
+    steps: [
+      ['Find increase amount', `${pct}% × ${orig} = ${change}`],
+      ['Add to original', `${orig} + ${change} = ${newVal}`],
+      ['Or multiply directly', `${orig} × ${1 + pct/100} = ${newVal}`],
+    ],
+    hint: `Increase = ${pct}% × ${orig} = ${change}. New value = ${orig} + ${change} = ${newVal}.`,
+  };
+}
+
+function makePercentDecrease() {
+  const ctx = randItem([...popContexts, ...priceContexts]);
+  const pct  = randItem(medPcts.filter(p => p < 80));
+  const orig = rand(200, 2000) * (ctx.unit === '$' ? 5 : 1);
+  const change = r2(pct/100 * orig);
+  const newVal = r2(orig - change);
+  return {
+    typeLabel: 'Percent Decrease', typeCls: 'decrease',
+    question: `A ${ctx.thing} has <strong>${ctx.unit === '$' ? fmt$(orig) : orig + ' ' + ctx.unit}</strong>. It decreases by <strong>${pct}%</strong>. What is the new value?`,
+    given: [`Original: ${ctx.unit === '$' ? fmt$(orig) : orig + ' ' + ctx.unit}`, `Decrease: ${pct}%`],
+    findDesc: 'Find the new value after decrease.',
+    findQ: 'New value = ?',
+    answerVal: newVal,
+    unit: ctx.unit === '$' ? '$' : ctx.unit,
+    inputNote: ctx.unit === '$' ? 'Enter amount in dollars.' : 'Enter a number.',
+    vis: { pct, label: `−${pct}%`, isDecrease: true },
+    steps: [
+      ['Find decrease amount', `${pct}% × ${orig} = ${change}`],
+      ['Subtract from original', `${orig} − ${change} = ${newVal}`],
+      ['Or multiply directly', `${orig} × ${1 - pct/100} = ${newVal}`],
+    ],
+    hint: `Decrease = ${pct}% × ${orig} = ${change}. New value = ${orig} − ${change} = ${newVal}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// HARD
+// ══════════════════════════════════════════════════════════════
+
+function makeFindPercentChange() {
+  // Given old and new value, find % change
+  const ctx = randItem([...priceContexts, ...popContexts]);
+  const orig = rand(100, 2000) * 5;
+  const pct  = randItem(hardPcts);
+  const isUp = Math.random() < 0.5;
+  const newVal = r2(isUp ? orig * (1 + pct/100) : orig * (1 - pct/100));
+  const actualPct = r2(Math.abs(newVal - orig) / orig * 100);
+  return {
+    typeLabel: '% Change', typeCls: 'find-change',
+    question: `A ${ctx.thing} ${isUp ? 'increases' : 'decreases'} from <strong>${ctx.unit === '$' ? fmt$(orig) : orig + ' ' + ctx.unit}</strong> to <strong>${ctx.unit === '$' ? fmt$(newVal) : newVal + ' ' + ctx.unit}</strong>. What is the percent ${isUp ? 'increase' : 'decrease'}?`,
+    given: [
+      `Original: ${ctx.unit === '$' ? fmt$(orig) : orig + ' ' + ctx.unit}`,
+      `New value: ${ctx.unit === '$' ? fmt$(newVal) : newVal + ' ' + ctx.unit}`,
+    ],
+    findDesc: `Find the percent ${isUp ? 'increase' : 'decrease'}.`,
+    findQ: `% ${isUp ? 'increase' : 'decrease'} = ?`,
+    answerVal: actualPct,
+    unit: '%',
+    inputNote: 'Enter a number (e.g. 12.5 for 12.5%).',
+    vis: { pct: actualPct, label: `${isUp ? '+' : '−'}${actualPct}%`, isIncrease: isUp, isDecrease: !isUp },
+    steps: [
+      ['Find the change', `|${newVal} − ${orig}| = ${Math.abs(newVal-orig)}`],
+      ['Divide by original', `${r2(Math.abs(newVal-orig))} ÷ ${orig} = ${r2(Math.abs(newVal-orig)/orig)}`],
+      ['Multiply by 100', `${r2(Math.abs(newVal-orig)/orig)} × 100 = ${actualPct}%`],
+    ],
+    hint: `% change = |new − old| ÷ old × 100 = ${r2(Math.abs(newVal-orig))} ÷ ${orig} × 100 = ${actualPct}%.`,
+  };
+}
+
+function makeReverseDiscount() {
+  // Given sale price and % discount, find original
+  const ctx = randItem(storeItems);
+  const pct  = randItem([10, 15, 20, 25, 30, 40, 50]);
+  const orig = ctx.base();
+  const salePrice = r2(orig * (1 - pct/100));
+  return {
+    typeLabel: 'Find Original Price', typeCls: 'find-whole',
+    question: `A ${ctx.item} is on sale for <strong>${fmt$(salePrice)}</strong> after a <strong>${pct}% discount</strong>. What was the original price?`,
+    given: [`Sale price: ${fmt$(salePrice)}`, `Discount: ${pct}%`],
+    findDesc: 'Work backwards to find the original.',
+    findQ: 'Original price = ?',
+    answerVal: orig,
+    unit: '$',
+    inputNote: 'Enter amount in dollars.',
+    vis: { pct, label: `${100-pct}% of original = ${fmt$(salePrice)}` },
+    steps: [
+      ['Sale price is (100 − discount)% of original', `Sale price = ${100-pct}% × original`],
+      ['Divide by the multiplier', `${fmt$(salePrice)} ÷ ${(100-pct)/100} = ${fmt$(orig)}`],
+    ],
+    hint: `${fmt$(salePrice)} is ${100-pct}% of original. Original = ${fmt$(salePrice)} ÷ ${(100-pct)/100} = ${fmt$(orig)}.`,
+  };
+}
+
+function makeSuccessivePct() {
+  // Two successive percent changes
+  const ctx = randItem(storeItems);
+  const orig  = ctx.base();
+  const pct1  = randItem([5, 10, 15, 20, 25]);
+  const pct2  = randItem([5, 10, 15, 20]);
+  const isUp1 = Math.random() < 0.6;
+  const isUp2 = Math.random() < 0.4;
+  const after1 = r2(orig * (isUp1 ? 1 + pct1/100 : 1 - pct1/100));
+  const final  = r2(after1 * (isUp2 ? 1 + pct2/100 : 1 - pct2/100));
+  return {
+    typeLabel: 'Successive %', typeCls: 'find-change',
+    question: `A ${ctx.item} costs <strong>${fmt$(orig)}</strong>. The price <strong>${isUp1 ? 'increases' : 'decreases'} by ${pct1}%</strong>, then later <strong>${isUp2 ? 'increases' : 'decreases'} by ${pct2}%</strong>. What is the final price?`,
+    given: [
+      `Original: ${fmt$(orig)}`,
+      `1st change: ${isUp1 ? '+' : '−'}${pct1}%`,
+      `2nd change: ${isUp2 ? '+' : '−'}${pct2}%`,
+    ],
+    findDesc: 'Apply both changes in sequence.',
+    findQ: 'Final price = ?',
+    answerVal: final,
+    unit: '$',
+    inputNote: 'Enter amount in dollars.',
+    vis: { pct: r2(Math.abs(final-orig)/orig*100), label: `Net change from ${fmt$(orig)}` },
+    steps: [
+      [`After ${isUp1?'+':'−'}${pct1}%`, `${fmt$(orig)} × ${isUp1?1+pct1/100:1-pct1/100} = ${fmt$(after1)}`],
+      [`After ${isUp2?'+':'−'}${pct2}%`, `${fmt$(after1)} × ${isUp2?1+pct2/100:1-pct2/100} = ${fmt$(final)}`],
+      ['Note', `Net change ≠ simply ${isUp1?'+':'-'}${pct1}% ${isUp2?'+':'-'}${pct2}% — apply each to the new value!`],
+    ],
+    hint: `Step 1: ${fmt$(orig)} × ${isUp1?1+pct1/100:1-pct1/100} = ${fmt$(after1)}. Step 2: ${fmt$(after1)} × ${isUp2?1+pct2/100:1-pct2/100} = ${fmt$(final)}.`,
+  };
+}
+
+function makeOriginalFromIncrease() {
+  // Given value after % increase, find original
+  const ctx = randItem([...priceContexts, ...popContexts]);
+  const pct  = randItem([5, 10, 15, 20, 25, 30, 40, 50]);
+  const orig = rand(100, 1000) * 10;
+  const newVal = r2(orig * (1 + pct/100));
+  return {
+    typeLabel: 'Find Original', typeCls: 'find-whole',
+    question: `After a <strong>${pct}% increase</strong>, a ${ctx.thing}'s value is <strong>${ctx.unit === '$' ? fmt$(newVal) : newVal + ' ' + ctx.unit}</strong>. What was the original value?`,
+    given: [
+      `Value after increase: ${ctx.unit === '$' ? fmt$(newVal) : newVal + ' ' + ctx.unit}`,
+      `Percent increase: ${pct}%`,
+    ],
+    findDesc: 'Find the original value.',
+    findQ: 'Original = ?',
+    answerVal: orig,
+    unit: ctx.unit === '$' ? '$' : ctx.unit,
+    inputNote: ctx.unit === '$' ? 'Enter amount in dollars.' : 'Enter a number.',
+    vis: { pct, label: `${fmt$(newVal)} = ${100+pct}% of original`, isIncrease: true },
+    steps: [
+      [`New value = ${100+pct}% of original`, `${newVal} = ${(100+pct)/100} × original`],
+      ['Divide by multiplier', `${newVal} ÷ ${(100+pct)/100} = ${orig}`],
+    ],
+    hint: `${newVal} is ${100+pct}% of original. Divide: ${newVal} ÷ ${(100+pct)/100} = ${orig}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// Dispatcher
+// ══════════════════════════════════════════════════════════════
+function makeProblem() {
+  let p;
+  if (difficulty === 'easy') {
+    p = randItem([makePercentOf, makePercentOf, makeFindPercent, makeFindWhole])();
+  } else if (difficulty === 'medium') {
+    p = randItem([makeDiscount, makeTaxTip, makePercentIncrease, makePercentDecrease])();
+  } else {
+    p = randItem([makeFindPercentChange, makeReverseDiscount, makeSuccessivePct, makeOriginalFromIncrease])();
+  }
+  p.difficulty = difficulty;
+  return p;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Difficulty
+// ══════════════════════════════════════════════════════════════
+function setDiff(d) {
+  difficulty = d;
+  ['easy','medium','hard'].forEach(x => {
+    document.getElementById('d' + x.charAt(0).toUpperCase() + x.slice(1))
+      .classList.toggle('active', x === d);
+  });
+  newProblem();
+}
+
+// ══════════════════════════════════════════════════════════════
+// Visual bar
+// ══════════════════════════════════════════════════════════════
+function renderVis(vis) {
+  const el = document.getElementById('pctVis');
+  if (!vis) { el.innerHTML = ''; return; }
+
+  const pctClamped = Math.min(vis.pct, 100);
+  const color = vis.isDecrease ? '#c62828' : vis.isIncrease ? '#2e7d32' : '#6c3fcf';
+
+  el.innerHTML = `
+    <div class="pct-bar-wrap">
+      <div class="pct-bar-track">
+        <div class="pct-bar-fill" style="width:${pctClamped}%;background:${color}">
+          ${pctClamped >= 12 ? vis.pct + '%' : ''}
+        </div>
+      </div>
+      <div class="pct-bar-labels">
+        <span>0%</span>
+        <span style="color:${color};font-weight:700">${vis.label}</span>
+        <span>100%</span>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Panel + problem lifecycle
+// ══════════════════════════════════════════════════════════════
+function updatePanel() {
+  const badge = document.getElementById('typeBadge');
+  badge.textContent = prob.typeLabel;
+  badge.className   = 'type-badge ' + (prob.typeCls || '');
+
+  document.getElementById('questionText').innerHTML = prob.question;
+
+  const given = document.getElementById('givenDims');
+  given.innerHTML = prob.given.map(g =>
+    `<div>${g.replace(/(\$[\d.,]+|\d[\d.,]*\s*%?)/g, '<span class="val">$1</span>')}</div>`
+  ).join('');
+
+  document.getElementById('findDesc').textContent    = prob.findDesc;
+  document.getElementById('findQuestion').textContent = prob.findQ;
+  document.getElementById('inputNote').textContent   = prob.inputNote;
+  renderVis(prob.vis);
+}
+
+function newProblem() {
+  prob = makeProblem();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('hintText').className = 'hint-text';
+  document.getElementById('hintText').textContent = '';
+  document.getElementById('stepsBox').className = 'steps-box';
+  document.getElementById('stepsBox').innerHTML = '';
+  updatePanel();
+  document.getElementById('answerInput').focus();
+}
+
+// ══════════════════════════════════════════════════════════════
+// Answer checking
+// ══════════════════════════════════════════════════════════════
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function checkAnswer() {
+  if (answered) return;
+  const raw = document.getElementById('answerInput').value.trim().replace(/[$,]/g, '');
+  if (!raw) { showFeedback('partial', 'Enter your answer first.'); return; }
+
+  const userVal = parseFloat(raw);
+  if (isNaN(userVal)) { showFeedback('partial', 'Please enter a number.'); return; }
+
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+
+  const tol = Math.max(0.015 * Math.abs(prob.answerVal), 0.05);
+
+  if (Math.abs(userVal - prob.answerVal) <= tol) {
+    correct++; streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent  = streak;
+    const dispAns = prob.unit === '$' ? fmt$(prob.answerVal) : prob.answerVal + (prob.unit ? ' ' + prob.unit : '');
+    showFeedback('correct', streak >= 3
+      ? `🔥 ${streak} in a row! Answer: ${dispAns}`
+      : `✓ Correct! Answer: ${dispAns}`);
+    answered = true;
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    const pctOff = Math.abs(userVal - prob.answerVal) / Math.abs(prob.answerVal);
+    if (pctOff < 0.15) {
+      showFeedback('partial', `Very close — check your rounding.`);
+    } else {
+      showFeedback('wrong', `Not quite. Use the hint for a step-by-step solution.`);
+    }
+  }
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Hint / steps
+// ══════════════════════════════════════════════════════════════
+function toggleHint() {
+  const hint  = document.getElementById('hintText');
+  const steps = document.getElementById('stepsBox');
+  if (hint.classList.contains('show')) {
+    hint.classList.remove('show'); steps.classList.remove('show'); return;
+  }
+  let html = '<strong style="font-style:normal;color:var(--accent2);font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;">Solution</strong><br>';
+  prob.steps.forEach(([label, expr], i) => {
+    html += `<span class="step-label">Step ${i+1}: ${label}</span><br>`;
+    html += `<span class="step-line">&nbsp;&nbsp;${expr}</span><br>`;
+  });
+  steps.innerHTML = html;
+  steps.classList.add('show');
+  hint.textContent = `Hint: ${prob.hint}`;
+  hint.classList.add('show');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+newProblem();
+</script>
+</body>
+</html>
