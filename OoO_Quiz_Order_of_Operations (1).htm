@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order of Operations Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #e8f0f5;
+    --paper: #f4f8fd;
+    --ink: #161c1c;
+    --muted: #607080;
+    --border: #b0c4d4;
+    --accent: #1a6bbf;
+    --accent2: #0e4d8a;
+    --green: #1a7a4a;
+    --orange: #b85c00;
+    --shadow: rgba(20,40,70,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(100,140,180,0.12) 27px, rgba(100,140,180,0.12) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(100,140,180,0.07) 27px, rgba(100,140,180,0.07) 28px);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 0.7rem;
+  }
+
+  header h1 {
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-style: italic;
+    margin-top: 0.15rem;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.4rem 1.8rem;
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .top-row {
+    display: flex;
+    flex-direction: row;
+    gap: 1.2rem;
+    align-items: stretch;
+  }
+
+  /* Left panel: the expression display */
+  .expr-panel {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #eef4fa;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-height: 320px;
+    padding: 1.5rem 1.2rem;
+    gap: 1.4rem;
+  }
+
+  .difficulty-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--paper);
+    background: var(--accent);
+    border-radius: 3px;
+    padding: 0.18rem 0.55rem;
+    align-self: flex-start;
+  }
+  .difficulty-badge.medium { background: var(--orange); }
+  .difficulty-badge.hard   { background: #7b1fa2; }
+
+  /* The rendered math expression */
+  .expr-display {
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(1.1rem, 2.5vw, 1.55rem);
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.6;
+    word-break: break-word;
+    width: 100%;
+  }
+
+  /* Fraction rendering */
+  .frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    margin: 0 0.12em;
+    font-size: 0.88em;
+    line-height: 1.1;
+  }
+  .frac .num { border-bottom: 1.5px solid var(--ink); padding: 0 0.15em 0.05em; }
+  .frac .den { padding: 0.05em 0.15em 0; }
+
+  /* Step-by-step breakdown area */
+  .steps-box {
+    width: 100%;
+    background: rgba(26,107,191,0.05);
+    border: 1px solid rgba(26,107,191,0.2);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.82rem;
+    color: var(--ink);
+    line-height: 1.8;
+    font-style: italic;
+    display: none;
+  }
+  .steps-box.show { display: block; }
+  .steps-box .step-line { font-family: 'DM Mono', monospace; font-style: normal; font-size: 0.85rem; }
+  .steps-box .step-label { color: var(--accent2); font-weight: 700; font-style: normal; }
+
+  /* Right info panel */
+  .info-panel {
+    flex: 0 0 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .given-box {
+    background: rgba(26,107,191,0.07);
+    border: 1.5px solid rgba(26,107,191,0.3);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .given-box h3 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .given-item {
+    font-size: 0.85rem;
+    color: var(--ink);
+    line-height: 1.7;
+  }
+
+  .reminder-box {
+    background: rgba(14,77,138,0.06);
+    border: 1.5px solid rgba(14,77,138,0.25);
+    border-radius: 4px;
+    padding: 0.65rem 0.9rem;
+  }
+
+  .reminder-box h3 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent2);
+    margin-bottom: 0.35rem;
+  }
+
+  .bodmas-list {
+    list-style: none;
+    font-size: 0.8rem;
+    line-height: 1.9;
+    color: var(--ink);
+  }
+
+  .bodmas-list li span {
+    font-family: 'DM Mono', monospace;
+    font-weight: 700;
+    color: var(--accent);
+    margin-right: 0.3em;
+  }
+
+  .find-box {
+    background: rgba(14,77,138,0.06);
+    border: 1.5px solid rgba(14,77,138,0.3);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .find-box h3 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent2);
+    margin-bottom: 0.4rem;
+  }
+
+  .find-box p {
+    font-size: 0.92rem;
+    color: var(--ink);
+    font-style: italic;
+  }
+
+  .answer-row {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+  }
+
+  .answer-row label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+    white-space: nowrap;
+  }
+
+  .answer-wrap {
+    flex: 1;
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  /* Accept fractions: use text input */
+  input[type="text"] {
+    flex: 1;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 0.6rem 0.9rem;
+    font-size: 1.15rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 0;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,107,191,0.14);
+  }
+
+  .input-hint {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 0.2rem;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  button {
+    flex: 1;
+    border: none;
+    border-radius: 4px;
+    padding: 0.65rem 1rem;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-check {
+    background: var(--accent2);
+    color: white;
+    box-shadow: 2px 2px 0 rgba(14,77,138,0.4);
+  }
+
+  .btn-check:hover { filter: brightness(1.15); }
+
+  .btn-new {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border);
+  }
+
+  .btn-new:hover { background: var(--bg); }
+
+  .hint-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: 0.78rem;
+    padding: 0.42rem;
+    border-radius: 4px;
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    cursor: pointer;
+  }
+
+  .hint-btn:hover { border-color: var(--accent); color: var(--ink); }
+
+  .hint-text {
+    display: none;
+    background: rgba(26,107,191,0.06);
+    border: 1px solid rgba(26,107,191,0.25);
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.82rem;
+    color: #0e3d6e;
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  .hint-text.show { display: block; }
+
+  .feedback {
+    border-radius: 4px;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-align: center;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .feedback.correct {
+    background: rgba(26,122,74,0.1);
+    border: 1.5px solid rgba(26,122,74,0.4);
+    color: var(--green);
+  }
+
+  .feedback.wrong {
+    background: rgba(192,57,43,0.08);
+    border: 1.5px solid rgba(192,57,43,0.3);
+    color: #c0392b;
+  }
+
+  .feedback.partial {
+    background: rgba(184,92,0,0.08);
+    border: 1.5px solid rgba(184,92,0,0.3);
+    color: var(--orange);
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    border-top: 1px solid var(--border);
+    padding-top: 0.7rem;
+  }
+
+  .stat {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .stat strong {
+    display: block;
+    font-size: 1.1rem;
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .difficulty-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .diff-btn {
+    flex: none;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 3px;
+    border: 1.5px solid var(--border);
+    background: var(--paper);
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'Libre Baskerville', serif;
+    transition: all 0.15s;
+  }
+
+  .diff-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .diff-btn:hover:not(.active) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Order of Operations</h1>
+  <p>Evaluate the expression. Enter your answer as a fraction (e.g. 3/4) or integer.</p>
+</header>
+
+<div class="card">
+  <div class="difficulty-row">
+    Difficulty:
+    <button class="diff-btn active" id="dEasy" onclick="setDiff('easy')">Easy</button>
+    <button class="diff-btn" id="dMed" onclick="setDiff('medium')">Medium</button>
+    <button class="diff-btn" id="dHard" onclick="setDiff('hard')">Hard</button>
+  </div>
+
+  <div class="top-row">
+    <!-- Left: expression display -->
+    <div class="expr-panel">
+      <div class="difficulty-badge" id="diffBadge">Easy</div>
+      <div class="expr-display" id="exprDisplay">—</div>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+
+    <!-- Right: info + answer -->
+    <div class="info-panel">
+      <div class="reminder-box">
+        <h3>BEDMAS</h3>
+        <ul class="bodmas-list">
+          <li><span>B</span> Brackets</li>
+          <li><span>E</span> Exponents</li>
+          <li><span>D</span> Division</li>
+          <li><span>M</span> Multiplication</li>
+          <li><span>A</span> Addition</li>
+          <li><span>S</span> Subtraction</li>
+        </ul>
+      </div>
+
+      <div class="find-box">
+        <h3>Evaluate</h3>
+        <p>Simplify the expression completely.</p>
+        <p style="font-style:normal; font-size:0.78rem; color:var(--muted); margin-top:0.35rem;">Enter as integer or fraction (e.g. <span style="font-family:DM Mono,monospace">-3/4</span>).</p>
+      </div>
+
+      <div class="answer-row">
+        <label for="answerInput">= </label>
+        <div class="answer-wrap" style="flex-direction:column; align-items:stretch; gap:0.2rem;">
+          <input type="text" id="answerInput" placeholder="e.g. 5 or 3/4" onkeydown="handleKey(event)" autocomplete="off">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new" onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show step-by-step solution</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let prob = {};
+let attempts = 0, correct = 0, streak = 0;
+let answered = false;
+let difficulty = 'easy';
+
+// ── Fraction arithmetic ────────────────────────────────────────
+function gcd(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) { [a, b] = [b, a % b]; }
+  return a;
+}
+
+function frac(n, d = 1) {
+  // Normalise: denominator always positive
+  if (d < 0) { n = -n; d = -d; }
+  const g = gcd(Math.abs(n), d);
+  return { n: n / g, d: d / g };
+}
+
+function fadd(a, b) { return frac(a.n * b.d + b.n * a.d, a.d * b.d); }
+function fsub(a, b) { return frac(a.n * b.d - b.n * a.d, a.d * b.d); }
+function fmul(a, b) { return frac(a.n * b.n, a.d * b.d); }
+function fdiv(a, b) { return frac(a.n * b.d, a.d * b.n); }
+function fpow(a, exp) {
+  // exp is always a small positive integer here
+  return frac(Math.pow(a.n, exp), Math.pow(a.d, exp));
+}
+
+function fstr(f) {
+  if (f.d === 1) return `${f.n}`;
+  return `${f.n}/${f.d}`;
+}
+
+function feq(a, b) { return a.n === b.n && a.d === b.d; }
+
+// Parse a user input string like "3/4" or "-5" or "2" into a frac
+function parseInput(s) {
+  s = s.trim().replace(/\s+/g, '');
+  const m = s.match(/^(-?\d+)\/(-?\d+)$/);
+  if (m) return frac(parseInt(m[1]), parseInt(m[2]));
+  const n = parseInt(s);
+  if (!isNaN(n)) return frac(n);
+  return null;
+}
+
+// ── Random helpers ─────────────────────────────────────────────
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randNonZero(min, max) {
+  let v;
+  do { v = rand(min, max); } while (v === 0);
+  return v;
+}
+
+// ── HTML rendering for expression ─────────────────────────────
+function fracHtml(n, d) {
+  if (d === 1) return `<span>${n}</span>`;
+  const sign = (n < 0) ? '−' : '';
+  const an = Math.abs(n);
+  return `${sign}<span class="frac"><span class="num">${an}</span><span class="den">${d}</span></span>`;
+}
+
+function wrapNeg(v) {
+  // If value starts with − wrap in parens for display clarity inside expressions
+  if (typeof v === 'string' && v.startsWith('−')) return `(${v})`;
+  return v;
+}
+
+// ── Problem generators ─────────────────────────────────────────
+
+function makeEasy() {
+  // Patterns:
+  // 1) a + b × c
+  // 2) (a + b) × c
+  // 3) a − b + c × d  
+  // 4) a × b + c ÷ d (integer result)
+  // 5) a² + b
+  const type = rand(1, 5);
+
+  if (type === 1) {
+    const a = rand(1,10), b = rand(2,8), c = rand(2,8);
+    const ans = frac(a + b * c);
+    const html = `${a} + ${b} × ${c}`;
+    const steps = [
+      ['Multiply first', `${b} × ${c} = ${b*c}`],
+      ['Then add', `${a} + ${b*c} = ${a + b*c}`],
+    ];
+    return { html, ans, steps, hint: `Multiplication before addition.` };
+  }
+
+  if (type === 2) {
+    const a = rand(1,9), b = rand(1,9), c = rand(2,8);
+    const ans = frac((a + b) * c);
+    const html = `(${a} + ${b}) × ${c}`;
+    const steps = [
+      ['Brackets first', `${a} + ${b} = ${a+b}`],
+      ['Then multiply', `${a+b} × ${c} = ${(a+b)*c}`],
+    ];
+    return { html, ans, steps, hint: `Brackets first, then multiply.` };
+  }
+
+  if (type === 3) {
+    const a = rand(2,12), b = rand(1,8), c = rand(2,8), d = rand(2,6);
+    const ans = frac(a - b + c * d);
+    const html = `${a} − ${b} + ${c} × ${d}`;
+    const steps = [
+      ['Multiply first', `${c} × ${d} = ${c*d}`],
+      ['Left to right', `${a} − ${b} + ${c*d} = ${a-b} + ${c*d} = ${a - b + c*d}`],
+    ];
+    return { html, ans, steps, hint: `Multiply before adding/subtracting.` };
+  }
+
+  if (type === 4) {
+    // ensure c divisible by d
+    const a = rand(2,8), b = rand(2,8), d = randItem([2,3,4,5]);
+    const c = d * rand(1,6);
+    const ans = frac(a * b + c / d);
+    const html = `${a} × ${b} + ${c} ÷ ${d}`;
+    const steps = [
+      ['Multiply', `${a} × ${b} = ${a*b}`],
+      ['Divide', `${c} ÷ ${d} = ${c/d}`],
+      ['Add', `${a*b} + ${c/d} = ${a*b + c/d}`],
+    ];
+    return { html, ans, steps, hint: `Multiplication and division before addition.` };
+  }
+
+  // type 5: a² + b
+  {
+    const a = rand(2,7), b = rand(1,12);
+    const ans = frac(a*a + b);
+    const html = `${a}² + ${b}`;
+    const steps = [
+      ['Exponent first', `${a}² = ${a*a}`],
+      ['Then add', `${a*a} + ${b} = ${a*a+b}`],
+    ];
+    return { html, ans, steps, hint: `Exponents before addition.` };
+  }
+}
+
+function makeMedium() {
+  const type = rand(1, 5);
+
+  if (type === 1) {
+    // (a + b)² − c × d
+    const a = rand(1,5), b = rand(1,5), c = rand(2,6), d = rand(2,6);
+    const inner = a + b;
+    const ans = frac(inner*inner - c*d);
+    const html = `(${a} + ${b})² − ${c} × ${d}`;
+    const steps = [
+      ['Brackets', `${a} + ${b} = ${inner}`],
+      ['Exponent', `${inner}² = ${inner*inner}`],
+      ['Multiply', `${c} × ${d} = ${c*d}`],
+      ['Subtract', `${inner*inner} − ${c*d} = ${inner*inner - c*d}`],
+    ];
+    return { html, ans, steps, hint: `Brackets → Exponent → Multiply → Subtract.` };
+  }
+
+  if (type === 2) {
+    // a/b × c + d  (fraction × integer + integer — tests multiply-before-add with fractions)
+    const b = randItem([2,3,4,5,6]);
+    const a = rand(1, b-1 < 1 ? 1 : b-1) || 1;
+    const c = rand(2, 8), d = rand(1, 10);
+    const t1 = fmul(frac(a, b), frac(c));
+    const ans = fadd(t1, frac(d));
+    const html = fracHtml(a,b) + ` × ${c} + ${d}`;
+    const steps = [
+      ['Multiply first', `${a}/${b} × ${c} = ${a*c}/${b} = ${fstr(t1)}`],
+      ['Then add', `${fstr(t1)} + ${d} = ${fstr(ans)}`],
+    ];
+    return { html, ans, steps, hint: `Multiplication before addition — even with fractions.` };
+  }
+
+  if (type === 3) {
+    // a × (b/c + d)
+    const c = randItem([2,3,4,5,6]);
+    const b = rand(1, c-1) || 1;
+    const a = rand(2,6), d = rand(1,8);
+    // b/c + d = (b + d*c)/c
+    const inner = frac(b + d*c, c);
+    const ans = fmul(frac(a), inner);
+    const html = `${a} × ` + `(` + fracHtml(b,c) + ` + ${d})`;
+    const steps = [
+      ['Brackets: add', `${b}/${c} + ${d} = ${b}/${c} + ${d*c}/${c} = ${b+d*c}/${c}`],
+      ['Multiply', `${a} × ${b+d*c}/${c} = ${a*(b+d*c)}/${c}`],
+      ['Simplify', fstr(ans)],
+    ];
+    return { html, ans, steps, hint: `Evaluate the bracket first, then multiply.` };
+  }
+
+  if (type === 4) {
+    // a + b² ÷ c − d  (c divides b² for clean answer)
+    const b = randItem([2,3,4,5,6]);
+    const bsq = b*b;
+    const c = randItem([1,2,3,4].filter(x => bsq % x === 0));
+    const a = rand(1,10), d = rand(1, a + bsq/c);
+    const ans = frac(a + bsq/c - d);
+    const html = `${a} + ${b}² ÷ ${c} − ${d}`;
+    const steps = [
+      ['Exponent', `${b}² = ${bsq}`],
+      ['Divide', `${bsq} ÷ ${c} = ${bsq/c}`],
+      ['Left to right', `${a} + ${bsq/c} − ${d} = ${a + bsq/c - d}`],
+    ];
+    return { html, ans, steps, hint: `Exponent, then divide, then add/subtract left to right.` };
+  }
+
+  // type 5: a + b/c × (d − e)  — bracket, then multiply fraction, then add
+  {
+    const c = randItem([2,3,4,5]);
+    const b = rand(1, c-1) || 1;
+    const a = rand(1, 12);
+    const e = rand(1, 5), d = e + rand(1, 6); // ensure d > e
+    const diff = d - e;
+    const t1 = fmul(frac(b, c), frac(diff));
+    const ans = fadd(frac(a), t1);
+    const html = `${a} + ` + fracHtml(b,c) + ` × (${d} − ${e})`;
+    const steps = [
+      ['Brackets first', `${d} − ${e} = ${diff}`],
+      ['Multiply', `${b}/${c} × ${diff} = ${b*diff}/${c} = ${fstr(t1)}`],
+      ['Add', `${a} + ${fstr(t1)} = ${fstr(ans)}`],
+    ];
+    return { html, ans, steps, hint: `Brackets → Multiply fraction → Add.` };
+  }
+}
+
+function makeHard() {
+  const type = rand(1, 4);
+
+  if (type === 1) {
+    // (a/b + c/d) ÷ e
+    const b = randItem([2,3,4,5]), d = randItem([2,3,4,5]);
+    const a = rand(1, b), c = rand(1, d);
+    const e = rand(2, 5);
+    const sum = fadd(frac(a,b), frac(c,d));
+    const ans = fdiv(sum, frac(e));
+    const html = `(` + fracHtml(a,b) + ` + ` + fracHtml(c,d) + `) ÷ ${e}`;
+    const steps = [
+      ['Brackets', `${a}/${b} + ${c}/${d} = ${fstr(sum)}`],
+      ['Divide by ${e}', `${fstr(sum)} ÷ ${e} = ${fstr(ans)}`],
+    ];
+    return { html, ans, steps, hint: `Add fractions in brackets first, then divide.` };
+  }
+
+  if (type === 2) {
+    // a ÷ (b − c) + d/e   where b > c
+    const c = rand(1,5), b = c + rand(1,4);
+    const e = randItem([2,3,4,5,6]);
+    const d = rand(1, e);
+    const a = rand(2,8);
+    const diff = frac(b - c);
+    const t1 = fdiv(frac(a), diff);
+    const t2 = frac(d, e);
+    const ans = fadd(t1, t2);
+    const html = `${a} ÷ (${b} − ${c}) + ` + fracHtml(d,e);
+    const steps = [
+      ['Brackets', `${b} − ${c} = ${b-c}`],
+      ['Divide', `${a} ÷ ${b-c} = ${fstr(t1)}`],
+      ['Add fraction', `${fstr(t1)} + ${d}/${e} = ${fstr(ans)}`],
+    ];
+    return { html, ans, steps, hint: `Brackets → Divide → Add.` };
+  }
+
+  if (type === 3) {
+    // (a + b) × (c − d/e)   integers + fraction
+    const e = randItem([2,3,4,5]);
+    const d = rand(1, e-1) || 1;
+    const a = rand(1,6), b = rand(1,6), c = rand(2,8);
+    const t1 = frac(a + b);
+    const t2 = fsub(frac(c), frac(d, e));
+    const ans = fmul(t1, t2);
+    const html = `(${a} + ${b}) × (${c} − ` + fracHtml(d,e) + `)`;
+    const steps = [
+      ['First bracket', `${a} + ${b} = ${a+b}`],
+      ['Second bracket', `${c} − ${d}/${e} = ${fstr(t2)}`],
+      ['Multiply', `${a+b} × ${fstr(t2)} = ${fstr(ans)}`],
+    ];
+    return { html, ans, steps, hint: `Evaluate both brackets, then multiply.` };
+  }
+
+  // type 4: a² ÷ b + c/d − e  with negative possible
+  {
+    const b = rand(2,5), e = rand(1,6);
+    const a = randItem([2,3,4,5,6]);
+    const asq = a*a;
+    // ensure b divides asq cleanly
+    const bFinal = [2,3,4,5].find(x => asq % x === 0) || 1;
+    const d = randItem([2,3,4,5]);
+    const c = rand(1, d);
+    const t1 = frac(asq / bFinal);
+    const t2 = frac(c, d);
+    const t3 = frac(e);
+    const ans = fsub(fadd(t1, t2), t3);
+    const html = `${a}² ÷ ${bFinal} + ` + fracHtml(c,d) + ` − ${e}`;
+    const steps = [
+      ['Exponent', `${a}² = ${asq}`],
+      ['Divide', `${asq} ÷ ${bFinal} = ${asq/bFinal}`],
+      ['Add fraction', `${asq/bFinal} + ${c}/${d} = ${fstr(fadd(t1,t2))}`],
+      ['Subtract', `${fstr(fadd(t1,t2))} − ${e} = ${fstr(ans)}`],
+    ];
+    return { html, ans, steps, hint: `Exponent → Divide → Add → Subtract.` };
+  }
+}
+
+function makeProblem() {
+  let p;
+  if (difficulty === 'easy')   p = makeEasy();
+  if (difficulty === 'medium') p = makeMedium();
+  if (difficulty === 'hard')   p = makeHard();
+  p.difficulty = difficulty;
+  return p;
+}
+
+// ── Difficulty selector ────────────────────────────────────────
+function setDiff(d) {
+  difficulty = d;
+  ['easy','medium','hard'].forEach(x => {
+    document.getElementById('d' + x.charAt(0).toUpperCase() + x.slice(1))
+      .classList.toggle('active', x === d);
+  });
+  newProblem();
+}
+
+// ── Render expression ──────────────────────────────────────────
+function renderExpr(html) {
+  document.getElementById('exprDisplay').innerHTML = html;
+}
+
+// ── Info panel update ──────────────────────────────────────────
+function updatePanel() {
+  const badge = document.getElementById('diffBadge');
+  const labels = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+  badge.textContent = labels[prob.difficulty];
+  badge.className = 'difficulty-badge' + (prob.difficulty === 'medium' ? ' medium' : prob.difficulty === 'hard' ? ' hard' : '');
+}
+
+// ── New problem ────────────────────────────────────────────────
+function newProblem() {
+  prob = makeProblem();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('hintText').className = 'hint-text';
+  document.getElementById('hintText').textContent = '';
+  document.getElementById('stepsBox').className = 'steps-box';
+  document.getElementById('stepsBox').innerHTML = '';
+  renderExpr(prob.html);
+  updatePanel();
+  document.getElementById('answerInput').focus();
+}
+
+// ── Answer check ───────────────────────────────────────────────
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function checkAnswer() {
+  if (answered) return;
+  const raw = document.getElementById('answerInput').value;
+  if (!raw.trim()) { showFeedback('partial', 'Enter your answer first.'); return; }
+
+  const userFrac = parseInput(raw);
+  if (!userFrac) {
+    showFeedback('partial', 'Format: enter an integer (e.g. 5) or fraction (e.g. 3/4).');
+    return;
+  }
+
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+
+  if (feq(userFrac, prob.ans)) {
+    correct++;
+    streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent = streak;
+    const msg = streak >= 3
+      ? `🔥 ${streak} in a row! Answer: ${fstr(prob.ans)}`
+      : `✓ Correct! Answer: ${fstr(prob.ans)}`;
+    showFeedback('correct', msg);
+    answered = true;
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    // check if they might have the right value but wrong form (e.g. 2/4 vs 1/2)
+    if (userFrac.n * prob.ans.d === prob.ans.n * userFrac.d) {
+      showFeedback('partial', `Almost — simplify your fraction fully. e.g. ${fstr(prob.ans)}`);
+    } else {
+      showFeedback('wrong', `Not quite. Check your order of operations. Try the hint!`);
+    }
+  }
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+// ── Hint / steps ───────────────────────────────────────────────
+function toggleHint() {
+  const hint = document.getElementById('hintText');
+  const steps = document.getElementById('stepsBox');
+
+  if (hint.classList.contains('show')) {
+    hint.classList.remove('show');
+    steps.classList.remove('show');
+    return;
+  }
+
+  // Build step-by-step in the expr panel
+  let stepsHtml = '<strong style="font-style:normal;color:var(--accent2);font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;">Step-by-step</strong><br>';
+  prob.steps.forEach(([label, expr], i) => {
+    stepsHtml += `<span class="step-label">Step ${i+1}: ${label}</span><br>`;
+    stepsHtml += `<span class="step-line">&nbsp;&nbsp;${expr}</span><br>`;
+  });
+  steps.innerHTML = stepsHtml;
+  steps.classList.add('show');
+
+  hint.textContent = `Hint: ${prob.hint} Answer: ${fstr(prob.ans)}`;
+  hint.classList.add('show');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+newProblem();
+</script>
+</body>
+</html>
