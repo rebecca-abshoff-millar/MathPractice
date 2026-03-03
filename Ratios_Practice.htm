@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ratios Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --paper: #fdfaf4;
+    --ink: #1c1a16;
+    --muted: #8a8070;
+    --border: #d4c9b0;
+    --accent: #c0392b;
+    --accent2: #2980b9;
+    --green: #27ae60;
+    --orange: #e67e22;
+    --shadow: rgba(60,50,30,0.12);
+  }
+
+  /* ── Override to warm amber/gold ── */
+  :root {
+    --bg:      #f5ede0;
+    --paper:   #fdf8f0;
+    --ink:     #1c1508;
+    --muted:   #8a7050;
+    --border:  #d4b880;
+    --accent:  #b36200;
+    --accent2: #7a4400;
+    --shadow:  rgba(80,50,10,0.14);
+    --green:   #2e7d32;
+    --red:     #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(180,140,60,0.10) 27px, rgba(180,140,60,0.10) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(180,140,60,0.06) 27px, rgba(180,140,60,0.06) 28px);
+  }
+
+  header { text-align: center; margin-bottom: 0.7rem; }
+  header h1 {
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    font-weight: 700; color: var(--ink); letter-spacing: -0.5px;
+  }
+  header p { color: var(--muted); font-size: 0.82rem; font-style: italic; margin-top: 0.15rem; }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.4rem 1.8rem;
+    width: 100%; max-width: 900px;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  .top-row { display: flex; flex-direction: row; gap: 1.2rem; align-items: stretch; }
+
+  .question-panel {
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column; justify-content: center;
+    background: #faf3e4;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-height: 320px;
+    padding: 1.6rem 1.4rem;
+    gap: 1.1rem;
+  }
+
+  .type-badge {
+    font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: white; background: var(--accent);
+    border-radius: 3px; padding: 0.18rem 0.55rem;
+    align-self: flex-start;
+  }
+  .type-badge.simplify  { background: #b36200; }
+  .type-badge.scale     { background: #6d4c41; }
+  .type-badge.share     { background: #4e342e; }
+  .type-badge.compare   { background: #37474f; }
+  .type-badge.part-whole{ background: #1b5e20; }
+  .type-badge.mixed     { background: #880e4f; }
+
+  .question-text {
+    font-size: 1.05rem; color: var(--ink); line-height: 1.8;
+  }
+  .question-text strong {
+    font-weight: 700; color: var(--accent2);
+    font-family: 'DM Mono', monospace; font-size: 0.97em;
+  }
+
+  /* Visual ratio bar */
+  .ratio-vis {
+    display: flex; align-items: center; gap: 0.5rem;
+    flex-wrap: wrap; margin-top: 0.2rem;
+  }
+  .ratio-seg {
+    height: 28px; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    font-weight: 700; color: white;
+    min-width: 32px; padding: 0 8px;
+    transition: width 0.3s;
+  }
+  .seg-a { background: var(--accent); }
+  .seg-b { background: var(--accent2); }
+  .seg-c { background: var(--green); }
+  .ratio-label {
+    font-size: 0.75rem; color: var(--muted); font-style: italic;
+  }
+
+  .steps-box {
+    width: 100%;
+    background: rgba(179,98,0,0.06);
+    border: 1px solid rgba(179,98,0,0.22);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.82rem; color: var(--ink);
+    line-height: 1.8; font-style: italic; display: none;
+  }
+  .steps-box.show { display: block; }
+  .steps-box .step-line { font-family: 'DM Mono', monospace; font-style: normal; font-size: 0.85rem; }
+  .steps-box .step-label { color: var(--accent2); font-weight: 700; font-style: normal; }
+
+  .info-panel { flex: 0 0 240px; display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .given-box {
+    background: rgba(179,98,0,0.07);
+    border: 1.5px solid rgba(179,98,0,0.3);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .given-box h3 {
+    font-size: 0.65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--accent); margin-bottom: 0.4rem;
+  }
+  .given-item { font-size: 0.88rem; color: var(--ink); line-height: 1.75; }
+  .given-item .val { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--accent2); }
+
+  .find-box {
+    background: rgba(122,68,0,0.06);
+    border: 1.5px solid rgba(122,68,0,0.28);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .find-box h3 {
+    font-size: 0.65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--accent2); margin-bottom: 0.4rem;
+  }
+  .find-box p { font-size: 0.92rem; color: var(--ink); font-style: italic; }
+  .find-box .find-question {
+    font-style: normal; font-size: 0.88rem;
+    color: var(--accent2); font-weight: 700;
+    margin-top: 0.35rem; line-height: 1.5;
+  }
+
+  .answer-row { display: flex; gap: 0.7rem; align-items: flex-start; }
+  .answer-wrap { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+
+  input[type="text"] {
+    width: 100%; background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 4px; padding: 0.6rem 0.9rem;
+    font-size: 1.1rem; font-family: 'DM Mono', monospace;
+    color: var(--ink); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(179,98,0,0.14);
+  }
+  .input-note { font-size: 0.7rem; color: var(--muted); font-style: italic; }
+
+  .btn-row { display: flex; gap: 0.6rem; }
+  button {
+    flex: 1; border: none; border-radius: 4px;
+    padding: 0.65rem 1rem;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 0.88rem; font-weight: 700; cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-check { background: var(--accent2); color: white; box-shadow: 2px 2px 0 rgba(122,68,0,0.4); }
+  .btn-check:hover { filter: brightness(1.2); }
+  .btn-new { background: var(--paper); color: var(--ink); border: 1.5px solid var(--border); box-shadow: 2px 2px 0 var(--border); }
+  .btn-new:hover { background: var(--bg); }
+
+  .hint-btn {
+    width: 100%; background: transparent;
+    border: 1px dashed var(--border); color: var(--muted);
+    font-size: 0.78rem; padding: 0.42rem; border-radius: 4px;
+    font-family: 'Libre Baskerville', serif; font-style: italic; cursor: pointer;
+  }
+  .hint-btn:hover { border-color: var(--accent); color: var(--ink); }
+
+  .hint-text {
+    display: none;
+    background: rgba(179,98,0,0.06);
+    border: 1px solid rgba(179,98,0,0.25);
+    border-radius: 4px; padding: 0.6rem 0.8rem;
+    font-size: 0.82rem; color: #5c3000;
+    line-height: 1.7; font-style: italic;
+  }
+  .hint-text.show { display: block; }
+
+  .feedback {
+    border-radius: 4px; padding: 0.55rem 0.9rem;
+    font-size: 0.88rem; font-weight: 700;
+    text-align: center; min-height: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .feedback.correct { background: rgba(46,125,50,0.1); border: 1.5px solid rgba(46,125,50,0.4); color: var(--green); }
+  .feedback.wrong   { background: rgba(192,57,43,0.08); border: 1.5px solid rgba(192,57,43,0.3); color: var(--red); }
+  .feedback.partial { background: rgba(179,98,0,0.08); border: 1.5px solid rgba(179,98,0,0.3); color: var(--accent); }
+
+  .stats-row { display: flex; gap: 1rem; justify-content: center; border-top: 1px solid var(--border); padding-top: 0.7rem; }
+  .stat { text-align: center; font-size: 0.75rem; color: var(--muted); }
+  .stat strong { display: block; font-size: 1.1rem; color: var(--ink); font-family: 'DM Mono', monospace; }
+
+  .difficulty-row { display: flex; gap: 0.5rem; align-items: center; font-size: 0.78rem; color: var(--muted); font-style: italic; }
+  .diff-btn {
+    flex: none; padding: 0.3rem 0.7rem; font-size: 0.75rem; font-weight: 700;
+    border-radius: 3px; border: 1.5px solid var(--border); background: var(--paper);
+    color: var(--muted); cursor: pointer;
+    font-family: 'Libre Baskerville', serif; transition: all 0.15s;
+  }
+  .diff-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .diff-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Ratios</h1>
+  <p>Simplifying, scaling, sharing, part-to-whole, and comparing ratios.</p>
+</header>
+
+<div class="card">
+  <div class="difficulty-row">
+    Difficulty:
+    <button class="diff-btn active" id="dEasy"   onclick="setDiff('easy')">Easy</button>
+    <button class="diff-btn"        id="dMedium" onclick="setDiff('medium')">Medium</button>
+    <button class="diff-btn"        id="dHard"   onclick="setDiff('hard')">Hard</button>
+  </div>
+
+  <div class="top-row">
+    <div class="question-panel">
+      <div class="type-badge" id="typeBadge">Simplifying</div>
+      <div class="question-text" id="questionText">—</div>
+      <div id="ratioVis"></div>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+
+    <div class="info-panel">
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Find</h3>
+        <p id="findDesc">—</p>
+        <div class="find-question" id="findQuestion"></div>
+      </div>
+      <div class="answer-row">
+        <div class="answer-wrap">
+          <input type="text" id="answerInput" placeholder="e.g. 3:2 or 15" onkeydown="handleKey(event)" autocomplete="off">
+          <span class="input-note" id="inputNote"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new"   onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show solution</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback"   id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+let prob = {};
+let attempts = 0, correct = 0, streak = 0;
+let answered = false;
+let difficulty = 'easy';
+
+// ── Helpers ────────────────────────────────────────────────────
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randItem(arr)  { return arr[Math.floor(Math.random() * arr.length)]; }
+function gcd(a, b)      { a = Math.abs(a); b = Math.abs(b); while (b) { [a,b]=[b,a%b]; } return a; }
+function lcm(a, b)      { return (a * b) / gcd(a, b); }
+function r2(x)          { return Math.round(x * 100) / 100; }
+
+// Simplify ratio [a, b] or [a, b, c]
+function simplifyRatio(parts) {
+  let g = parts[0];
+  for (let i = 1; i < parts.length; i++) g = gcd(g, parts[i]);
+  return parts.map(p => p / g);
+}
+
+// Ratio as string "a:b" or "a:b:c"
+function ratioStr(parts) { return parts.join(' : '); }
+
+// Context banks
+const mixContexts = [
+  { thing: 'paint',    units: ['red', 'blue'],          unit: 'litre'  },
+  { thing: 'concrete', units: ['cement', 'sand'],       unit: 'kg'     },
+  { thing: 'drink',    units: ['juice', 'water'],       unit: 'cup'    },
+  { thing: 'mixture',  units: ['salt', 'sugar'],        unit: 'gram'   },
+  { thing: 'mortar',   units: ['sand', 'cement'],       unit: 'bag'    },
+  { thing: 'salad',    units: ['lettuce', 'tomato'],    unit: 'cup'    },
+];
+
+const mix3Contexts = [
+  { thing: 'smoothie', units: ['mango', 'banana', 'yoghurt'], unit: 'cup'   },
+  { thing: 'mortar',   units: ['cement', 'sand', 'gravel'],   unit: 'bag'   },
+  { thing: 'paint',    units: ['red', 'yellow', 'white'],     unit: 'litre' },
+  { thing: 'trail mix',units: ['nuts', 'raisins', 'seeds'],   unit: 'cup'   },
+];
+
+const shareContexts = [
+  { thing: 'prize money', unit: '$', prefix: '$' },
+  { thing: 'profit',      unit: '$', prefix: '$' },
+  { thing: 'marbles',     unit: 'marbles', prefix: '' },
+  { thing: 'sweets',      unit: 'sweets',  prefix: '' },
+  { thing: 'land',        unit: 'hectares',prefix: '' },
+  { thing: 'cookies',     unit: 'cookies', prefix: '' },
+];
+
+const scaleContexts = [
+  { thing: 'map',      from: 'cm on the map', to: 'km in real life' },
+  { thing: 'model',    from: 'cm on the model', to: 'm in real life' },
+  { thing: 'blueprint',from: 'cm on paper', to: 'm in real life' },
+];
+
+const names = ['Alex','Sam','Jordan','Taylor','Morgan','Casey','Riley','Quinn','Avery','Blake'];
+function twoNames() {
+  const a = randItem(names);
+  let b;
+  do { b = randItem(names); } while (b === a);
+  return [a, b];
+}
+function threeNames() {
+  const pool = [...names];
+  const pick = [];
+  while (pick.length < 3) {
+    const i = Math.floor(Math.random() * pool.length);
+    pick.push(pool.splice(i, 1)[0]);
+  }
+  return pick;
+}
+
+// ══════════════════════════════════════════════════════════════
+// EASY
+// ══════════════════════════════════════════════════════════════
+
+function makeSimplify() {
+  // Generate a ratio that needs simplifying
+  const simple = [rand(1,8), rand(1,8)];
+  const factor = randItem([2, 3, 4, 5, 6]);
+  const raw = simple.map(x => x * factor);
+  const ctx = randItem(mixContexts);
+  const ans = simplifyRatio(raw);
+  return {
+    typeLabel: 'Simplify', typeCls: 'simplify',
+    question: `Simplify the ratio <strong>${ratioStr(raw)}</strong>.`,
+    given: [`Ratio: ${ratioStr(raw)}`],
+    findDesc: 'Write in simplest form.',
+    findQ: `Simplest ratio = ?`,
+    answerType: 'ratio2',
+    answerVal: ans,
+    answerDisplay: ratioStr(ans),
+    inputNote: 'Enter as A:B (e.g. 3:2)',
+    vis: { type: 'bar2', parts: raw, labels: ['A', 'B'] },
+    steps: [
+      ['Find GCD', `GCD(${raw[0]}, ${raw[1]}) = ${gcd(raw[0],raw[1])}`],
+      ['Divide both parts', `${raw[0]} ÷ ${gcd(raw[0],raw[1])} = ${ans[0]},  ${raw[1]} ÷ ${gcd(raw[0],raw[1])} = ${ans[1]}`],
+      ['Simplified ratio', ratioStr(ans)],
+    ],
+    hint: `Divide both parts by their GCD (${gcd(raw[0],raw[1])}). ${raw[0]}÷${gcd(raw[0],raw[1])} = ${ans[0]}, ${raw[1]}÷${gcd(raw[0],raw[1])} = ${ans[1]}.`,
+  };
+}
+
+function makeScaleRatio() {
+  // Given ratio A:B and one actual value, find the other
+  const ctx = randItem(mixContexts);
+  const [rA, rB] = [rand(1,6), rand(1,6)];
+  // give the A amount, find B
+  const multiples = [2,3,4,5,6,8,10];
+  const k = randItem(multiples);
+  const amtA = rA * k;
+  const amtB = rB * k;
+  const [n1, n2] = twoNames();
+  return {
+    typeLabel: 'Scale Ratio', typeCls: 'scale',
+    question: `The ratio of ${ctx.units[0]} to ${ctx.units[1]} in a ${ctx.thing} is <strong>${rA} : ${rB}</strong>. If you use <strong>${amtA} ${ctx.unit}s</strong> of ${ctx.units[0]}, how many ${ctx.unit}s of ${ctx.units[1]} do you need?`,
+    given: [`Ratio ${ctx.units[0]} : ${ctx.units[1]} = ${rA} : ${rB}`, `${ctx.units[0]} used: ${amtA} ${ctx.unit}s`],
+    findDesc: 'Find the matching amount.',
+    findQ: `${ctx.units[1]} needed = ?`,
+    answerType: 'number',
+    answerVal: amtB,
+    answerDisplay: `${amtB}`,
+    inputNote: `Enter a number.`,
+    vis: { type: 'bar2', parts: [rA, rB], labels: [ctx.units[0], ctx.units[1]] },
+    steps: [
+      ['Find scale factor', `${amtA} ÷ ${rA} = ${k}`],
+      ['Apply to other part', `${rB} × ${k} = ${amtB} ${ctx.unit}s`],
+    ],
+    hint: `Scale factor = ${amtA} ÷ ${rA} = ${k}. Then ${rB} × ${k} = ${amtB}.`,
+  };
+}
+
+function makePartToWhole() {
+  // Part-to-whole: given ratio A:B, what fraction or percentage is A of total?
+  const ctx = randItem(mixContexts);
+  const [rA, rB] = [rand(1,7), rand(1,7)];
+  const total = rA + rB;
+  const fraction = `${rA}/${total}`;
+  const pct = Math.round((rA / total) * 100 * 10) / 10;
+  return {
+    typeLabel: 'Part-to-Whole', typeCls: 'part-whole',
+    question: `A bag contains red and blue marbles in the ratio <strong>${rA} : ${rB}</strong>. What fraction of the marbles are red?`,
+    given: [`Red : Blue = ${rA} : ${rB}`],
+    findDesc: 'Find the fraction of total.',
+    findQ: `Fraction that are red = ?`,
+    answerType: 'fraction',
+    answerVal: { n: rA, d: total },
+    answerDisplay: fraction,
+    inputNote: 'Enter as A/B (e.g. 3/7)',
+    vis: { type: 'bar2', parts: [rA, rB], labels: ['Red', 'Blue'] },
+    steps: [
+      ['Total parts', `${rA} + ${rB} = ${total}`],
+      ['Fraction red', `${rA} out of ${total} = ${rA}/${total}`],
+    ],
+    hint: `Total parts = ${rA} + ${rB} = ${total}. Fraction red = ${rA}/${total}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// MEDIUM
+// ══════════════════════════════════════════════════════════════
+
+function makeShareByRatio() {
+  // Share a total between two people in a given ratio
+  const ctx = randItem(shareContexts);
+  const [n1, n2] = twoNames();
+  const [rA, rB] = [rand(1,5), rand(1,5)];
+  const total = rA + rB;
+  // pick a total that divides evenly
+  const k = rand(2, 12);
+  const shareTotal = total * k;
+  const amtA = rA * k;
+  const amtB = rB * k;
+  return {
+    typeLabel: 'Sharing', typeCls: 'share',
+    question: `${n1} and ${n2} share <strong>${ctx.prefix}${shareTotal}</strong> in ${ctx.thing} in the ratio <strong>${rA} : ${rB}</strong>. How much does ${n1} get?`,
+    given: [`Total: ${ctx.prefix}${shareTotal}`, `Ratio ${n1} : ${n2} = ${rA} : ${rB}`],
+    findDesc: `Find ${n1}'s share.`,
+    findQ: `${n1}'s share = ?`,
+    answerType: 'number',
+    answerVal: amtA,
+    answerDisplay: `${amtA}`,
+    inputNote: `Enter a number.`,
+    vis: { type: 'bar2', parts: [rA, rB], labels: [n1, n2] },
+    steps: [
+      ['Total parts', `${rA} + ${rB} = ${total} parts`],
+      ['Value per part', `${shareTotal} ÷ ${total} = ${k} per part`],
+      [`${n1}'s share`, `${rA} × ${k} = ${amtA}`],
+    ],
+    hint: `Total parts = ${total}. Value per part = ${shareTotal}÷${total} = ${k}. ${n1} gets ${rA}×${k} = ${amtA}.`,
+  };
+}
+
+function makeCompareRatios() {
+  // Compare two ratios — which is larger (as a fraction)?
+  // e.g. 2:5 vs 3:7 — which has the larger A:total fraction?
+  const ctx = randItem(mixContexts);
+  let rA1, rB1, rA2, rB2, f1, f2;
+  do {
+    rA1 = rand(1,6); rB1 = rand(1,6);
+    rA2 = rand(1,6); rB2 = rand(1,6);
+    f1 = rA1 / (rA1 + rB1);
+    f2 = rA2 / (rA2 + rB2);
+  } while (Math.abs(f1 - f2) < 0.05 || f1 === f2);
+
+  const stronger = f1 > f2 ? `${rA1}:${rB1}` : `${rA2}:${rB2}`;
+  const strongerFrac = f1 > f2 ? `${rA1}/${rA1+rB1}` : `${rA2}/${rA2+rB2}`;
+
+  return {
+    typeLabel: 'Comparing', typeCls: 'compare',
+    question: `Two ${ctx.thing} mixtures are made with ${ctx.units[0]} and ${ctx.units[1]}:<br>
+      <strong>Mixture A:</strong> ${ctx.units[0]} to ${ctx.units[1]} = ${rA1} : ${rB1}<br>
+      <strong>Mixture B:</strong> ${ctx.units[0]} to ${ctx.units[1]} = ${rA2} : ${rB2}<br>
+      Which mixture has more ${ctx.units[0]}? Enter the fraction of ${ctx.units[0]} in the stronger mixture (as A/B).`,
+    given: [
+      `Mixture A: ${rA1}:${rB1}`,
+      `Mixture B: ${rA2}:${rB2}`,
+    ],
+    findDesc: 'Compare proportions.',
+    findQ: `Fraction of ${ctx.units[0]} in stronger = ?`,
+    answerType: 'fraction',
+    answerVal: f1 > f2 ? { n: rA1, d: rA1+rB1 } : { n: rA2, d: rA2+rB2 },
+    answerDisplay: strongerFrac,
+    inputNote: 'Enter as A/B in lowest terms.',
+    vis: { type: 'compare2', partsA: [rA1, rB1], partsB: [rA2, rB2], labels: [ctx.units[0], ctx.units[1]] },
+    steps: [
+      ['Mixture A fraction', `${rA1} / (${rA1}+${rB1}) = ${rA1}/${rA1+rB1} = ${r2(f1)}`],
+      ['Mixture B fraction', `${rA2} / (${rA2}+${rB2}) = ${rA2}/${rA2+rB2} = ${r2(f2)}`],
+      ['Compare', `${r2(f1)} ${f1>f2?'>':'<'} ${r2(f2)} → Mixture ${f1>f2?'A':'B'} has more ${ctx.units[0]}`],
+      ['Fraction', strongerFrac],
+    ],
+    hint: `Convert each to a fraction of the total. A: ${rA1}/${rA1+rB1}≈${r2(f1)}, B: ${rA2}/${rA2+rB2}≈${r2(f2)}. Mixture ${f1>f2?'A':'B'} is stronger.`,
+  };
+}
+
+function makeFindMissingTerm() {
+  // Given equivalent ratio, find the missing value: 3:5 = ?:20
+  const [rA, rB] = [rand(1,8), rand(1,8)];
+  const k = rand(2, 9);
+  const side = Math.random() < 0.5 ? 'left' : 'right'; // which side has the ?
+  let question, answerVal, steps;
+  if (side === 'right') {
+    // 3:5 = ?:20  → ? = 3*4 = 12  (given 5*4=20)
+    const given2 = rB * k;
+    answerVal = rA * k;
+    question = `Find the missing value: <strong>${rA} : ${rB} = ? : ${given2}</strong>`;
+    steps = [
+      ['Scale factor', `${given2} ÷ ${rB} = ${k}`],
+      ['Apply to first part', `${rA} × ${k} = ${answerVal}`],
+    ];
+  } else {
+    // 3:5 = 12:?  → ? = 5*4 = 20
+    const given1 = rA * k;
+    answerVal = rB * k;
+    question = `Find the missing value: <strong>${rA} : ${rB} = ${given1} : ?</strong>`;
+    steps = [
+      ['Scale factor', `${given1} ÷ ${rA} = ${k}`],
+      ['Apply to second part', `${rB} × ${k} = ${answerVal}`],
+    ];
+  }
+  return {
+    typeLabel: 'Equivalent Ratio', typeCls: 'scale',
+    question,
+    given: [`Base ratio: ${rA} : ${rB}`, `Scale factor: ${k}`],
+    findDesc: 'Find the missing term.',
+    findQ: `Missing value = ?`,
+    answerType: 'number',
+    answerVal,
+    answerDisplay: `${answerVal}`,
+    inputNote: 'Enter a number.',
+    vis: null,
+    steps,
+    hint: steps.map(([l,s]) => `${l}: ${s}`).join(' → '),
+  };
+}
+
+function makeThreeWayShare() {
+  // Share among three people
+  const ctx = randItem(shareContexts);
+  const [n1, n2, n3] = threeNames();
+  const [rA, rB, rC] = [rand(1,4), rand(1,4), rand(1,4)];
+  const total = rA + rB + rC;
+  const k = rand(3, 10);
+  const shareTotal = total * k;
+  const amtA = rA * k;
+  const amtC = rC * k;
+  // ask for one of the shares
+  const askFor = Math.random() < 0.5 ? n1 : n3;
+  const askAmt = askFor === n1 ? amtA : amtC;
+  const askR   = askFor === n1 ? rA   : rC;
+  return {
+    typeLabel: 'Three-Way Share', typeCls: 'share',
+    question: `${n1}, ${n2}, and ${n3} share <strong>${ctx.prefix}${shareTotal}</strong> in ${ctx.thing} in the ratio <strong>${rA} : ${rB} : ${rC}</strong>. How much does ${askFor} receive?`,
+    given: [`Total: ${ctx.prefix}${shareTotal}`, `Ratio: ${rA} : ${rB} : ${rC}`],
+    findDesc: `Find ${askFor}'s share.`,
+    findQ: `${askFor}'s share = ?`,
+    answerType: 'number',
+    answerVal: askAmt,
+    answerDisplay: `${askAmt}`,
+    inputNote: 'Enter a number.',
+    vis: { type: 'bar3', parts: [rA, rB, rC], labels: [n1, n2, n3] },
+    steps: [
+      ['Total parts', `${rA} + ${rB} + ${rC} = ${total} parts`],
+      ['Value per part', `${shareTotal} ÷ ${total} = ${k} per part`],
+      [`${askFor}'s share`, `${askR} × ${k} = ${askAmt}`],
+    ],
+    hint: `Value per part = ${shareTotal}÷${total} = ${k}. ${askFor} has ${askR} parts → ${askR}×${k} = ${askAmt}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// HARD
+// ══════════════════════════════════════════════════════════════
+
+function makeChangeRatio() {
+  // Items are added/removed and the ratio changes
+  const ctx = randItem(mixContexts);
+  const [rA, rB] = [rand(2,5), rand(2,5)];
+  const k = rand(3, 8);
+  let amtA = rA * k, amtB = rB * k;
+  // add some of B to make a new ratio
+  const add = rand(2, 10) * rB; // add a clean multiple so new ratio simplifies
+  const newB = amtB + add;
+  const newRatio = simplifyRatio([amtA, newB]);
+  return {
+    typeLabel: 'Changing Ratio', typeCls: 'mixed',
+    question: `The ratio of ${ctx.units[0]} to ${ctx.units[1]} in a container is <strong>${rA} : ${rB}</strong>. The container holds <strong>${amtA + amtB} ${ctx.unit}s</strong> in total. Then <strong>${add} ${ctx.unit}s</strong> of ${ctx.units[1]} are added. What is the new ratio of ${ctx.units[0]} to ${ctx.units[1]}? Simplify your answer.`,
+    given: [
+      `Original ratio: ${rA}:${rB}`,
+      `Total: ${amtA + amtB} ${ctx.unit}s`,
+      `Added: ${add} ${ctx.unit}s of ${ctx.units[1]}`,
+    ],
+    findDesc: 'Find the new simplified ratio.',
+    findQ: `New ratio ${ctx.units[0]} : ${ctx.units[1]} = ?`,
+    answerType: 'ratio2',
+    answerVal: newRatio,
+    answerDisplay: ratioStr(newRatio),
+    inputNote: 'Enter as A:B in simplest form.',
+    vis: null,
+    steps: [
+      ['Find original amounts', `Total = ${amtA+amtB}, ratio ${rA}:${rB} → ${ctx.units[0]}: ${amtA}, ${ctx.units[1]}: ${amtB}`],
+      ['Add to second part', `${ctx.units[1]}: ${amtB} + ${add} = ${newB}`],
+      ['New ratio', `${amtA} : ${newB}`],
+      ['Simplify', `GCD(${amtA},${newB}) = ${gcd(amtA,newB)} → ${ratioStr(newRatio)}`],
+    ],
+    hint: `${ctx.units[0]}: ${amtA}, ${ctx.units[1]}: ${amtB}+${add}=${newB}. Ratio ${amtA}:${newB} → simplify by ${gcd(amtA,newB)} → ${ratioStr(newRatio)}.`,
+  };
+}
+
+function makeMapScale() {
+  const ctx = randItem(scaleContexts);
+  const scaleA = rand(1,3);
+  const scaleB = rand(100, 5000);
+  // round scaleB to something clean
+  const cleanB = Math.round(scaleB / 50) * 50 || 100;
+  const mapDist = rand(2, 15);
+  const realDist = mapDist * cleanB / scaleA;
+  return {
+    typeLabel: 'Scale', typeCls: 'scale',
+    question: `A ${ctx.thing} has a scale of <strong>${scaleA} cm : ${cleanB} m</strong>. A measurement on the ${ctx.thing} is <strong>${mapDist} cm</strong>. What is the real-life distance in metres?`,
+    given: [`Scale: ${scaleA} cm : ${cleanB} m`, `Measured: ${mapDist} cm`],
+    findDesc: 'Apply the scale.',
+    findQ: `Real distance (m) = ?`,
+    answerType: 'number',
+    answerVal: realDist,
+    answerDisplay: `${realDist}`,
+    inputNote: 'Enter a number.',
+    vis: null,
+    steps: [
+      ['Unit rate', `${cleanB} ÷ ${scaleA} = ${cleanB/scaleA} m per cm`],
+      ['Multiply by measurement', `${mapDist} × ${cleanB/scaleA} = ${realDist} m`],
+    ],
+    hint: `${cleanB}÷${scaleA} = ${cleanB/scaleA} m per cm. ${mapDist} × ${cleanB/scaleA} = ${realDist} m.`,
+  };
+}
+
+function makeAllocationChange() {
+  // Ratio changes after one person contributes more — find new shares
+  const ctx = randItem(shareContexts);
+  const [n1, n2] = twoNames();
+  const [rA, rB] = [rand(1,4), rand(1,4)];
+  const k = rand(4,10);
+  const total1 = (rA + rB) * k;
+  // n1 adds extra, changing ratio
+  const extra = rand(1,4) * (rA + rB); // extra contributed by n1
+  const newTotal = total1 + extra;
+  // new ratio: n1 contributed rA*k + extra, n2 contributed rB*k
+  const newParts = simplifyRatio([rA*k + extra, rB*k]);
+  const newK = newTotal / (newParts[0] + newParts[1]);
+  const newShareA = newParts[0] * newK;
+
+  return {
+    typeLabel: 'Changing Ratio', typeCls: 'mixed',
+    question: `${n1} and ${n2} invest in a business in the ratio <strong>${rA} : ${rB}</strong>, with a total of <strong>${ctx.prefix}${total1}</strong>. Later, ${n1} invests an additional <strong>${ctx.prefix}${extra}</strong>. In what ratio do they now share the <strong>${ctx.prefix}${newTotal}</strong> total? Simplify your answer.`,
+    given: [
+      `Original ratio: ${rA}:${rB}, total: ${ctx.prefix}${total1}`,
+      `${n1} adds: ${ctx.prefix}${extra}`,
+      `New total: ${ctx.prefix}${newTotal}`,
+    ],
+    findDesc: 'Find the new ratio.',
+    findQ: `New ratio ${n1} : ${n2} = ?`,
+    answerType: 'ratio2',
+    answerVal: newParts,
+    answerDisplay: ratioStr(newParts),
+    inputNote: 'Enter as A:B in simplest form.',
+    vis: null,
+    steps: [
+      ['Original amounts', `${n1}: ${rA*k}, ${n2}: ${rB*k}`],
+      [`After ${n1} adds`, `${n1}: ${rA*k}+${extra} = ${rA*k+extra}`],
+      ['New ratio', `${rA*k+extra} : ${rB*k}`],
+      ['Simplify', `GCD = ${gcd(rA*k+extra, rB*k)} → ${ratioStr(newParts)}`],
+    ],
+    hint: `${n1}: ${rA*k}+${extra}=${rA*k+extra}, ${n2}: ${rB*k}. Ratio ${rA*k+extra}:${rB*k} → ÷${gcd(rA*k+extra,rB*k)} → ${ratioStr(newParts)}.`,
+  };
+}
+
+function makeThreeWaySimplify() {
+  const ctx = randItem(mix3Contexts);
+  const simple = [rand(1,5), rand(1,5), rand(1,5)];
+  const factor = randItem([2,3,4,5]);
+  const raw = simple.map(x => x * factor);
+  const ans = simplifyRatio(raw);
+  return {
+    typeLabel: 'Simplify 3-Part', typeCls: 'simplify',
+    question: `A ${ctx.thing} uses ${ctx.units[0]}, ${ctx.units[1]}, and ${ctx.units[2]} in the amounts <strong>${raw[0]} : ${raw[1]} : ${raw[2]}</strong>. Write this ratio in its simplest form.`,
+    given: [`Ratio: ${ratioStr(raw)}`],
+    findDesc: 'Simplify the three-part ratio.',
+    findQ: `Simplest form = ?`,
+    answerType: 'ratio3',
+    answerVal: ans,
+    answerDisplay: ratioStr(ans),
+    inputNote: 'Enter as A:B:C',
+    vis: { type: 'bar3', parts: raw, labels: ctx.units },
+    steps: [
+      ['Find GCD of all three', `GCD(${raw[0]}, ${raw[1]}, ${raw[2]}) = ${factor}`],
+      ['Divide each part', raw.map((v,i) => `${v}÷${factor}=${ans[i]}`).join(',  ')],
+      ['Simplified ratio', ratioStr(ans)],
+    ],
+    hint: `GCD of ${raw.join(',')} = ${factor}. Divide each by ${factor}: ${ratioStr(ans)}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// Dispatcher
+// ══════════════════════════════════════════════════════════════
+function makeProblem() {
+  let p;
+  if (difficulty === 'easy') {
+    p = randItem([makeSimplify, makeSimplify, makeScaleRatio, makePartToWhole])();
+  } else if (difficulty === 'medium') {
+    p = randItem([makeShareByRatio, makeCompareRatios, makeFindMissingTerm, makeThreeWayShare])();
+  } else {
+    p = randItem([makeChangeRatio, makeMapScale, makeAllocationChange, makeThreeWaySimplify])();
+  }
+  p.difficulty = difficulty;
+  return p;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Answer checking
+// ══════════════════════════════════════════════════════════════
+function parseRatio2(s) {
+  const m = s.trim().match(/^(\d+)\s*[:]\s*(\d+)$/);
+  return m ? [parseInt(m[1]), parseInt(m[2])] : null;
+}
+function parseRatio3(s) {
+  const m = s.trim().match(/^(\d+)\s*[:]\s*(\d+)\s*[:]\s*(\d+)$/);
+  return m ? [parseInt(m[1]), parseInt(m[2]), parseInt(m[3])] : null;
+}
+function parseFraction(s) {
+  const m = s.trim().match(/^(-?\d+)\s*\/\s*(-?\d+)$/);
+  if (m) { const n=parseInt(m[1]),d=parseInt(m[2]); return {n,d}; }
+  const n = parseInt(s.trim());
+  if (!isNaN(n)) return {n, d:1};
+  return null;
+}
+function fracEq(a, b) {
+  // cross multiply to compare
+  return a.n * b.d === b.n * a.d;
+}
+function simplifyFrac(n,d) { const g=gcd(Math.abs(n),d); return {n:n/g,d:d/g}; }
+
+function checkAnswer() {
+  if (answered) return;
+  const raw = document.getElementById('answerInput').value.trim();
+  if (!raw) { showFeedback('partial','Enter your answer first.'); return; }
+
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+
+  let correct_ans = false;
+  const t = prob.answerType;
+
+  if (t === 'ratio2') {
+    const user = parseRatio2(raw);
+    if (!user) { showFeedback('partial','Format: A:B (e.g. 3:2)'); attempts--; document.getElementById('statAttempts').textContent = attempts; return; }
+    // check equivalent AND simplified
+    const g = gcd(user[0], user[1]);
+    const simplified = [user[0]/g, user[1]/g];
+    if (simplified[0] === prob.answerVal[0] && simplified[1] === prob.answerVal[1]) correct_ans = true;
+    else if (user[0] * prob.answerVal[1] === prob.answerVal[0] * user[1] && g > 1) {
+      showFeedback('partial',`Equivalent but not fully simplified. Try ${prob.answerDisplay}.`); return;
+    }
+  } else if (t === 'ratio3') {
+    const user = parseRatio3(raw);
+    if (!user) { showFeedback('partial','Format: A:B:C (e.g. 2:3:5)'); attempts--; document.getElementById('statAttempts').textContent = attempts; return; }
+    const g = gcd(gcd(user[0],user[1]),user[2]);
+    const s = user.map(x=>x/g);
+    if (s[0]===prob.answerVal[0] && s[1]===prob.answerVal[1] && s[2]===prob.answerVal[2]) correct_ans = true;
+    else if (g>1) { showFeedback('partial',`Equivalent but not fully simplified. Try ${prob.answerDisplay}.`); return; }
+  } else if (t === 'fraction') {
+    const user = parseFraction(raw);
+    if (!user) { showFeedback('partial','Format: A/B (e.g. 3/7)'); attempts--; document.getElementById('statAttempts').textContent = attempts; return; }
+    if (fracEq(user, prob.answerVal)) {
+      const us = simplifyFrac(user.n, user.d);
+      if (us.n === prob.answerVal.n && us.d === prob.answerVal.d) correct_ans = true;
+      else { showFeedback('partial',`Correct value but simplify: ${prob.answerDisplay}`); return; }
+    }
+  } else { // number
+    const user = parseFloat(raw);
+    if (isNaN(user)) { showFeedback('partial','Enter a number.'); attempts--; document.getElementById('statAttempts').textContent = attempts; return; }
+    const tol = Math.max(0.01 * Math.abs(prob.answerVal), 0.01);
+    if (Math.abs(user - prob.answerVal) <= tol) correct_ans = true;
+  }
+
+  if (correct_ans) {
+    correct++; streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent  = streak;
+    showFeedback('correct', streak >= 3
+      ? `🔥 ${streak} in a row! Answer: ${prob.answerDisplay}`
+      : `✓ Correct! Answer: ${prob.answerDisplay}`);
+    answered = true;
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    showFeedback('wrong', `Not quite. Check your working or use the hint.`);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Rendering
+// ══════════════════════════════════════════════════════════════
+const SEG_COLORS = ['seg-a','seg-b','seg-c'];
+
+function renderVis(vis) {
+  const el = document.getElementById('ratioVis');
+  if (!vis) { el.innerHTML=''; return; }
+
+  const maxPart = Math.max(...(vis.partsA || vis.parts || []));
+  const scale = px => Math.max(32, Math.round((px / maxPart) * 120));
+
+  if (vis.type === 'bar2' || vis.type === 'bar3') {
+    const parts = vis.parts;
+    const total = parts.reduce((a,b)=>a+b,0);
+    let html = '<div class="ratio-vis">';
+    parts.forEach((p,i) => {
+      const w = Math.max(36, Math.round((p/total)*280));
+      html += `<div class="ratio-seg ${SEG_COLORS[i]}" style="width:${w}px">${vis.labels[i]}: ${p}</div>`;
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } else if (vis.type === 'compare2') {
+    const tA = vis.partsA[0]+vis.partsA[1], tB = vis.partsB[0]+vis.partsB[1];
+    let html = '<div style="display:flex;flex-direction:column;gap:0.4rem;width:100%">';
+    ['A','B'].forEach((lbl,idx) => {
+      const parts = idx===0?vis.partsA:vis.partsB;
+      const total = parts[0]+parts[1];
+      html += `<div style="display:flex;align-items:center;gap:0.4rem"><span style="font-size:0.75rem;font-family:DM Mono,monospace;width:22px">Mix ${lbl}</span>`;
+      parts.forEach((p,i) => {
+        const w = Math.max(28, Math.round((p/total)*220));
+        html += `<div class="ratio-seg ${SEG_COLORS[i]}" style="width:${w}px">${vis.labels[i]}: ${p}</div>`;
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+function setDiff(d) {
+  difficulty = d;
+  ['easy','medium','hard'].forEach(x => {
+    const key = 'd' + x.charAt(0).toUpperCase() + x.slice(1);
+    document.getElementById(key).classList.toggle('active', x === d);
+  });
+  newProblem();
+}
+
+function updatePanel() {
+  const badge = document.getElementById('typeBadge');
+  badge.textContent = prob.typeLabel;
+  badge.className = 'type-badge ' + (prob.typeCls||'');
+  document.getElementById('questionText').innerHTML = prob.question;
+  const given = document.getElementById('givenDims');
+  given.innerHTML = prob.given.map(g =>
+    `<div>${g.replace(/(\d[\d.,]*)/g, '<span class="val">$1</span>')}</div>`
+  ).join('');
+  document.getElementById('findDesc').textContent = prob.findDesc;
+  document.getElementById('findQuestion').textContent = prob.findQ;
+  document.getElementById('inputNote').textContent = prob.inputNote;
+  renderVis(prob.vis);
+}
+
+function newProblem() {
+  prob = makeProblem();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('answerInput').placeholder =
+    prob.answerType === 'ratio2' ? 'e.g. 3:2' :
+    prob.answerType === 'ratio3' ? 'e.g. 2:3:5' :
+    prob.answerType === 'fraction' ? 'e.g. 3/7' : 'e.g. 15';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('hintText').className = 'hint-text';
+  document.getElementById('hintText').textContent = '';
+  document.getElementById('stepsBox').className = 'steps-box';
+  document.getElementById('stepsBox').innerHTML = '';
+  updatePanel();
+  document.getElementById('answerInput').focus();
+}
+
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+function toggleHint() {
+  const hint  = document.getElementById('hintText');
+  const steps = document.getElementById('stepsBox');
+  if (hint.classList.contains('show')) {
+    hint.classList.remove('show'); steps.classList.remove('show'); return;
+  }
+  let html = '<strong style="font-style:normal;color:var(--accent2);font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;">Solution</strong><br>';
+  prob.steps.forEach(([label, expr], i) => {
+    html += `<span class="step-label">Step ${i+1}: ${label}</span><br>`;
+    html += `<span class="step-line">&nbsp;&nbsp;${expr}</span><br>`;
+  });
+  steps.innerHTML = html;
+  steps.classList.add('show');
+  hint.textContent = `Hint: ${prob.hint}`;
+  hint.classList.add('show');
+}
+
+newProblem();
+</script>
+</body>
+</html>
