@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multiplying &amp; Dividing Fractions</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #e8f0f5;
+    --paper:  #f4f8fd;
+    --ink:    #161c1c;
+    --muted:  #607080;
+    --border: #b0c4d4;
+    --accent: #1a6bbf;
+    --accent2:#0e4d8a;
+    --green:  #1a7a4a;
+    --orange: #b85c00;
+    --red:    #c0392b;
+    --shadow: rgba(20,40,70,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg); color: var(--ink);
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(100,140,180,0.12) 27px, rgba(100,140,180,0.12) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(100,140,180,0.07) 27px, rgba(100,140,180,0.07) 28px);
+  }
+
+  header { text-align: center; margin-bottom: 0.7rem; }
+  header h1 { font-size: clamp(1.3rem,3vw,1.9rem); font-weight:700; color:var(--ink); letter-spacing:-0.5px; }
+  header p  { color:var(--muted); font-size:0.82rem; font-style:italic; margin-top:0.15rem; }
+
+  .card {
+    background:var(--paper); border:1px solid var(--border); border-radius:4px;
+    box-shadow:4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding:1.4rem 1.8rem; width:100%; max-width:900px;
+    display:flex; flex-direction:column; gap:1rem;
+  }
+
+  .top-row { display:flex; flex-direction:row; gap:1.2rem; align-items:stretch; }
+
+  .question-panel {
+    flex:1 1 0; min-width:0; display:flex; flex-direction:column; justify-content:center;
+    background:#eef4fa; border:1px solid var(--border); border-radius:4px;
+    min-height:320px; padding:1.6rem 1.8rem; gap:1.3rem;
+  }
+
+  .type-badge {
+    font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px;
+    color:white; background:var(--accent); border-radius:3px;
+    padding:0.18rem 0.55rem; align-self:flex-start;
+  }
+  .type-badge.multiply      { background:#1a6bbf; }
+  .type-badge.divide        { background:#0e4d8a; }
+  .type-badge.mixed-mul     { background:#1565c0; }
+  .type-badge.mixed-div     { background:#0d47a1; }
+  .type-badge.chain         { background:#1976d2; }
+  .type-badge.cross-cancel  { background:#01579b; }
+
+  /* ── Big fraction display ── */
+  .expr-display {
+    display:flex; align-items:center; gap:0.55rem;
+    flex-wrap:wrap; font-size:1.1rem; min-height:3.5rem;
+  }
+
+  .big-frac {
+    display:inline-flex; flex-direction:column; align-items:center;
+    font-family:'DM Mono',monospace; font-size:1.4rem; font-weight:700;
+    vertical-align:middle; line-height:1.1;
+  }
+  .big-frac .fn { border-bottom:2.5px solid var(--ink); padding:0 0.25em 0.1em; min-width:1.2em; text-align:center; }
+  .big-frac .fd { padding:0.1em 0.25em 0; min-width:1.2em; text-align:center; }
+
+  .big-mixed {
+    display:inline-flex; align-items:flex-start; gap:0.15em;
+    font-family:'DM Mono',monospace; font-size:1.4rem; vertical-align:middle;
+  }
+  .big-mixed .whole { font-weight:700; line-height:2.2; font-size:1em; }
+
+  .op-sym {
+    font-family:'DM Mono',monospace; font-size:1.6rem; font-weight:700;
+    color:var(--accent); line-height:1;
+  }
+  .eq-sym { font-family:'DM Mono',monospace; font-size:1.5rem; color:var(--muted); }
+  .blank-box {
+    border-bottom:2.5px solid var(--accent2); min-width:2.5em;
+    display:inline-block; text-align:center; font-family:'DM Mono',monospace;
+    font-size:1.4rem; color:var(--accent2);
+  }
+
+  /* ── Area model visual ── */
+  .area-model {
+    display:flex; flex-direction:column; gap:0.35rem; align-items:flex-start;
+  }
+  .area-label {
+    font-size:0.72rem; color:var(--muted); font-style:italic;
+    font-family:'Libre Baskerville',serif;
+  }
+  .area-grid {
+    display:grid; gap:2px;
+  }
+  .area-cell {
+    width:22px; height:22px; border-radius:2px;
+    background:#dce8f5; border:1px solid #b0c4d4;
+  }
+  .area-cell.filled { background:var(--accent); border-color:var(--accent2); }
+
+  .steps-box {
+    width:100%; background:rgba(26,107,191,0.05); border:1px solid rgba(26,107,191,0.2);
+    border-radius:4px; padding:0.7rem 0.9rem; font-size:0.82rem; color:var(--ink);
+    line-height:1.8; font-style:italic; display:none;
+  }
+  .steps-box.show { display:block; }
+  .steps-box .sl { font-family:'DM Mono',monospace; font-style:normal; font-size:0.85rem; }
+  .steps-box .sk { color:var(--accent2); font-weight:700; font-style:normal; }
+
+  /* ── Right panel ── */
+  .info-panel { flex:0 0 240px; display:flex; flex-direction:column; gap:0.7rem; }
+
+  .given-box {
+    background:rgba(26,107,191,0.07); border:1.5px solid rgba(26,107,191,0.3);
+    border-radius:4px; padding:0.7rem 0.9rem;
+  }
+  .given-box h3 { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent); margin-bottom:0.4rem; }
+  .given-item  { font-size:0.88rem; color:var(--ink); line-height:1.75; }
+  .given-item .val { font-family:'DM Mono',monospace; font-weight:500; color:var(--accent2); }
+
+  .find-box {
+    background:rgba(14,77,138,0.06); border:1.5px solid rgba(14,77,138,0.28);
+    border-radius:4px; padding:0.7rem 0.9rem;
+  }
+  .find-box h3 { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent2); margin-bottom:0.4rem; }
+  .find-box p  { font-size:0.92rem; color:var(--ink); font-style:italic; }
+  .find-box .fq { font-style:normal; font-size:0.88rem; color:var(--accent2); font-weight:700; margin-top:0.35rem; line-height:1.5; }
+
+  .reminder-box {
+    background:rgba(14,77,138,0.05); border:1.5px solid rgba(14,77,138,0.2);
+    border-radius:4px; padding:0.65rem 0.9rem;
+  }
+  .reminder-box h3 { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent2); margin-bottom:0.35rem; }
+  .reminder-box p  { font-size:0.8rem; color:var(--ink); line-height:1.7; }
+  .reminder-box .rule { font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--accent); display:block; margin-top:0.2rem; }
+
+  .answer-row { display:flex; gap:0.7rem; align-items:flex-start; }
+  .answer-wrap { flex:1; display:flex; flex-direction:column; gap:0.25rem; }
+
+  input[type="text"] {
+    width:100%; background:white; border:1.5px solid var(--border); border-radius:4px;
+    padding:0.6rem 0.9rem; font-size:1.1rem; font-family:'DM Mono',monospace;
+    color:var(--ink); outline:none; transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(26,107,191,0.14); }
+  .input-note { font-size:0.7rem; color:var(--muted); font-style:italic; }
+
+  .btn-row { display:flex; gap:0.6rem; }
+  button {
+    flex:1; border:none; border-radius:4px; padding:0.65rem 1rem;
+    font-family:'Libre Baskerville',serif; font-size:0.88rem; font-weight:700;
+    cursor:pointer; transition:transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+  button:active { transform:scale(0.97); }
+  .btn-check { background:var(--accent2); color:white; box-shadow:2px 2px 0 rgba(14,77,138,0.4); }
+  .btn-check:hover { filter:brightness(1.2); }
+  .btn-new { background:var(--paper); color:var(--ink); border:1.5px solid var(--border); box-shadow:2px 2px 0 var(--border); }
+  .btn-new:hover { background:var(--bg); }
+
+  .hint-btn {
+    width:100%; background:transparent; border:1px dashed var(--border); color:var(--muted);
+    font-size:0.78rem; padding:0.42rem; border-radius:4px;
+    font-family:'Libre Baskerville',serif; font-style:italic; cursor:pointer;
+  }
+  .hint-btn:hover { border-color:var(--accent); color:var(--ink); }
+
+  .hint-text {
+    display:none; background:rgba(26,107,191,0.06); border:1px solid rgba(26,107,191,0.25);
+    border-radius:4px; padding:0.6rem 0.8rem; font-size:0.82rem; color:#0e3d6e; line-height:1.7; font-style:italic;
+  }
+  .hint-text.show { display:block; }
+
+  .feedback {
+    border-radius:4px; padding:0.55rem 0.9rem; font-size:0.88rem; font-weight:700;
+    text-align:center; min-height:2rem; display:flex; align-items:center; justify-content:center; transition:all 0.2s;
+  }
+  .feedback.correct { background:rgba(26,122,74,0.1); border:1.5px solid rgba(26,122,74,0.4); color:var(--green); }
+  .feedback.wrong   { background:rgba(192,57,43,0.08); border:1.5px solid rgba(192,57,43,0.3); color:var(--red); }
+  .feedback.partial { background:rgba(184,92,0,0.08); border:1.5px solid rgba(184,92,0,0.3); color:var(--orange); }
+
+  .stats-row { display:flex; gap:1rem; justify-content:center; border-top:1px solid var(--border); padding-top:0.7rem; }
+  .stat { text-align:center; font-size:0.75rem; color:var(--muted); }
+  .stat strong { display:block; font-size:1.1rem; color:var(--ink); font-family:'DM Mono',monospace; }
+
+  .difficulty-row { display:flex; gap:0.5rem; align-items:center; font-size:0.78rem; color:var(--muted); font-style:italic; }
+  .diff-btn {
+    flex:none; padding:0.3rem 0.7rem; font-size:0.75rem; font-weight:700; border-radius:3px;
+    border:1.5px solid var(--border); background:var(--paper); color:var(--muted);
+    cursor:pointer; font-family:'Libre Baskerville',serif; transition:all 0.15s;
+  }
+  .diff-btn.active { background:var(--accent); color:white; border-color:var(--accent); }
+  .diff-btn:hover:not(.active) { border-color:var(--accent); color:var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Multiplying &amp; Dividing Fractions</h1>
+  <p>Proper fractions, mixed numbers, cross-cancelling, and chained operations.</p>
+</header>
+
+<div class="card">
+  <div class="difficulty-row">
+    Difficulty:
+    <button class="diff-btn active" id="dEasy"   onclick="setDiff('easy')">Easy</button>
+    <button class="diff-btn"        id="dMedium" onclick="setDiff('medium')">Medium</button>
+    <button class="diff-btn"        id="dHard"   onclick="setDiff('hard')">Hard</button>
+  </div>
+
+  <div class="top-row">
+    <div class="question-panel">
+      <div class="type-badge" id="typeBadge">Multiply Fractions</div>
+      <div class="expr-display" id="exprDisplay"></div>
+      <div id="areaModel"></div>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+
+    <div class="info-panel">
+      <div class="reminder-box" id="reminderBox">
+        <h3>Key Rules</h3>
+        <p>Multiply: multiply tops, multiply bottoms.<span class="rule">a/b × c/d = ac/bd</span></p>
+        <p style="margin-top:0.4rem">Divide: multiply by the reciprocal.<span class="rule">a/b ÷ c/d = a/b × d/c</span></p>
+      </div>
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Evaluate</h3>
+        <p id="findDesc">Simplify completely.</p>
+        <div class="fq" id="findQuestion"></div>
+      </div>
+      <div class="answer-row">
+        <div class="answer-wrap">
+          <input type="text" id="answerInput" placeholder="e.g. 2/3 or 1 1/2" onkeydown="handleKey(event)" autocomplete="off">
+          <span class="input-note" id="inputNote">Enter as fraction (3/4), mixed number (2 1/3), or integer.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new"   onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show step-by-step solution</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback"   id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// Fraction engine
+// ══════════════════════════════════════════════════════════════
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){[a,b]=[b,a%b];} return a||1; }
+
+function F(n,d=1){
+  if(d===0) throw 'zero denom';
+  if(d<0){n=-n;d=-d;}
+  const g=gcd(Math.abs(n),d);
+  return {n:n/g, d:d/g};
+}
+function fmul(a,b){ return F(a.n*b.n, a.d*b.d); }
+function fdiv(a,b){ return F(a.n*b.d, a.d*b.n); }
+function fstr(f){
+  if(f.d===1) return `${f.n}`;
+  if(Math.abs(f.n)>=f.d){
+    const w=Math.trunc(f.n/f.d), r=Math.abs(f.n)-Math.abs(w)*f.d;
+    if(r===0) return `${w}`;
+    return `${w} ${r}/${f.d}`;
+  }
+  return `${f.n}/${f.d}`;
+}
+function feq(a,b){ return a.n===b.n && a.d===b.d; }
+
+// Parse "2 3/4", "3/4", or "5"
+function parseMixed(s){
+  s=s.trim();
+  let m=s.match(/^(-?)(\d+)\s+(\d+)\/(\d+)$/);
+  if(m){ const sg=m[1]==='-'?-1:1,w=parseInt(m[2]),n=parseInt(m[3]),d=parseInt(m[4]); return F(sg*(w*d+n),d); }
+  m=s.match(/^(-?\d+)\/(\d+)$/);
+  if(m) return F(parseInt(m[1]),parseInt(m[2]));
+  const n=parseInt(s);
+  if(!isNaN(n)) return F(n);
+  return null;
+}
+
+// ── Helpers ────────────────────────────────────────────────────
+function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function randItem(a)  { return a[Math.floor(Math.random()*a.length)]; }
+
+// ── HTML fraction builders ─────────────────────────────────────
+function bigFrac(n,d){
+  return `<span class="big-frac"><span class="fn">${n}</span><span class="fd">${d}</span></span>`;
+}
+function bigMixed(w,n,d){
+  return `<span class="big-mixed"><span class="whole">${w}</span>${bigFrac(n,d)}</span>`;
+}
+function fracToHtml(f){
+  if(f.d===1) return `<span style="font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:700">${f.n}</span>`;
+  if(Math.abs(f.n)>f.d){
+    const w=Math.trunc(f.n/f.d), r=Math.abs(f.n)-Math.abs(w)*f.d;
+    if(r===0) return `<span style="font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:700">${w}</span>`;
+    return bigMixed(w, r, f.d);
+  }
+  return bigFrac(f.n, f.d);
+}
+
+// Area model HTML for a×b/c×d type problems (small denominators only)
+function areaModelHtml(na,da,nb,db){
+  if(da>8||db>8) return ''; // skip for large denoms
+  let html=`<div class="area-model"><div class="area-label">Area model: ${na}/${da} × ${nb}/${db}</div>`;
+  html+=`<div class="area-grid" style="grid-template-columns:repeat(${db},22px)">`;
+  for(let r=0;r<da;r++){
+    for(let c=0;c<db;c++){
+      const filled = r<na && c<nb;
+      html+=`<div class="area-cell${filled?' filled':''}"></div>`;
+    }
+  }
+  html+=`</div><div class="area-label">${na*nb} shaded out of ${da*db} = ${fstr(F(na*nb,da*db))}</div></div>`;
+  return html;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Problem generators
+// ══════════════════════════════════════════════════════════════
+let prob={}, attempts=0, correct=0, streak=0, answered=false, difficulty='easy';
+
+// ── EASY ──────────────────────────────────────────────────────
+
+function makeMulProper(){
+  // Simple proper × proper, no cross-cancel needed
+  const da=randItem([2,3,4,5,6]), db=randItem([2,3,4,5,6]);
+  const na=rand(1,da-1), nb=rand(1,db-1);
+  const a=F(na,da), b=F(nb,db);
+  const ans=fmul(a,b);
+  const rawN=na*nb, rawD=da*db, g=gcd(rawN,rawD);
+  return{
+    typeLabel:'Multiply Fractions', typeCls:'multiply',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">×</span>`+fracToHtml(b)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)} and ${fstr(b)}`],
+    findDesc:'Multiply and simplify completely.',
+    findQ:`${fstr(a)} × ${fstr(b)} = ?`,
+    ans,
+    areaVis: da<=6&&db<=6 ? areaModelHtml(na,da,nb,db) : '',
+    inputNote:'Enter as fraction (e.g. 2/3) or integer.',
+    steps:[
+      ['Multiply numerators',`${na} × ${nb} = ${rawN}`],
+      ['Multiply denominators',`${da} × ${db} = ${rawD}`],
+      ['Unsimplified result',`${rawN}/${rawD}`],
+      g>1?['Simplify (GCD = '+g+')',`${rawN}÷${g} / ${rawD}÷${g} = ${fstr(ans)}`]:['Already simplified',fstr(ans)],
+    ],
+    hint:`Multiply tops: ${na}×${nb}=${rawN}. Multiply bottoms: ${da}×${db}=${rawD}. Simplify: ${fstr(ans)}.`,
+  };
+}
+
+function makeDivProper(){
+  // Simple proper ÷ proper
+  const da=randItem([2,3,4,5,6]), db=randItem([2,3,4,5,6]);
+  const na=rand(1,da-1), nb=rand(1,db-1);
+  const a=F(na,da), b=F(nb,db);
+  const recip=F(b.d,b.n);
+  const ans=fdiv(a,b);
+  return{
+    typeLabel:'Divide Fractions', typeCls:'divide',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">÷</span>`+fracToHtml(b)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)} and ${fstr(b)}`],
+    findDesc:'Divide: multiply by the reciprocal.',
+    findQ:`${fstr(a)} ÷ ${fstr(b)} = ?`,
+    ans,
+    areaVis:'',
+    inputNote:'Enter as fraction (e.g. 4/3) or mixed number (1 1/3).',
+    steps:[
+      ['Write reciprocal of divisor',`Reciprocal of ${fstr(b)} = ${fstr(recip)}`],
+      ['Multiply instead',`${fstr(a)} × ${fstr(recip)}`],
+      ['Multiply numerators',`${a.n} × ${recip.n} = ${a.n*recip.n}`],
+      ['Multiply denominators',`${a.d} × ${recip.d} = ${a.d*recip.d}`],
+      ['Simplify',fstr(ans)],
+    ],
+    hint:`Flip the divisor: ${fstr(b)} → ${fstr(recip)}. Then multiply: ${fstr(a)} × ${fstr(recip)} = ${fstr(ans)}.`,
+  };
+}
+
+// ── MEDIUM ────────────────────────────────────────────────────
+
+function makeCrossCancel(){
+  // Deliberately set up so cross-cancelling simplifies things nicely
+  // Choose factor pairs so numerator of a shares factor with denom of b
+  const f1=randItem([2,3,4,5,6]);
+  const f2=randItem([2,3,4,5]);
+  const na=f1*rand(1,3), db=f1*rand(1,3);  // na & db share f1
+  const nb=f2*rand(1,3), da=f2*rand(1,4);  // nb & da share f2
+  // Ensure proper fractions: na<da, nb<db
+  const a=F(na,da+na > da ? da+na : da);
+  const b=F(nb < db ? nb : nb%db||1, db);
+  const na2=Math.min(na, a.d-1)||1, nb2=Math.min(nb, b.d-1)||1;
+  const aF=F(na2,a.d), bF=F(nb2,b.d);
+  const ans=fmul(aF,bF);
+
+  // cross-cancel: gcd(na2, b.d) and gcd(nb2, a.d)
+  const g1=gcd(na2,b.d), g2=gcd(nb2,a.d);
+  const cn1=na2/g1, cd2=b.d/g1, cn2=nb2/g2, cd1=a.d/g2;
+  return{
+    typeLabel:'Cross-Cancelling', typeCls:'cross-cancel',
+    exprHtml: fracToHtml(aF)+`<span class="op-sym">×</span>`+fracToHtml(bF)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(aF)} and ${fstr(bF)}`],
+    findDesc:'Use cross-cancelling before multiplying.',
+    findQ:`${fstr(aF)} × ${fstr(bF)} = ?`,
+    ans,
+    areaVis:'',
+    inputNote:'Enter as fraction (e.g. 1/3) or integer.',
+    steps:[
+      ['Look for common factors diagonally',`GCD(${na2}, ${b.d}) = ${g1};  GCD(${nb2}, ${a.d}) = ${g2}`],
+      g1>1?['Cancel across top-left & bottom-right',`${na2}÷${g1}=${cn1},  ${b.d}÷${g1}=${cd2}`]:['No cancel top-left/bottom-right','(already coprime)'],
+      g2>1?['Cancel across top-right & bottom-left',`${nb2}÷${g2}=${cn2},  ${a.d}÷${g2}=${cd1}`]:['No cancel top-right/bottom-left','(already coprime)'],
+      ['Multiply simplified terms',`${cn1}×${cn2} / ${cd1}×${cd2} = ${cn1*cn2}/${cd1*cd2}`],
+      ['Simplify',fstr(ans)],
+    ],
+    hint:`Cross-cancel: ${na2}/${a.d} × ${nb2}/${b.d}. Cancel ${g1>1?na2+'/'+b.d:''} ${g2>1?'and '+nb2+'/'+a.d:''}. Result: ${fstr(ans)}.`,
+  };
+}
+
+function makeMixedMul(){
+  const da=randItem([2,3,4,5,6]), db=randItem([2,3,4,5,6]);
+  const wa=rand(1,4), na=rand(1,da-1);
+  const wb=rand(1,4), nb=rand(1,db-1);
+  const a=F(wa*da+na, da), b=F(wb*db+nb, db);
+  const ans=fmul(a,b);
+  return{
+    typeLabel:'Multiply Mixed Numbers', typeCls:'mixed-mul',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">×</span>`+fracToHtml(b)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)} and ${fstr(b)}`],
+    findDesc:'Convert to improper fractions, then multiply.',
+    findQ:`${fstr(a)} × ${fstr(b)} = ?`,
+    ans,
+    areaVis:'',
+    inputNote:'Enter as mixed number (e.g. 3 1/2) or fraction.',
+    steps:[
+      ['Convert to improper fractions',`${fstr(a)} = ${a.n}/${a.d},   ${fstr(b)} = ${b.n}/${b.d}`],
+      ['Multiply numerators',`${a.n} × ${b.n} = ${a.n*b.n}`],
+      ['Multiply denominators',`${a.d} × ${b.d} = ${a.d*b.d}`],
+      ['Simplify',`${a.n*b.n}/${a.d*b.d} = ${fstr(ans)}`],
+    ],
+    hint:`Convert: ${a.n}/${a.d} × ${b.n}/${b.d} = ${a.n*b.n}/${a.d*b.d} = ${fstr(ans)}.`,
+  };
+}
+
+function makeMixedDiv(){
+  const da=randItem([2,3,4,5,6]), db=randItem([2,3,4,5,6]);
+  const wa=rand(1,5), na=rand(1,da-1);
+  const wb=rand(1,4), nb=rand(1,db-1);
+  const a=F(wa*da+na, da), b=F(wb*db+nb, db);
+  const recip=F(b.d,b.n);
+  const ans=fdiv(a,b);
+  return{
+    typeLabel:'Divide Mixed Numbers', typeCls:'mixed-div',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">÷</span>`+fracToHtml(b)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)} and ${fstr(b)}`],
+    findDesc:'Convert to improper, then multiply by reciprocal.',
+    findQ:`${fstr(a)} ÷ ${fstr(b)} = ?`,
+    ans,
+    areaVis:'',
+    inputNote:'Enter as mixed number (e.g. 1 3/4) or fraction.',
+    steps:[
+      ['Convert to improper fractions',`${fstr(a)} = ${a.n}/${a.d},   ${fstr(b)} = ${b.n}/${b.d}`],
+      ['Flip the divisor (reciprocal)',`${b.n}/${b.d} → ${b.d}/${b.n}`],
+      ['Multiply',`${a.n}/${a.d} × ${b.d}/${b.n} = ${a.n*b.d}/${a.d*b.n}`],
+      ['Simplify',fstr(ans)],
+    ],
+    hint:`Convert, flip: ${a.n}/${a.d} × ${b.d}/${b.n} = ${a.n*b.d}/${a.d*b.n} = ${fstr(ans)}.`,
+  };
+}
+
+// ── HARD ──────────────────────────────────────────────────────
+
+function makeChainMulDiv(){
+  // Three fractions: a × b ÷ c  or  a ÷ b × c
+  const dens=[2,3,4,5,6,7,8];
+  const da=randItem(dens), db=randItem(dens), dc=randItem(dens);
+  const na=rand(1,da-1), nb=rand(1,db-1), nc=rand(1,dc-1);
+  const a=F(na,da), b=F(nb,db), c=F(nc,dc);
+  const isDivSecond=Math.random()<0.5;
+  const ans=isDivSecond ? fdiv(fmul(a,b),c) : fmul(fdiv(a,b),c);
+  const op1='×', op2=isDivSecond?'÷':'×';
+  // after op1: tmp
+  const tmp=isDivSecond ? fmul(a,b) : fdiv(a,b);
+  return{
+    typeLabel:'Chain ×÷', typeCls:'chain',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">${op1}</span>`+fracToHtml(b)+`<span class="op-sym">${op2}</span>`+fracToHtml(c)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)}, ${fstr(b)}, and ${fstr(c)}`],
+    findDesc:'Evaluate left to right, simplifying at each step.',
+    findQ:`${fstr(a)} ${op1} ${fstr(b)} ${op2} ${fstr(c)} = ?`,
+    ans,
+    areaVis:'',
+    inputNote:'Enter as fraction or mixed number.',
+    steps:[
+      [`Step 1: ${fstr(a)} ${op1} ${fstr(b)}`,fstr(tmp)],
+      isDivSecond
+        ? [`Step 2: ${fstr(tmp)} ÷ ${fstr(c)}`, `${fstr(tmp)} × ${fstr(F(c.d,c.n))} = ${fstr(ans)}`]
+        : [`Step 2: ${fstr(tmp)} × ${fstr(c)}`, fstr(ans)],
+      ['Final answer',fstr(ans)],
+    ],
+    hint:`Left to right: ${fstr(a)} ${op1} ${fstr(b)} = ${fstr(tmp)}. Then ${fstr(tmp)} ${op2} ${fstr(c)} = ${fstr(ans)}.`,
+  };
+}
+
+function makeWordProblemMul(){
+  // Real-world context multiplying fractions
+  const contexts=[
+    { tmpl:(a,b)=>`A recipe calls for <strong>${fstr(a)} cups</strong> of flour. You want to make <strong>${fstr(b)}</strong> of the recipe. How many cups of flour do you need?`, op:'×' },
+    { tmpl:(a,b)=>`A garden is <strong>${fstr(a)} km</strong> long and <strong>${fstr(b)} km</strong> wide. What is its area in km²?`, op:'×' },
+    { tmpl:(a,b)=>`A tank is <strong>${fstr(b)}</strong> full and holds <strong>${fstr(a)} litres</strong> when full. How many litres are in it now?`, op:'×' },
+  ];
+  const ctx=randItem(contexts);
+  const da=randItem([2,3,4,5,6]), db=randItem([2,3,4,5,6]);
+  let na=rand(1,da-1), nb=rand(1,db-1);
+  // sometimes use whole numbers for a
+  const useWholeA=Math.random()<0.3;
+  const a=useWholeA ? F(rand(2,8)) : F(na,da);
+  const b=F(nb,db);
+  const ans=fmul(a,b);
+  return{
+    typeLabel:'Word Problem ×', typeCls:'multiply',
+    exprHtml:`<div style="font-size:1rem;line-height:1.7;color:var(--ink)">${ctx.tmpl(a,b)}</div>`,
+    given:[`First value: ${fstr(a)}`, `Second value: ${fstr(b)}`],
+    findDesc:'Multiply to find the answer.',
+    findQ:`${fstr(a)} × ${fstr(b)} = ?`,
+    ans,
+    areaVis: a.d<=6&&b.d<=6&&a.n<a.d&&b.n<b.d ? areaModelHtml(a.n,a.d,b.n,b.d) : '',
+    inputNote:'Enter as fraction or mixed number.',
+    steps:[
+      ['Set up multiplication',`${fstr(a)} × ${fstr(b)}`],
+      ['Multiply numerators',`${a.n} × ${b.n} = ${a.n*b.n}`],
+      ['Multiply denominators',`${a.d} × ${b.d} = ${a.d*b.d}`],
+      ['Simplify',fstr(ans)],
+    ],
+    hint:`Multiply: ${fstr(a)} × ${fstr(b)} = ${a.n*b.n}/${a.d*b.d} = ${fstr(ans)}.`,
+  };
+}
+
+function makeWordProblemDiv(){
+  const contexts=[
+    { tmpl:(a,b)=>`You have <strong>${fstr(a)} metres</strong> of ribbon. Each bow needs <strong>${fstr(b)} metres</strong>. How many bows can you make?`, op:'÷' },
+    { tmpl:(a,b)=>`A jug holds <strong>${fstr(a)} litres</strong>. Each glass holds <strong>${fstr(b)} litres</strong>. How many glasses can you fill?`, op:'÷' },
+    { tmpl:(a,b)=>`A <strong>${fstr(a)} kg</strong> bag of flour is split into portions of <strong>${fstr(b)} kg</strong> each. How many portions?`, op:'÷' },
+  ];
+  const ctx=randItem(contexts);
+  const da=randItem([2,3,4,5,6]), db=randItem([2,3,4,5,6]);
+  const na=rand(1,da-1), nb=rand(1,db-1);
+  const wa=rand(1,5);
+  const a=F(wa*da+na, da); // mixed number
+  const b=F(nb,db);
+  const ans=fdiv(a,b);
+  const recip=F(b.d,b.n);
+  return{
+    typeLabel:'Word Problem ÷', typeCls:'divide',
+    exprHtml:`<div style="font-size:1rem;line-height:1.7;color:var(--ink)">${ctx.tmpl(a,b)}</div>`,
+    given:[`Total: ${fstr(a)}`, `Per portion: ${fstr(b)}`],
+    findDesc:'Divide to find the answer.',
+    findQ:`${fstr(a)} ÷ ${fstr(b)} = ?`,
+    ans,
+    areaVis:'',
+    inputNote:'Enter as mixed number (e.g. 3 1/2) or integer.',
+    steps:[
+      ['Convert to improper',`${fstr(a)} = ${a.n}/${a.d}`],
+      ['Reciprocal of divisor',`${fstr(b)} → ${fstr(recip)}`],
+      ['Multiply',`${a.n}/${a.d} × ${b.d}/${b.n} = ${a.n*b.d}/${a.d*b.n}`],
+      ['Simplify',fstr(ans)],
+    ],
+    hint:`${fstr(a)} ÷ ${fstr(b)} = ${a.n}/${a.d} × ${b.d}/${b.n} = ${fstr(ans)}.`,
+  };
+}
+
+// ── Dispatcher ────────────────────────────────────────────────
+function makeProblem(){
+  let p;
+  if(difficulty==='easy')
+    p=randItem([makeMulProper,makeMulProper,makeDivProper])();
+  else if(difficulty==='medium')
+    p=randItem([makeCrossCancel,makeMixedMul,makeMixedMul,makeMixedDiv])();
+  else
+    p=randItem([makeChainMulDiv,makeWordProblemMul,makeWordProblemDiv,makeCrossCancel])();
+  p.difficulty=difficulty;
+  return p;
+}
+
+// ── Answer checking ───────────────────────────────────────────
+function checkAnswer(){
+  if(answered) return;
+  const raw=document.getElementById('answerInput').value.trim();
+  if(!raw){ showFeedback('partial','Enter your answer first.'); return; }
+  const user=parseMixed(raw);
+  if(!user){ showFeedback('partial','Format: fraction (3/4), mixed number (2 1/3), or integer.'); return; }
+
+  attempts++;
+  document.getElementById('statAttempts').textContent=attempts;
+
+  if(feq(user,prob.ans)){
+    correct++; streak++;
+    document.getElementById('statCorrect').textContent=correct;
+    document.getElementById('statStreak').textContent=streak;
+    showFeedback('correct', streak>=3?`🔥 ${streak} in a row! Answer: ${fstr(prob.ans)}`:`✓ Correct! Answer: ${fstr(prob.ans)}`);
+    answered=true;
+  } else {
+    // same value, not simplified
+    if(user.n*prob.ans.d===prob.ans.n*user.d){
+      showFeedback('partial',`Right value — simplify fully. Answer: ${fstr(prob.ans)}`);
+    } else {
+      streak=0; document.getElementById('statStreak').textContent=streak;
+      showFeedback('wrong','Not quite. Check your working or use the hint.');
+    }
+  }
+}
+
+function showFeedback(t,m){ const f=document.getElementById('feedback'); f.className='feedback '+t; f.textContent=m; }
+function handleKey(e){ if(e.key==='Enter') checkAnswer(); }
+
+// ── Hint / steps ──────────────────────────────────────────────
+function toggleHint(){
+  const hint=document.getElementById('hintText'), steps=document.getElementById('stepsBox');
+  if(hint.classList.contains('show')){ hint.classList.remove('show'); steps.classList.remove('show'); return; }
+  let html='<strong style="font-style:normal;color:var(--accent2);font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;">Solution</strong><br>';
+  prob.steps.forEach(([lbl,expr],i)=>{
+    html+=`<span class="sk">Step ${i+1}: ${lbl}</span><br><span class="sl">&nbsp;&nbsp;${expr}</span><br>`;
+  });
+  steps.innerHTML=html; steps.classList.add('show');
+  hint.textContent=`Hint: ${prob.hint}`; hint.classList.add('show');
+}
+
+// ── Difficulty ────────────────────────────────────────────────
+function setDiff(d){
+  difficulty=d;
+  ['easy','medium','hard'].forEach(x=>{
+    document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===d);
+  });
+  newProblem();
+}
+
+// ── Render ────────────────────────────────────────────────────
+function updatePanel(){
+  const badge=document.getElementById('typeBadge');
+  badge.textContent=prob.typeLabel; badge.className='type-badge '+(prob.typeCls||'');
+  document.getElementById('exprDisplay').innerHTML=prob.exprHtml;
+  document.getElementById('givenDims').innerHTML=prob.given.map(g=>`<div><span class="val">${g}</span></div>`).join('');
+  document.getElementById('findDesc').textContent=prob.findDesc;
+  document.getElementById('findQuestion').textContent=prob.findQ;
+  document.getElementById('inputNote').textContent=prob.inputNote;
+  document.getElementById('areaModel').innerHTML=prob.areaVis||'';
+  // Update reminder box based on operation
+  const isDiv = prob.typeCls==='divide'||prob.typeCls==='mixed-div';
+  document.getElementById('reminderBox').innerHTML=isDiv
+    ? `<h3>Key Rule</h3><p>Divide: multiply by the reciprocal.<span class="rule">a/b ÷ c/d = a/b × d/c</span></p><p style="margin-top:0.4rem;font-size:0.78rem;color:var(--muted);font-style:italic">"Keep, Change, Flip"</p>`
+    : `<h3>Key Rule</h3><p>Multiply: multiply tops, multiply bottoms.<span class="rule">a/b × c/d = ac/bd</span></p><p style="margin-top:0.4rem;font-size:0.78rem;color:var(--muted);font-style:italic">Simplify before or after multiplying.</p>`;
+}
+
+function newProblem(){
+  prob=makeProblem(); answered=false;
+  document.getElementById('answerInput').value='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('feedback').textContent='';
+  document.getElementById('hintText').className='hint-text';
+  document.getElementById('hintText').textContent='';
+  document.getElementById('stepsBox').className='steps-box';
+  document.getElementById('stepsBox').innerHTML='';
+  updatePanel();
+  document.getElementById('answerInput').focus();
+}
+
+newProblem();
+</script>
+</body>
+</html>

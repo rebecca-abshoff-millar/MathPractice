@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adding &amp; Subtracting Fractions</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #e8f0f5;
+    --paper:  #f4f8fd;
+    --ink:    #161c1c;
+    --muted:  #607080;
+    --border: #b0c4d4;
+    --accent: #1a6bbf;
+    --accent2:#0e4d8a;
+    --green:  #1a7a4a;
+    --orange: #b85c00;
+    --red:    #c0392b;
+    --shadow: rgba(20,40,70,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg); color: var(--ink);
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(100,140,180,0.12) 27px, rgba(100,140,180,0.12) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(100,140,180,0.07) 27px, rgba(100,140,180,0.07) 28px);
+  }
+
+  header { text-align: center; margin-bottom: 0.7rem; }
+  header h1 { font-size: clamp(1.3rem,3vw,1.9rem); font-weight:700; color:var(--ink); letter-spacing:-0.5px; }
+  header p  { color:var(--muted); font-size:0.82rem; font-style:italic; margin-top:0.15rem; }
+
+  .card {
+    background:var(--paper); border:1px solid var(--border); border-radius:4px;
+    box-shadow:4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding:1.4rem 1.8rem; width:100%; max-width:900px;
+    display:flex; flex-direction:column; gap:1rem;
+  }
+
+  .top-row { display:flex; flex-direction:row; gap:1.2rem; align-items:stretch; }
+
+  .question-panel {
+    flex:1 1 0; min-width:0; display:flex; flex-direction:column; justify-content:center;
+    background:#eef4fa; border:1px solid var(--border); border-radius:4px;
+    min-height:320px; padding:1.6rem 1.8rem; gap:1.3rem;
+  }
+
+  .type-badge {
+    font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px;
+    color:white; background:var(--accent); border-radius:3px;
+    padding:0.18rem 0.55rem; align-self:flex-start;
+  }
+  .type-badge.unlike   { background:#1a6bbf; }
+  .type-badge.mixed    { background:#0e4d8a; }
+  .type-badge.sub      { background:#1565c0; }
+  .type-badge.mixed-sub{ background:#0d47a1; }
+  .type-badge.chain    { background:#1976d2; }
+
+  /* ── Big fraction display ── */
+  .expr-display {
+    display:flex; align-items:center; gap:0.6rem;
+    flex-wrap:wrap; font-size:1.1rem;
+  }
+
+  .big-frac {
+    display:inline-flex; flex-direction:column; align-items:center;
+    font-family:'DM Mono',monospace; font-size:1.4rem; font-weight:700;
+    vertical-align:middle; line-height:1.1;
+  }
+  .big-frac .fn { border-bottom:2.5px solid var(--ink); padding:0 0.25em 0.1em; min-width:1.2em; text-align:center; }
+  .big-frac .fd { padding:0.1em 0.25em 0; min-width:1.2em; text-align:center; }
+
+  .big-mixed {
+    display:inline-flex; align-items:flex-start; gap:0.18em;
+    font-family:'DM Mono',monospace; font-size:1.4rem; vertical-align:middle;
+  }
+  .big-mixed .whole { font-weight:700; line-height:2.2; font-size:1em; }
+
+  .op-sym {
+    font-family:'DM Mono',monospace; font-size:1.6rem; font-weight:700;
+    color:var(--accent); line-height:1;
+  }
+  .eq-sym { font-family:'DM Mono',monospace; font-size:1.5rem; color:var(--muted); }
+  .blank-box {
+    border-bottom:2.5px solid var(--accent2); min-width:2.5em;
+    display:inline-block; text-align:center; font-family:'DM Mono',monospace;
+    font-size:1.4rem; color:var(--accent2);
+  }
+
+  /* ── Number line visual ── */
+  .nline-wrap { width:100%; padding:0 0.5rem; }
+  .nline-svg  { width:100%; height:64px; overflow:visible; }
+
+  .steps-box {
+    width:100%; background:rgba(26,107,191,0.05); border:1px solid rgba(26,107,191,0.2);
+    border-radius:4px; padding:0.7rem 0.9rem; font-size:0.82rem; color:var(--ink);
+    line-height:1.8; font-style:italic; display:none;
+  }
+  .steps-box.show { display:block; }
+  .steps-box .sl { font-family:'DM Mono',monospace; font-style:normal; font-size:0.85rem; }
+  .steps-box .sk { color:var(--accent2); font-weight:700; font-style:normal; }
+
+  /* ── Right panel ── */
+  .info-panel { flex:0 0 240px; display:flex; flex-direction:column; gap:0.7rem; }
+
+  .given-box {
+    background:rgba(26,107,191,0.07); border:1.5px solid rgba(26,107,191,0.3);
+    border-radius:4px; padding:0.7rem 0.9rem;
+  }
+  .given-box h3 { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent); margin-bottom:0.4rem; }
+  .given-item  { font-size:0.88rem; color:var(--ink); line-height:1.75; }
+  .given-item .val { font-family:'DM Mono',monospace; font-weight:500; color:var(--accent2); }
+
+  .find-box {
+    background:rgba(14,77,138,0.06); border:1.5px solid rgba(14,77,138,0.28);
+    border-radius:4px; padding:0.7rem 0.9rem;
+  }
+  .find-box h3 { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent2); margin-bottom:0.4rem; }
+  .find-box p  { font-size:0.92rem; color:var(--ink); font-style:italic; }
+  .find-box .fq { font-style:normal; font-size:0.88rem; color:var(--accent2); font-weight:700; margin-top:0.35rem; line-height:1.5; }
+
+  .answer-row { display:flex; gap:0.7rem; align-items:flex-start; }
+  .answer-wrap { flex:1; display:flex; flex-direction:column; gap:0.25rem; }
+
+  input[type="text"] {
+    width:100%; background:white; border:1.5px solid var(--border); border-radius:4px;
+    padding:0.6rem 0.9rem; font-size:1.1rem; font-family:'DM Mono',monospace;
+    color:var(--ink); outline:none; transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(26,107,191,0.14); }
+  .input-note { font-size:0.7rem; color:var(--muted); font-style:italic; }
+
+  .btn-row { display:flex; gap:0.6rem; }
+  button {
+    flex:1; border:none; border-radius:4px; padding:0.65rem 1rem;
+    font-family:'Libre Baskerville',serif; font-size:0.88rem; font-weight:700;
+    cursor:pointer; transition:transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+  button:active { transform:scale(0.97); }
+  .btn-check { background:var(--accent2); color:white; box-shadow:2px 2px 0 rgba(14,77,138,0.4); }
+  .btn-check:hover { filter:brightness(1.2); }
+  .btn-new { background:var(--paper); color:var(--ink); border:1.5px solid var(--border); box-shadow:2px 2px 0 var(--border); }
+  .btn-new:hover { background:var(--bg); }
+
+  .hint-btn {
+    width:100%; background:transparent; border:1px dashed var(--border); color:var(--muted);
+    font-size:0.78rem; padding:0.42rem; border-radius:4px;
+    font-family:'Libre Baskerville',serif; font-style:italic; cursor:pointer;
+  }
+  .hint-btn:hover { border-color:var(--accent); color:var(--ink); }
+
+  .hint-text {
+    display:none; background:rgba(26,107,191,0.06); border:1px solid rgba(26,107,191,0.25);
+    border-radius:4px; padding:0.6rem 0.8rem; font-size:0.82rem; color:#0e3d6e; line-height:1.7; font-style:italic;
+  }
+  .hint-text.show { display:block; }
+
+  .feedback {
+    border-radius:4px; padding:0.55rem 0.9rem; font-size:0.88rem; font-weight:700;
+    text-align:center; min-height:2rem; display:flex; align-items:center; justify-content:center; transition:all 0.2s;
+  }
+  .feedback.correct { background:rgba(26,122,74,0.1); border:1.5px solid rgba(26,122,74,0.4); color:var(--green); }
+  .feedback.wrong   { background:rgba(192,57,43,0.08); border:1.5px solid rgba(192,57,43,0.3); color:var(--red); }
+  .feedback.partial { background:rgba(184,92,0,0.08); border:1.5px solid rgba(184,92,0,0.3); color:var(--orange); }
+
+  .stats-row { display:flex; gap:1rem; justify-content:center; border-top:1px solid var(--border); padding-top:0.7rem; }
+  .stat { text-align:center; font-size:0.75rem; color:var(--muted); }
+  .stat strong { display:block; font-size:1.1rem; color:var(--ink); font-family:'DM Mono',monospace; }
+
+  .difficulty-row { display:flex; gap:0.5rem; align-items:center; font-size:0.78rem; color:var(--muted); font-style:italic; }
+  .diff-btn {
+    flex:none; padding:0.3rem 0.7rem; font-size:0.75rem; font-weight:700; border-radius:3px;
+    border:1.5px solid var(--border); background:var(--paper); color:var(--muted);
+    cursor:pointer; font-family:'Libre Baskerville',serif; transition:all 0.15s;
+  }
+  .diff-btn.active { background:var(--accent); color:white; border-color:var(--accent); }
+  .diff-btn:hover:not(.active) { border-color:var(--accent); color:var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Adding &amp; Subtracting Fractions</h1>
+  <p>Unlike denominators, mixed numbers, and simplifying.</p>
+</header>
+
+<div class="card">
+  <div class="difficulty-row">
+    Difficulty:
+    <button class="diff-btn active" id="dEasy"   onclick="setDiff('easy')">Easy</button>
+    <button class="diff-btn"        id="dMedium" onclick="setDiff('medium')">Medium</button>
+    <button class="diff-btn"        id="dHard"   onclick="setDiff('hard')">Hard</button>
+  </div>
+
+  <div class="top-row">
+    <div class="question-panel">
+      <div class="type-badge" id="typeBadge">Unlike Denominators</div>
+      <div class="expr-display" id="exprDisplay"></div>
+      <div id="nlineVis"></div>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+    <div class="info-panel">
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Evaluate</h3>
+        <p id="findDesc">Simplify completely.</p>
+        <div class="fq" id="findQuestion"></div>
+      </div>
+      <div class="answer-row">
+        <div class="answer-wrap">
+          <input type="text" id="answerInput" placeholder="e.g. 5/6 or 2 1/3" onkeydown="handleKey(event)" autocomplete="off">
+          <span class="input-note" id="inputNote">Enter as fraction (3/4), mixed number (2 1/3), or integer.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new"   onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show step-by-step solution</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback"   id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// Fraction engine
+// ══════════════════════════════════════════════════════════════
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){[a,b]=[b,a%b];} return a||1; }
+function lcm(a,b){ return Math.abs(a*b)/gcd(a,b); }
+
+function F(n,d=1){
+  if(d===0) throw 'zero denom';
+  if(d<0){n=-n;d=-d;}
+  const g=gcd(Math.abs(n),d);
+  return {n:n/g, d:d/g};
+}
+function fadd(a,b){ return F(a.n*b.d + b.n*a.d, a.d*b.d); }
+function fsub(a,b){ return F(a.n*b.d - b.n*a.d, a.d*b.d); }
+
+// Convert mixed number string "2 3/4" → fraction, or "3/4", or "5"
+function parseMixed(s){
+  s = s.trim();
+  // mixed: "2 3/4" or "-2 3/4"
+  let m = s.match(/^(-?)(\d+)\s+(\d+)\/(\d+)$/);
+  if(m){ const sign=m[1]==='-'?-1:1; const w=parseInt(m[2]); const n=parseInt(m[3]); const d=parseInt(m[4]); return F(sign*(w*d+n),d); }
+  // fraction: "3/4"
+  m = s.match(/^(-?\d+)\/(\d+)$/);
+  if(m) return F(parseInt(m[1]),parseInt(m[2]));
+  // integer
+  const n=parseInt(s);
+  if(!isNaN(n)) return F(n);
+  return null;
+}
+
+// Fraction → display string: proper, improper, or mixed
+function fstr(f,mixed=true){
+  if(f.d===1) return `${f.n}`;
+  if(mixed && Math.abs(f.n)>=f.d){
+    const w=Math.trunc(f.n/f.d);
+    const r=Math.abs(f.n)-Math.abs(w)*f.d;
+    if(r===0) return `${w}`;
+    return `${w} ${r}/${f.d}`;
+  }
+  return `${f.n}/${f.d}`;
+}
+
+function feq(a,b){ return a.n===b.n && a.d===b.d; }
+
+// ── Helpers ────────────────────────────────────────────────────
+function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function randItem(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+const DENOMS_EASY = [2,3,4,5,6,8,10];
+const DENOMS_MED  = [3,4,5,6,7,8,9,10,12];
+const DENOMS_HARD = [4,5,6,7,8,9,10,11,12,15];
+
+function pickUnlikeDenoms(pool){
+  let a,b;
+  do{ a=randItem(pool); b=randItem(pool); } while(a===b);
+  return [a,b];
+}
+
+// ── HTML fraction builders ─────────────────────────────────────
+function bigFrac(n,d){
+  return `<span class="big-frac"><span class="fn">${n}</span><span class="fd">${d}</span></span>`;
+}
+function bigMixed(w,n,d){
+  return `<span class="big-mixed"><span class="whole">${w}</span>${bigFrac(n,d)}</span>`;
+}
+function fracToHtml(f){
+  if(f.d===1) return `<span style="font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:700">${f.n}</span>`;
+  if(Math.abs(f.n)>f.d){
+    const w=Math.trunc(f.n/f.d), r=Math.abs(f.n)-Math.abs(w)*f.d;
+    if(r===0) return `<span style="font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:700">${w}</span>`;
+    return bigMixed(w,r,f.d);
+  }
+  return bigFrac(f.n,f.d);
+}
+
+// ══════════════════════════════════════════════════════════════
+// Problem generators
+// ══════════════════════════════════════════════════════════════
+let prob={}, attempts=0, correct=0, streak=0, answered=false, difficulty='easy';
+
+// ── EASY: unlike denominators, proper fractions ───────────────
+function makeUnlikeAdd(){
+  const [da,db]=pickUnlikeDenoms(DENOMS_EASY);
+  const na=rand(1,da-1), nb=rand(1,db-1);
+  const a=F(na,da), b=F(nb,db);
+  const ans=fadd(a,b);
+  const L=lcm(da,db);
+  const na2=na*(L/da), nb2=nb*(L/db);
+  const isAdd=true;
+  return{
+    typeLabel:'Add Unlike Fractions', typeCls:'unlike',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">+</span>`+fracToHtml(b)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)} and ${fstr(b)}`],
+    findDesc:'Add and simplify completely.',
+    findQ:`${fstr(a)} + ${fstr(b)} = ?`,
+    ans, inputNote:'Enter as fraction (e.g. 5/6) or integer.',
+    steps:[
+      ['Find the LCD',`LCD(${da}, ${db}) = ${L}`],
+      ['Convert both fractions',`${na}/${da} = ${na2}/${L},   ${nb}/${db} = ${nb2}/${L}`],
+      ['Add numerators',`${na2} + ${nb2} = ${na2+nb2}`],
+      ['Result',`${na2+nb2}/${L}`],
+      ['Simplify',fstr(ans)],
+    ],
+    hint:`LCD = ${L}. Convert: ${na2}/${L} + ${nb2}/${L} = ${na2+nb2}/${L} = ${fstr(ans)}.`,
+  };
+}
+
+function makeUnlikeSub(){
+  const [da,db]=pickUnlikeDenoms(DENOMS_EASY);
+  const na=rand(1,da-1), nb=rand(1,db-1);
+  // ensure positive result
+  let a=F(na,da), b=F(nb,db);
+  if(a.n*b.d < b.n*a.d){ [a,b]=[b,a]; }
+  const ans=fsub(a,b);
+  const L=lcm(a.d,b.d);
+  const na2=a.n*(L/a.d), nb2=b.n*(L/b.d);
+  return{
+    typeLabel:'Subtract Unlike Fractions', typeCls:'sub',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">−</span>`+fracToHtml(b)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)} and ${fstr(b)}`],
+    findDesc:'Subtract and simplify completely.',
+    findQ:`${fstr(a)} − ${fstr(b)} = ?`,
+    ans, inputNote:'Enter as fraction (e.g. 1/4) or integer.',
+    steps:[
+      ['Find the LCD',`LCD(${a.d}, ${b.d}) = ${L}`],
+      ['Convert both fractions',`${a.n}/${a.d} = ${na2}/${L},   ${b.n}/${b.d} = ${nb2}/${L}`],
+      ['Subtract numerators',`${na2} − ${nb2} = ${na2-nb2}`],
+      ['Result',`${na2-nb2}/${L}`],
+      ['Simplify',fstr(ans)],
+    ],
+    hint:`LCD = ${L}. Convert: ${na2}/${L} − ${nb2}/${L} = ${na2-nb2}/${L} = ${fstr(ans)}.`,
+  };
+}
+
+// ── MEDIUM: mixed numbers ──────────────────────────────────────
+function makeMixedAdd(){
+  const [da,db]=pickUnlikeDenoms(DENOMS_MED);
+  const wa=rand(1,5), na=rand(1,da-1);
+  const wb=rand(1,5), nb=rand(1,db-1);
+  const a=F(wa*da+na,da), b=F(wb*db+nb,db);
+  const ans=fadd(a,b);
+  const L=lcm(da,db);
+  const fn1=na*(L/da), fn2=nb*(L/db);
+  const fracSum=fn1+fn2;
+  const carry=Math.floor(fracSum/L);
+  const remNum=fracSum%L;
+  const g=gcd(remNum,L);
+  return{
+    typeLabel:'Add Mixed Numbers', typeCls:'mixed',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">+</span>`+fracToHtml(b)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)} and ${fstr(b)}`],
+    findDesc:'Add mixed numbers and simplify.',
+    findQ:`${fstr(a)} + ${fstr(b)} = ?`,
+    ans, inputNote:'Enter as mixed number (e.g. 3 1/4) or fraction.',
+    steps:[
+      ['Add whole numbers',`${wa} + ${wb} = ${wa+wb}`],
+      ['Find LCD for fractions',`LCD(${da}, ${db}) = ${L}`],
+      ['Add the fractions',`${fn1}/${L} + ${fn2}/${L} = ${fracSum}/${L}`],
+      carry>0?['Fraction ≥ 1 — carry',`${fracSum}/${L} = ${carry} + ${remNum}/${L}`]:['Simplify fraction',`${fracSum}/${L} = ${F(fracSum,L).n}/${F(fracSum,L).d}`],
+      ['Combine',fstr(ans)],
+    ],
+    hint:`Whole: ${wa}+${wb}=${wa+wb}. Fractions (LCD=${L}): ${fn1}/${L}+${fn2}/${L}=${fracSum}/${L}${carry>0?` = ${carry} r ${remNum}/${L}`:''}. Total: ${fstr(ans)}.`,
+  };
+}
+
+function makeMixedSub(){
+  const [da,db]=pickUnlikeDenoms(DENOMS_MED);
+  const wa=rand(2,7), na=rand(1,da-1);
+  const wb=rand(1,wa-1), nb=rand(1,db-1);
+  let a=F(wa*da+na,da), b=F(wb*db+nb,db);
+  // guarantee a > b
+  if(fadd(a,F(0)).n*b.d < b.n*a.d){ [a,b]=[b,a]; }
+  const ans=fsub(a,b);
+  const L=lcm(a.d,b.d);
+  const fn1=( (Math.abs(a.n)%a.d) )*(L/a.d);
+  const fn2=( (Math.abs(b.n)%b.d) )*(L/b.d);
+  const aW=Math.trunc(a.n/a.d), bW=Math.trunc(b.n/b.d);
+  const needsBorrow = fn1 < fn2;
+  return{
+    typeLabel:'Subtract Mixed Numbers', typeCls:'mixed-sub',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">−</span>`+fracToHtml(b)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)} and ${fstr(b)}`],
+    findDesc:'Subtract mixed numbers and simplify.',
+    findQ:`${fstr(a)} − ${fstr(b)} = ?`,
+    ans, inputNote:'Enter as mixed number (e.g. 2 3/8) or fraction.',
+    steps: needsBorrow?[
+      ['Convert to improper fractions',`${a.n}/${a.d} and ${b.n}/${b.d}`],
+      ['Find LCD',`LCD(${a.d}, ${b.d}) = ${L}`],
+      ['Convert',`${a.n*(L/a.d)}/${L} − ${b.n*(L/b.d)}/${L}`],
+      ['Subtract',`${a.n*(L/a.d)-b.n*(L/b.d)}/${L}`],
+      ['Simplify',fstr(ans)],
+    ]:[
+      ['Subtract whole numbers',`${aW} − ${bW} = ${aW-bW}`],
+      ['Find LCD',`LCD(${a.d}, ${b.d}) = ${L}`],
+      ['Subtract fractions',`${fn1}/${L} − ${fn2}/${L} = ${fn1-fn2}/${L}`],
+      ['Combine',`${aW-bW} + ${fstr(F(fn1-fn2,L))} = ${fstr(ans)}`],
+    ],
+    hint:`Convert to improper fractions if needed. LCD=${L}. ${a.n*(L/a.d)}/${L} − ${b.n*(L/b.d)}/${L} = ${fstr(ans)}.`,
+  };
+}
+
+// ── HARD: three terms, larger denominators ────────────────────
+function makeThreeTermAdd(){
+  const denoms = DENOMS_HARD;
+  let da,db,dc;
+  do{ da=randItem(denoms); db=randItem(denoms); dc=randItem(denoms); } while(da===db||db===dc||da===dc);
+  const na=rand(1,da-1), nb=rand(1,db-1), nc=rand(1,dc-1);
+  const isOp2Sub = Math.random()<0.5;
+  const a=F(na,da), b=F(nb,db), c=F(nc,dc);
+  const ans = isOp2Sub ? fsub(fadd(a,b),c) : fadd(fadd(a,b),c);
+  const op2 = isOp2Sub ? '−' : '+';
+  const L=lcm(lcm(da,db),dc);
+  return{
+    typeLabel:'Three-Term Expression', typeCls:'chain',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">+</span>`+fracToHtml(b)+`<span class="op-sym">${op2}</span>`+fracToHtml(c)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)}, ${fstr(b)}, and ${fstr(c)}`],
+    findDesc:'Evaluate left to right and simplify.',
+    findQ:`${fstr(a)} + ${fstr(b)} ${op2} ${fstr(c)} = ?`,
+    ans, inputNote:'Enter as fraction, mixed number, or integer.',
+    steps:[
+      ['Find common LCD for all three',`LCD(${da}, ${db}, ${dc}) = ${L}`],
+      ['Convert all',`${na*(L/da)}/${L},  ${nb*(L/db)}/${L},  ${nc*(L/dc)}/${L}`],
+      ['Combine numerators',`${na*(L/da)} + ${nb*(L/db)} ${op2} ${nc*(L/dc)} = ${na*(L/da)+nb*(L/db)+(isOp2Sub?-1:1)*nc*(L/dc)}`],
+      ['Over LCD',`${na*(L/da)+nb*(L/db)+(isOp2Sub?-1:1)*nc*(L/dc)}/${L}`],
+      ['Simplify',fstr(ans)],
+    ],
+    hint:`LCD=${L}. Convert all and combine: ${na*(L/da)+nb*(L/db)+(isOp2Sub?-1:1)*nc*(L/dc)}/${L} = ${fstr(ans)}.`,
+  };
+}
+
+function makeMixedThree(){
+  const [da,db]=pickUnlikeDenoms(DENOMS_HARD);
+  const wa=rand(1,5), na=rand(1,da-1);
+  const wb=rand(1,4), nb=rand(1,db-1);
+  const dc=randItem(DENOMS_EASY);
+  const nc=rand(1,dc-1);
+  const isOp2Sub = Math.random()<0.5;
+  const a=F(wa*da+na,da), b=F(wb*db+nb,db), c=F(nc,dc);
+  const ans=isOp2Sub ? fsub(fadd(a,b),c) : fadd(fadd(a,b),c);
+  const op2=isOp2Sub?'−':'+';
+  return{
+    typeLabel:'Mixed Number Chain', typeCls:'chain',
+    exprHtml: fracToHtml(a)+`<span class="op-sym">+</span>`+fracToHtml(b)+`<span class="op-sym">${op2}</span>`+fracToHtml(c)+`<span class="eq-sym">=</span><span class="blank-box">?</span>`,
+    given:[`${fstr(a)}, ${fstr(b)}, and ${fstr(c)}`],
+    findDesc:'Evaluate and give as a simplified mixed number or fraction.',
+    findQ:`${fstr(a)} + ${fstr(b)} ${op2} ${fstr(c)} = ?`,
+    ans, inputNote:'Enter as mixed number (e.g. 5 2/3) or fraction.',
+    steps:[
+      ['Convert to improper fractions',`${a.n}/${a.d},  ${b.n}/${b.d},  ${c.n}/${c.d}`],
+      ['Find LCD',`LCD = ${lcm(lcm(a.d,b.d),c.d)}`],
+      ['Combine',`= ${fstr(ans)}`],
+    ],
+    hint:`Convert all to improper fractions, find LCD=${lcm(lcm(a.d,b.d),c.d)}, combine, simplify. Answer: ${fstr(ans)}.`,
+  };
+}
+
+// ── Dispatcher ────────────────────────────────────────────────
+function makeProblem(){
+  let p;
+  if(difficulty==='easy')   p=randItem([makeUnlikeAdd,makeUnlikeAdd,makeUnlikeSub])();
+  if(difficulty==='medium') p=randItem([makeMixedAdd,makeMixedAdd,makeMixedSub])();
+  if(difficulty==='hard')   p=randItem([makeThreeTermAdd,makeThreeTermAdd,makeMixedThree])();
+  p.difficulty=difficulty;
+  return p;
+}
+
+// ── Answer checking ───────────────────────────────────────────
+function checkAnswer(){
+  if(answered) return;
+  const raw=document.getElementById('answerInput').value.trim();
+  if(!raw){ showFeedback('partial','Enter your answer first.'); return; }
+  const user=parseMixed(raw);
+  if(!user){ showFeedback('partial','Format: fraction (3/4), mixed number (2 1/3), or integer.'); return; }
+
+  attempts++;
+  document.getElementById('statAttempts').textContent=attempts;
+
+  if(feq(user,prob.ans)){
+    correct++; streak++;
+    document.getElementById('statCorrect').textContent=correct;
+    document.getElementById('statStreak').textContent=streak;
+    showFeedback('correct', streak>=3?`🔥 ${streak} in a row! Answer: ${fstr(prob.ans)}`:`✓ Correct! Answer: ${fstr(prob.ans)}`);
+    answered=true;
+  } else {
+    // same value but not simplified?
+    if(user.n*prob.ans.d===prob.ans.n*user.d && !(feq(user,prob.ans))){
+      showFeedback('partial',`Right value — simplify fully. Answer: ${fstr(prob.ans)}`);
+    } else {
+      streak=0; document.getElementById('statStreak').textContent=streak;
+      showFeedback('wrong','Not quite. Try the hint for step-by-step help.');
+    }
+  }
+}
+
+function showFeedback(t,m){ const f=document.getElementById('feedback'); f.className='feedback '+t; f.textContent=m; }
+function handleKey(e){ if(e.key==='Enter') checkAnswer(); }
+
+// ── Hint / steps ──────────────────────────────────────────────
+function toggleHint(){
+  const hint=document.getElementById('hintText'), steps=document.getElementById('stepsBox');
+  if(hint.classList.contains('show')){ hint.classList.remove('show'); steps.classList.remove('show'); return; }
+  let html='<strong style="font-style:normal;color:var(--accent2);font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;">Solution</strong><br>';
+  prob.steps.forEach(([lbl,expr],i)=>{
+    html+=`<span class="sk">Step ${i+1}: ${lbl}</span><br><span class="sl">&nbsp;&nbsp;${expr}</span><br>`;
+  });
+  steps.innerHTML=html; steps.classList.add('show');
+  hint.textContent=`Hint: ${prob.hint}`; hint.classList.add('show');
+}
+
+// ── Difficulty ────────────────────────────────────────────────
+function setDiff(d){
+  difficulty=d;
+  ['easy','medium','hard'].forEach(x=>{
+    document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===d);
+  });
+  newProblem();
+}
+
+// ── Render ────────────────────────────────────────────────────
+function updatePanel(){
+  const badge=document.getElementById('typeBadge');
+  badge.textContent=prob.typeLabel; badge.className='type-badge '+(prob.typeCls||'');
+  document.getElementById('exprDisplay').innerHTML=prob.exprHtml;
+  document.getElementById('givenDims').innerHTML=prob.given.map(g=>`<div><span class="val">${g}</span></div>`).join('');
+  document.getElementById('findDesc').textContent=prob.findDesc;
+  document.getElementById('findQuestion').textContent=prob.findQ;
+  document.getElementById('inputNote').textContent=prob.inputNote;
+  document.getElementById('nlineVis').innerHTML='';
+}
+
+function newProblem(){
+  prob=makeProblem(); answered=false;
+  document.getElementById('answerInput').value='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('feedback').textContent='';
+  document.getElementById('hintText').className='hint-text';
+  document.getElementById('hintText').textContent='';
+  document.getElementById('stepsBox').className='steps-box';
+  document.getElementById('stepsBox').innerHTML='';
+  updatePanel();
+  document.getElementById('answerInput').focus();
+}
+
+newProblem();
+</script>
+</body>
+</html>
