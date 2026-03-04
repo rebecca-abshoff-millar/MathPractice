@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perimeter – Triangles, Circles, Rectangles, Trapezoids &amp; Parallelograms</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --paper: #fdfaf4;
+    --ink: #1c1a16;
+    --muted: #8a8070;
+    --border: #d4c9b0;
+    --accent: #c0392b;
+    --accent2: #2980b9;
+    --green: #27ae60;
+    --orange: #e67e22;
+    --shadow: rgba(60,50,30,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(180,170,150,0.15) 27px, rgba(180,170,150,0.15) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(180,170,150,0.08) 27px, rgba(180,170,150,0.08) 28px);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 0.7rem;
+  }
+
+  header h1 {
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-style: italic;
+    margin-top: 0.15rem;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.4rem 1.8rem;
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .top-row {
+    display: flex;
+    flex-direction: row;
+    gap: 1.2rem;
+    align-items: stretch;
+  }
+
+  .shape-panel {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f4ec;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.5rem;
+  }
+
+  #shapeSvg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .info-panel {
+    flex: 0 0 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .given-box {
+    background: rgba(41,128,185,0.07);
+    border: 1.5px solid rgba(41,128,185,0.3);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .given-box h3 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent2);
+    margin-bottom: 0.4rem;
+  }
+
+  .given-item {
+    font-size: 0.9rem;
+    color: var(--ink);
+    line-height: 1.8;
+  }
+
+  .given-item .val {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--accent2);
+  }
+
+  .find-box {
+    background: rgba(192,57,43,0.06);
+    border: 1.5px solid rgba(192,57,43,0.3);
+    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .find-box h3 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .find-box p {
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-style: italic;
+  }
+
+  .find-box p span {
+    font-style: normal;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .answer-row {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+  }
+
+  .answer-row label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+    white-space: nowrap;
+  }
+
+  .answer-wrap {
+    flex: 1;
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  input[type="number"] {
+    flex: 1;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 0.6rem 0.9rem;
+    font-size: 1.2rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: textfield;
+    -moz-appearance: textfield;
+    min-width: 0;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
+  }
+
+  .unit-label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  button {
+    flex: 1;
+    border: none;
+    border-radius: 4px;
+    padding: 0.65rem 1rem;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-check {
+    background: var(--ink);
+    color: var(--bg);
+    box-shadow: 2px 2px 0 var(--muted);
+  }
+
+  .btn-check:hover { filter: brightness(1.15); }
+
+  .btn-new {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+    box-shadow: 2px 2px 0 var(--border);
+  }
+
+  .btn-new:hover { background: var(--bg); }
+
+  .hint-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: 0.78rem;
+    padding: 0.42rem;
+    border-radius: 4px;
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    cursor: pointer;
+  }
+
+  .hint-btn:hover { border-color: var(--muted); color: var(--ink); }
+
+  .hint-text {
+    display: none;
+    background: rgba(230,126,34,0.07);
+    border: 1px solid rgba(230,126,34,0.3);
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.82rem;
+    color: #7d4c0a;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  .hint-text.show { display: block; }
+
+  .feedback {
+    border-radius: 4px;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-align: center;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .feedback.correct {
+    background: rgba(39,174,96,0.1);
+    border: 1.5px solid rgba(39,174,96,0.4);
+    color: #1a6b3a;
+  }
+
+  .feedback.wrong {
+    background: rgba(192,57,43,0.08);
+    border: 1.5px solid rgba(192,57,43,0.3);
+    color: var(--accent);
+  }
+
+  .feedback.partial {
+    background: rgba(230,126,34,0.08);
+    border: 1.5px solid rgba(230,126,34,0.3);
+    color: #8a4a00;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    border-top: 1px solid var(--border);
+    padding-top: 0.7rem;
+  }
+
+  .stat {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .stat strong {
+    display: block;
+    font-size: 1.1rem;
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .svg-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    fill: var(--ink);
+  }
+  .svg-label.dim {
+    fill: var(--accent2);
+    font-weight: 700;
+    font-size: 20px;
+  }
+  .svg-label.shape-name {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 20px;
+    fill: var(--muted);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Perimeter – Triangles, Circles, Rectangles, Trapezoids &amp; Parallelograms</h1>
+  <p>Find the perimeter (or circumference) of the 2D shape. Round to the nearest tenth.</p>
+</header>
+
+<div class="card">
+  <div class="top-row">
+    <div class="shape-panel">
+      <svg id="shapeSvg" viewBox="0 0 480 420" width="480" height="420" style="max-width:100%;display:block;"></svg>
+    </div>
+    <div class="info-panel">
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Find</h3>
+        <p>Calculate the <span id="findText">Perimeter</span></p>
+        <p style="font-style:normal; font-size:0.78rem; color:var(--muted); margin-top:0.35rem;">Round your answer to the nearest tenth (1 decimal place).</p>
+      </div>
+      <div class="answer-row">
+        <label for="answerInput" id="answerLabel">P =</label>
+        <div class="answer-wrap">
+          <input type="number" id="answerInput" placeholder="0.00" step="any" onkeydown="handleKey(event)">
+          <span class="unit-label" id="unitLabel">units</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new" onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show hint &amp; formula</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let prob = {};
+let attempts = 0, correct = 0, streak = 0;
+let answered = false;
+
+const cfg = { tol: 0.02 }; // 2% tolerance
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function randItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ── Shape definitions ──────────────────────────────────────────
+function makeProblem() {
+  const shapes = ['triangle', 'circle', 'rectangle', 'trapezoid', 'parallelogram'];
+  const shape = randItem(shapes);
+
+  if (shape === 'triangle') {
+    // Scalene triangle: give all three sides
+    const a = rand(4, 14), b = rand(4, 14), c = rand(4, 14);
+    const answer = a + b + c;
+    return {
+      shape,
+      dims: { a, b, c },
+      answer,
+      dimLabels: [`Side a = ${a} units`, `Side b = ${b} units`, `Side c = ${c} units`],
+      hint: 'The perimeter of a triangle is the sum of all three sides: P = a + b + c.',
+      formula: `P = ${a} + ${b} + ${c}`,
+      shapeTitle: 'Triangle',
+    };
+  }
+
+  if (shape === 'circle') {
+    const r = rand(2, 14);
+    const answer = 2 * Math.PI * r;
+    return {
+      shape,
+      dims: { r },
+      answer,
+      dimLabels: [`Radius = ${r} units`],
+      hint: 'The circumference (perimeter) of a circle: C = 2πr.',
+      formula: `C = 2π × ${r}`,
+      shapeTitle: 'Circle',
+    };
+  }
+
+  if (shape === 'rectangle') {
+    const l = rand(3, 18), w = rand(3, 18);
+    const answer = 2 * (l + w);
+    return {
+      shape,
+      dims: { l, w },
+      answer,
+      dimLabels: [`Length = ${l} units`, `Width = ${w} units`],
+      hint: 'Perimeter of a rectangle: P = 2(l + w).',
+      formula: `P = 2(${l} + ${w})`,
+      shapeTitle: 'Rectangle',
+    };
+  }
+
+  if (shape === 'trapezoid') {
+    // Give all 4 sides (two parallel bases + two legs)
+    const a = rand(5, 16); // top base
+    const b = rand(8, 20); // bottom base (longer)
+    const c = rand(4, 12); // left leg
+    const d = rand(4, 12); // right leg
+    const answer = a + b + c + d;
+    return {
+      shape,
+      dims: { a, b, c, d },
+      answer,
+      dimLabels: [
+        `Top base (a) = ${a} units`,
+        `Bottom base (b) = ${b} units`,
+        `Left leg (c) = ${c} units`,
+        `Right leg (d) = ${d} units`,
+      ],
+      hint: 'Perimeter of a trapezoid: P = a + b + c + d (sum of all four sides).',
+      formula: `P = ${a} + ${b} + ${c} + ${d}`,
+      shapeTitle: 'Trapezoid',
+    };
+  }
+
+  if (shape === 'parallelogram') {
+    const a = rand(4, 16); // base
+    const b = rand(4, 14); // side
+    const answer = 2 * (a + b);
+    return {
+      shape,
+      dims: { a, b },
+      answer,
+      dimLabels: [`Base (a) = ${a} units`, `Side (b) = ${b} units`],
+      hint: 'Perimeter of a parallelogram: P = 2(a + b). Opposite sides are equal.',
+      formula: `P = 2(${a} + ${b})`,
+      shapeTitle: 'Parallelogram',
+    };
+  }
+}
+
+// ── SVG Helpers ────────────────────────────────────────────────
+function svg(tag, attrs, textContent) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  if (textContent !== undefined) el.textContent = textContent;
+  return el;
+}
+
+function label(x, y, text, cls = 'svg-label dim', anchor = 'middle') {
+  return svg('text', { x, y, class: cls, 'text-anchor': anchor, 'dominant-baseline': 'middle' }, text);
+}
+
+// ── Shape Drawers ──────────────────────────────────────────────
+
+function drawTriangle(s, dims) {
+  const { a, b, c } = dims;
+  // Fixed scalene triangle vertices
+  const A = { x: 100, y: 320 };
+  const B = { x: 380, y: 320 };
+  const C = { x: 210, y: 90 };
+
+  s.appendChild(svg('polygon', {
+    points: `${A.x},${A.y} ${B.x},${B.y} ${C.x},${C.y}`,
+    fill: 'rgba(228,218,198,0.55)', stroke: 'var(--ink)', 'stroke-width': '2.5'
+  }));
+
+  // Side labels along each edge
+  // Bottom side AB → label a
+  s.appendChild(label((A.x+B.x)/2, A.y + 26, `a = ${a}`));
+  // Right side BC → label b
+  s.appendChild(label((B.x+C.x)/2 + 34, (B.y+C.y)/2, `b = ${b}`, 'svg-label dim', 'start'));
+  // Left side CA → label c
+  s.appendChild(label((C.x+A.x)/2 - 34, (C.y+A.y)/2, `c = ${c}`, 'svg-label dim', 'end'));
+}
+
+function drawCircle(s, dims) {
+  const { r } = dims;
+  const cx = 240, cy = 200, cr = 140;
+
+  s.appendChild(svg('circle', { cx, cy, r: cr,
+    fill: 'rgba(228,218,198,0.55)', stroke: 'var(--ink)', 'stroke-width': '2.5' }));
+
+  // Radius line
+  s.appendChild(svg('line', { x1: cx, y1: cy, x2: cx + cr, y2: cy,
+    stroke: 'var(--accent2)', 'stroke-width': '2.5' }));
+
+  // Dot at center
+  s.appendChild(svg('circle', { cx, cy, r: 4, fill: 'var(--accent2)' }));
+
+  s.appendChild(label(cx + cr/2, cy - 18, `r = ${r}`));
+}
+
+function drawRectangle(s, dims) {
+  const { l, w } = dims;
+  const rx = 70, ry = 100, rw = 340, rh = 200;
+
+  s.appendChild(svg('rect', { x: rx, y: ry, width: rw, height: rh, rx: 2,
+    fill: 'rgba(228,218,198,0.55)', stroke: 'var(--ink)', 'stroke-width': '2.5' }));
+
+  // Length label (bottom)
+  s.appendChild(label(rx + rw/2, ry + rh + 26, `l = ${l}`));
+  // Width label (right)
+  s.appendChild(label(rx + rw + 36, ry + rh/2, `w = ${w}`, 'svg-label dim', 'start'));
+}
+
+function drawTrapezoid(s, dims) {
+  const { a, b, c, d } = dims;
+  // Bottom base wider, top base shorter, slightly offset for visual interest
+  const bx = 60,  by = 310; // bottom-left
+  const bxr = 420, byr = 310; // bottom-right
+  const offset = 60;
+  const tx = bx + offset,   ty = 110; // top-left
+  const txr = bxr - offset, tyr = 110; // top-right
+
+  s.appendChild(svg('polygon', {
+    points: `${bx},${by} ${bxr},${byr} ${txr},${tyr} ${tx},${ty}`,
+    fill: 'rgba(228,218,198,0.55)', stroke: 'var(--ink)', 'stroke-width': '2.5'
+  }));
+
+  // Bottom base label
+  s.appendChild(label((bx+bxr)/2, by + 28, `b = ${b}`));
+  // Top base label
+  s.appendChild(label((tx+txr)/2, ty - 22, `a = ${a}`));
+  // Left leg label
+  s.appendChild(label((bx+tx)/2 - 30, (by+ty)/2, `c = ${c}`, 'svg-label dim', 'end'));
+  // Right leg label
+  s.appendChild(label((bxr+txr)/2 + 30, (byr+tyr)/2, `d = ${d}`, 'svg-label dim', 'start'));
+}
+
+function drawParallelogram(s, dims) {
+  const { a, b } = dims;
+  const offset = 70;
+  const bx = 60, by = 310;
+  const bxr = 380, byr = 310;
+  const tx = bx + offset, ty = 110;
+  const txr = bxr + offset, tyr = 110;
+
+  s.appendChild(svg('polygon', {
+    points: `${bx},${by} ${bxr},${byr} ${txr},${tyr} ${tx},${ty}`,
+    fill: 'rgba(228,218,198,0.55)', stroke: 'var(--ink)', 'stroke-width': '2.5'
+  }));
+
+  // Bottom base label
+  s.appendChild(label((bx+bxr)/2, by + 28, `a = ${a}`));
+  // Right side label
+  s.appendChild(label((bxr+txr)/2 + 34, (byr+tyr)/2, `b = ${b}`, 'svg-label dim', 'start'));
+
+  // Right angle tick marks to show parallel sides
+  // tick on bottom base
+  const midBotX = (bx+bxr)/2, midBotY = by;
+  s.appendChild(svg('line', { x1: midBotX-6, y1: midBotY-8, x2: midBotX+6, y2: midBotY-8,
+    stroke:'var(--muted)', 'stroke-width':'1.8'}));
+  // tick on top base
+  const midTopX = (tx+txr)/2, midTopY = ty;
+  s.appendChild(svg('line', { x1: midTopX-6, y1: midTopY+8, x2: midTopX+6, y2: midTopY+8,
+    stroke:'var(--muted)', 'stroke-width':'1.8'}));
+}
+
+// ── Main draw dispatcher ───────────────────────────────────────
+function drawShape() {
+  const s = document.getElementById('shapeSvg');
+  s.innerHTML = '';
+  const { shape, dims } = prob;
+  if (shape === 'triangle')      drawTriangle(s, dims);
+  if (shape === 'circle')        drawCircle(s, dims);
+  if (shape === 'rectangle')     drawRectangle(s, dims);
+  if (shape === 'trapezoid')     drawTrapezoid(s, dims);
+  if (shape === 'parallelogram') drawParallelogram(s, dims);
+
+  // Shape name watermark
+  s.appendChild(label(240, 390, prob.shapeTitle, 'svg-label shape-name'));
+}
+
+// ── Info panel ─────────────────────────────────────────────────
+function updateInfoPanel() {
+  const html = prob.dimLabels.map(d =>
+    `<div>${d.replace(/(=\s*[\d.]+)/, '<span class="val">$1</span>')}</div>`
+  ).join('');
+  document.getElementById('givenDims').innerHTML = html;
+  const findLabel = prob.shape === 'circle' ? `Circumference (${prob.shapeTitle})` : `Perimeter (${prob.shapeTitle})`;
+  document.getElementById('findText').textContent = findLabel;
+  document.getElementById('answerLabel').textContent =
+    prob.shape === 'circle' ? 'C =' : 'P =';
+}
+
+// ── New problem ────────────────────────────────────────────────
+function newProblem() {
+  prob = makeProblem();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.textContent = '';
+  const hint = document.getElementById('hintText');
+  hint.className = 'hint-text';
+  hint.textContent = '';
+  updateInfoPanel();
+  drawShape();
+  document.getElementById('answerInput').focus();
+}
+
+// ── Answer check ───────────────────────────────────────────────
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function checkAnswer() {
+  if (answered) return;
+  const val = document.getElementById('answerInput').value;
+  if (val === '') { showFeedback('partial', 'Enter your answer first.'); return; }
+
+  const userAns = parseFloat(val);
+  const correctAns = prob.answer;
+  const pct = Math.abs(userAns - correctAns) / correctAns;
+
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+
+  if (pct <= cfg.tol) {
+    correct++;
+    streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent = streak;
+    const exact = correctAns.toFixed(1);
+    const label = prob.shape === 'circle' ? 'units' : 'units';
+    showFeedback('correct', streak >= 3
+      ? `🔥 ${streak} in a row! (Answer: ${exact} ${label})`
+      : `✓ Correct! (Answer: ${exact} ${label})`);
+    answered = true;
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    const diff = Math.abs(userAns - correctAns) / correctAns;
+    if (diff < 0.35) {
+      showFeedback('partial', `Close, but not quite. Double-check your calculation.`);
+    } else {
+      showFeedback('wrong', `Not quite. Try again or use the hint.`);
+    }
+  }
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+function toggleHint() {
+  const hint = document.getElementById('hintText');
+  if (hint.classList.contains('show')) { hint.classList.remove('show'); return; }
+  hint.textContent = `${prob.hint} Formula: ${prob.formula} ≈ ${prob.answer.toFixed(1)} units`;
+  hint.classList.add('show');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+newProblem();
+</script>
+</body>
+</html>
