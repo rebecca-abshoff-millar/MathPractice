@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Area – Composite Shapes</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --paper: #fdfaf4;
+    --ink: #1c1a16;
+    --muted: #8a8070;
+    --border: #d4c9b0;
+    --accent: #c0392b;
+    --accent2: #2980b9;
+    --green: #27ae60;
+    --orange: #e67e22;
+    --shadow: rgba(60,50,30,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(180,170,150,0.15) 27px, rgba(180,170,150,0.15) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(180,170,150,0.08) 27px, rgba(180,170,150,0.08) 28px);
+  }
+
+  header { text-align: center; margin-bottom: 0.7rem; }
+  header h1 {
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    font-weight: 700; color: var(--ink); letter-spacing: -0.5px;
+  }
+  header p {
+    color: var(--muted); font-size: 0.82rem; font-style: italic; margin-top: 0.15rem;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.4rem 1.8rem;
+    width: 100%; max-width: 900px;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  .top-row {
+    display: flex; flex-direction: row; gap: 1.2rem; align-items: stretch;
+  }
+
+  .shape-panel {
+    flex: 1 1 0; min-width: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #f8f4ec;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.5rem;
+  }
+
+  #shapeSvg { display: block; max-width: 100%; height: auto; }
+
+  .info-panel {
+    flex: 0 0 250px;
+    display: flex; flex-direction: column; gap: 0.7rem;
+  }
+
+  .given-box {
+    background: rgba(41,128,185,0.07);
+    border: 1.5px solid rgba(41,128,185,0.3);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .given-box h3 {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent2); margin-bottom: 0.4rem;
+  }
+  .given-item { font-size: 0.88rem; color: var(--ink); line-height: 1.85; }
+  .given-item .val {
+    font-family: 'DM Mono', monospace; font-weight: 500; color: var(--accent2);
+  }
+
+  .find-box {
+    background: rgba(192,57,43,0.06);
+    border: 1.5px solid rgba(192,57,43,0.3);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .find-box h3 {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent); margin-bottom: 0.4rem;
+  }
+  .find-box p { font-size: 0.95rem; color: var(--ink); font-style: italic; }
+  .find-box p span {
+    font-style: normal; font-family: 'DM Mono', monospace;
+    font-weight: 500; color: var(--accent);
+  }
+
+  .answer-row { display: flex; gap: 0.7rem; align-items: center; }
+  .answer-row label {
+    font-size: 0.85rem; color: var(--muted); font-style: italic; white-space: nowrap;
+  }
+  .answer-wrap { flex: 1; display: flex; gap: 0.6rem; align-items: center; }
+
+  input[type="number"] {
+    flex: 1; background: white;
+    border: 1.5px solid var(--border); border-radius: 4px;
+    padding: 0.6rem 0.9rem; font-size: 1.2rem;
+    font-family: 'DM Mono', monospace; color: var(--ink);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: textfield; -moz-appearance: textfield; min-width: 0;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus {
+    border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
+  }
+
+  .unit-label { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+  .btn-row { display: flex; gap: 0.6rem; }
+
+  button {
+    flex: 1; border: none; border-radius: 4px;
+    padding: 0.65rem 1rem;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 0.88rem; font-weight: 700; cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-check { background: var(--ink); color: var(--bg); box-shadow: 2px 2px 0 var(--muted); }
+  .btn-check:hover { filter: brightness(1.15); }
+  .btn-new { background: var(--paper); color: var(--ink); border: 1.5px solid var(--border); box-shadow: 2px 2px 0 var(--border); }
+  .btn-new:hover { background: var(--bg); }
+
+  .hint-btn {
+    width: 100%; background: transparent;
+    border: 1px dashed var(--border); color: var(--muted);
+    font-size: 0.78rem; padding: 0.42rem; border-radius: 4px;
+    font-family: 'Libre Baskerville', serif; font-style: italic; cursor: pointer;
+  }
+  .hint-btn:hover { border-color: var(--muted); color: var(--ink); }
+
+  .hint-text {
+    display: none;
+    background: rgba(230,126,34,0.07); border: 1px solid rgba(230,126,34,0.3);
+    border-radius: 4px; padding: 0.6rem 0.8rem;
+    font-size: 0.82rem; color: #7d4c0a; line-height: 1.6; font-style: italic;
+  }
+  .hint-text.show { display: block; }
+
+  .feedback {
+    border-radius: 4px; padding: 0.55rem 0.9rem;
+    font-size: 0.88rem; font-weight: 700; text-align: center;
+    min-height: 2rem; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .feedback.correct { background: rgba(39,174,96,0.1); border: 1.5px solid rgba(39,174,96,0.4); color: #1a6b3a; }
+  .feedback.wrong   { background: rgba(192,57,43,0.08); border: 1.5px solid rgba(192,57,43,0.3); color: var(--accent); }
+  .feedback.partial { background: rgba(230,126,34,0.08); border: 1.5px solid rgba(230,126,34,0.3); color: #8a4a00; }
+
+  .stats-row {
+    display: flex; gap: 1rem; justify-content: center;
+    border-top: 1px solid var(--border); padding-top: 0.7rem;
+  }
+  .stat { text-align: center; font-size: 0.75rem; color: var(--muted); }
+  .stat strong { display: block; font-size: 1.1rem; color: var(--ink); font-family: 'DM Mono', monospace; }
+
+  .svg-label { font-family: 'DM Mono', monospace; font-size: 19px; fill: var(--ink); }
+  .svg-label.dim  { fill: var(--accent2); font-weight: 700; font-size: 18px; }
+  .svg-label.ht   { fill: #1a7a5e;  font-weight: 700; font-size: 18px; }
+  .svg-label.sub-fill { fill: rgba(192,57,43,0.18); }
+  .svg-label.shape-name { font-family: 'Libre Baskerville', serif; font-size: 18px; fill: var(--muted); font-style: italic; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Area – Composite Shapes</h1>
+  <p>Find the total shaded area. Round to the nearest tenth.</p>
+</header>
+
+<div class="card">
+  <div class="top-row">
+    <div class="shape-panel">
+      <svg id="shapeSvg" viewBox="0 0 480 420" width="480" height="420" style="max-width:100%;display:block;"></svg>
+    </div>
+    <div class="info-panel">
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Find</h3>
+        <p>Calculate the <span id="findText">Total Area</span></p>
+        <p style="font-style:normal;font-size:0.78rem;color:var(--muted);margin-top:0.35rem;">Round to the nearest tenth (1 decimal place).</p>
+      </div>
+      <div class="answer-row">
+        <label for="answerInput">A =</label>
+        <div class="answer-wrap">
+          <input type="number" id="answerInput" placeholder="0.00" step="any" onkeydown="handleKey(event)">
+          <span class="unit-label">units²</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new" onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show hint &amp; formula</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+let prob = {};
+let attempts = 0, correct = 0, streak = 0, answered = false;
+const cfg = { tol: 0.02 };
+
+function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function pick(arr)  { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ── SVG helpers ────────────────────────────────────────────────
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function lbl(x, y, text, cls='svg-label dim', anchor='middle') {
+  return el('text', {x, y, class: cls, 'text-anchor': anchor, 'dominant-baseline': 'middle'}, text);
+}
+function dimLine(s, x1, y1, x2, y2, col='var(--accent2)') {
+  s.appendChild(el('line', {x1,y1,x2,y2, stroke:col, 'stroke-width':'1.8', 'stroke-dasharray':'5,3'}));
+}
+function tickH(s, x, y, col='var(--accent2)') { // horizontal tick
+  s.appendChild(el('line', {x1:x-9,y1:y,x2:x+9,y2:y, stroke:col,'stroke-width':'1.8'}));
+}
+function tickV(s, x, y, col='var(--accent2)') { // vertical tick
+  s.appendChild(el('line', {x1:x,y1:y-9,x2:x,y2:y+9, stroke:col,'stroke-width':'1.8'}));
+}
+function raBox(s, cx, cy, sz=9, flipX=false, flipY=false) {
+  const sx = flipX ? -sz : sz, sy = flipY ? -sz : sz;
+  s.appendChild(el('polyline', {
+    points:`${cx},${cy+sy} ${cx+sx},${cy+sy} ${cx+sx},${cy}`,
+    fill:'none', stroke:'var(--accent2)', 'stroke-width':'1.5'
+  }));
+}
+
+// ── Composite problem types ────────────────────────────────────
+// Each returns { titleA, titleB, op('+'/'-'), dimLabels, answer, hint, formula, draw(svg) }
+
+function makeRectPlusTriangle() {
+  const rw = rand(8,16), rh = rand(6,12), th = rand(3,8);
+  const A_rect = rw * rh;
+  const A_tri  = 0.5 * rw * th;
+  const answer = A_rect + A_tri;
+  return {
+    op: '+', titleA: 'Rectangle', titleB: 'Triangle',
+    dimLabels: [
+      `Rectangle: w = ${rw}, h = ${rh}`,
+      `Triangle base = ${rw} (shared)`,
+      `Triangle height = ${th}`,
+    ],
+    answer,
+    hint: `Area = Rectangle + Triangle = (w×h) + (½×b×h) = (${rw}×${rh}) + (½×${rw}×${th})`,
+    formula: `(${rw}×${rh}) + (½×${rw}×${th})`,
+    draw(s) {
+      // Rectangle sits at bottom, triangle on top
+      const cx=240, baseY=330, rectH=rh*14, triH=th*14;
+      const hw = rw*14/2;
+      const rL=cx-hw, rR=cx+hw;
+      const rTop=baseY-rectH, apex=rTop-triH;
+      // Rectangle (fill A)
+      s.appendChild(el('rect',{x:rL,y:rTop,width:rw*14,height:rectH,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Triangle (fill B)
+      s.appendChild(el('polygon',{points:`${rL},${rTop} ${rR},${rTop} ${cx},${apex}`,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Shared edge (dashed)
+      s.appendChild(el('line',{x1:rL,y1:rTop,x2:rR,y2:rTop,
+        stroke:'var(--muted)','stroke-width':'1.5','stroke-dasharray':'5,3'}));
+      // Dim: width (bottom)
+      dimLine(s,rL,baseY+20,rR,baseY+20); tickV(s,rL,baseY+20); tickV(s,rR,baseY+20);
+      s.appendChild(lbl(cx,baseY+38,`w=${rw}`));
+      // Dim: rect height (left)
+      dimLine(s,rL-22,baseY,rL-22,rTop,'var(--accent2)'); tickH(s,rL-22,baseY); tickH(s,rL-22,rTop);
+      s.appendChild(lbl(rL-42,(baseY+rTop)/2,`h=${rh}`,'svg-label dim','middle'));
+      // Dim: tri height (right)
+      dimLine(s,rR+22,rTop,rR+22,apex,'var(--accent2)'); tickH(s,rR+22,rTop,'var(--accent2)'); tickH(s,rR+22,apex,'var(--accent2)');
+      s.appendChild(lbl(rR+52,(rTop+apex)/2,`h=${th}`,'svg-label ht','middle'));
+      // Labels A B
+    }
+  };
+}
+
+function makeRectMinusCircle() {
+  const rw = rand(12,18), rh = rand(10,16);
+  const r = rand(2, Math.min(Math.floor(rw/2), Math.floor(rh/2)) - 1);
+  const A_rect = rw * rh;
+  const A_circ = Math.PI * r * r;
+  const answer = A_rect - A_circ;
+  return {
+    op: '-', titleA: 'Rectangle', titleB: 'Circle',
+    dimLabels: [
+      `Rectangle: l = ${rw}, w = ${rh}`,
+      `Circle radius = ${r}`,
+    ],
+    answer,
+    hint: `Area = Rectangle − Circle = (l×w) − πr² = (${rw}×${rh}) − π×${r}²`,
+    formula: `(${rw}×${rh}) − π×${r}²`,
+    draw(s) {
+      const cx=240, cy=210;
+      const rW=rw*16, rH=rh*16;
+      const rL=cx-rW/2, rT=cy-rH/2;
+      const cr=r*16;
+      // Rectangle
+      s.appendChild(el('rect',{x:rL,y:rT,width:rW,height:rH,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Cutout circle (white with red border)
+      s.appendChild(el('circle',{cx,cy,r:cr,
+        fill:'#fdfaf4',stroke:'var(--ink)','stroke-width':'2','stroke-dasharray':'7,3'}));
+      // Dims: length (bottom)
+      dimLine(s,rL,rT+rH+20,rL+rW,rT+rH+20); tickV(s,rL,rT+rH+20); tickV(s,rL+rW,rT+rH+20);
+      s.appendChild(lbl(cx,rT+rH+38,`l=${rw}`));
+      // Dims: width (right)
+      dimLine(s,rL+rW+22,rT,rL+rW+22,rT+rH,'var(--accent2)'); tickH(s,rL+rW+22,rT); tickH(s,rL+rW+22,rT+rH);
+      s.appendChild(lbl(rL+rW+52,(rT+rT+rH)/2,`w=${rh}`,'svg-label dim','middle'));
+      // Radius line
+      s.appendChild(el('line',{x1:cx,y1:cy,x2:cx+cr,y2:cy,stroke:'var(--accent2)','stroke-width':'2'}));
+      s.appendChild(el('circle',{cx,cy,r:4,fill:'var(--accent2)'}));
+      s.appendChild(lbl(cx+cr/2,cy-16,`r=${r}`,'svg-label ht'));
+      // Labels
+    }
+  };
+}
+
+function makeRectPlusSemiCircle() {
+  const rw = rand(8,16), rh = rand(6,14);
+  const r = rw / 2;
+  const A_rect = rw * rh;
+  const A_semi = 0.5 * Math.PI * r * r;
+  const answer = A_rect + A_semi;
+  return {
+    op: '+', titleA: 'Rectangle', titleB: 'Semicircle',
+    dimLabels: [
+      `Rectangle: w = ${rw}, h = ${rh}`,
+      `Semicircle radius = ${rw}/2 = ${r} (shared width)`,
+    ],
+    answer,
+    hint: `Area = Rectangle + Semicircle = (w×h) + (½πr²). The semicircle radius = w/2 = ${r}.`,
+    formula: `(${rw}×${rh}) + (½×π×${r}²)`,
+    draw(s) {
+      const cx=240, baseY=340;
+      const scale=Math.min(18, 240/rw*1.5);
+      const W=rw*scale, H=rh*scale, R=W/2;
+      const rL=cx-W/2, rR=cx+W/2, rTop=baseY-H;
+      // Rectangle
+      s.appendChild(el('rect',{x:rL,y:rTop,width:W,height:H,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Semicircle on top
+      s.appendChild(el('path',{
+        d:`M ${rL},${rTop} A ${R},${R} 0 0 1 ${rR},${rTop} Z`,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Dashed shared edge
+      s.appendChild(el('line',{x1:rL,y1:rTop,x2:rR,y2:rTop,
+        stroke:'var(--muted)','stroke-width':'1.5','stroke-dasharray':'5,3'}));
+      // Radius line in semicircle
+      s.appendChild(el('line',{x1:cx,y1:rTop,x2:rR,y2:rTop,stroke:'var(--accent2)','stroke-width':'2'}));
+      s.appendChild(el('circle',{cx,cy:rTop,r:4,fill:'var(--accent2)'}));
+      s.appendChild(lbl(cx+R/2,rTop-18,`r=${r}`,'svg-label ht'));
+      // Dim: width (bottom)
+      dimLine(s,rL,baseY+20,rR,baseY+20); tickV(s,rL,baseY+20); tickV(s,rR,baseY+20);
+      s.appendChild(lbl(cx,baseY+38,`w=${rw}`));
+      // Dim: rect height (left)
+      dimLine(s,rL-24,baseY,rL-24,rTop,'var(--accent2)'); tickH(s,rL-24,baseY); tickH(s,rL-24,rTop);
+      s.appendChild(lbl(rL-50,(baseY+rTop)/2,`h=${rh}`,'svg-label dim','middle'));
+      // Labels
+    }
+  };
+}
+
+function makeTrapezoidPlusTriangle() {
+  const a=rand(5,10), b=rand(10,18), th=rand(6,12), triH=rand(4,9);
+  const A_trap = 0.5*(a+b)*th;
+  const A_tri  = 0.5*b*triH;
+  const answer = A_trap + A_tri;
+  return {
+    op:'+', titleA:'Trapezoid', titleB:'Triangle',
+    dimLabels:[
+      `Trapezoid top (a) = ${a}`,
+      `Shared base (b) = ${b}`,
+      `Trapezoid height = ${th}`,
+      `Triangle height = ${triH}`,
+    ],
+    answer,
+    hint:`Area = Trapezoid + Triangle = ½(a+b)h₁ + ½bh₂ = ½(${a}+${b})×${th} + ½×${b}×${triH}`,
+    formula:`½(${a}+${b})×${th} + ½×${b}×${triH}`,
+    draw(s) {
+      const cx=240, scale=14;
+      const bW=b*scale, aW=a*scale, trapH=th*scale, triHpx=triH*scale;
+      const bL=cx-bW/2, bR=cx+bW/2;
+      const aL=cx-aW/2, aR=cx+aW/2;
+      const baseY=330, trapTop=baseY-trapH, apex=trapTop-triHpx;
+      // Trapezoid
+      s.appendChild(el('polygon',{
+        points:`${bL},${baseY} ${bR},${baseY} ${aR},${trapTop} ${aL},${trapTop}`,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Triangle
+      s.appendChild(el('polygon',{
+        points:`${bL},${trapTop} ${bR},${trapTop} ${cx},${apex}`,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Shared edge dashed
+      s.appendChild(el('line',{x1:bL,y1:trapTop,x2:bR,y2:trapTop,
+        stroke:'var(--muted)','stroke-width':'1.5','stroke-dasharray':'5,3'}));
+      // Trap height (left)
+      dimLine(s,bL-26,baseY,bL-26,trapTop,'var(--accent2)'); tickH(s,bL-26,baseY); tickH(s,bL-26,trapTop);
+      s.appendChild(lbl(bL-52,(baseY+trapTop)/2,`h=${th}`,'svg-label dim','middle'));
+      // Tri height (right)
+      dimLine(s,bR+26,trapTop,bR+26,apex,'var(--accent2)'); tickH(s,bR+26,trapTop,'var(--accent2)'); tickH(s,bR+26,apex,'var(--accent2)');
+      s.appendChild(lbl(bR+55,(trapTop+apex)/2,`h=${triH}`,'svg-label ht','middle'));
+      // Top base
+      dimLine(s,aL,trapTop-20,aR,trapTop-20,'var(--accent2)'); tickV(s,aL,trapTop-20); tickV(s,aR,trapTop-20);
+      s.appendChild(lbl(cx,trapTop-38,`a=${a}`));
+      // Bottom base
+      dimLine(s,bL,baseY+20,bR,baseY+20); tickV(s,bL,baseY+20); tickV(s,bR,baseY+20);
+      s.appendChild(lbl(cx,baseY+38,`b=${b}`));
+      // Labels
+    }
+  };
+}
+
+function makeParallelogramMinusTriangle() {
+  const pb=rand(10,18), ph=rand(7,14);
+  const tb=rand(4,Math.floor(pb*0.6)), th=ph; // triangle cut from corner, same height
+  const A_para = pb * ph;
+  const A_tri  = 0.5 * tb * th;
+  const answer = A_para - A_tri;
+  return {
+    op:'-', titleA:'Parallelogram', titleB:'Triangle',
+    dimLabels:[
+      `Parallelogram base (b) = ${pb}`,
+      `Parallelogram height (h) = ${ph}`,
+      `Triangle base cut = ${tb}`,
+      `Triangle height = ${ph} (same)`,
+    ],
+    answer,
+    hint:`Area = Parallelogram − Triangle = (b×h) − (½×tb×h) = (${pb}×${ph}) − (½×${tb}×${ph})`,
+    formula:`(${pb}×${ph}) − (½×${tb}×${ph})`,
+    draw(s) {
+      const cx=240, scale=14;
+      const off=50; // parallelogram slant offset
+      const bW=pb*scale, H=ph*scale, tW=tb*scale;
+      const baseY=330, topY=baseY-H;
+      const bL=cx-bW/2, bR=cx+bW/2;
+      const tL=bL+off, tR=bR+off;
+      // Parallelogram
+      s.appendChild(el('polygon',{
+        points:`${bL},${baseY} ${bR},${baseY} ${tR},${topY} ${tL},${topY}`,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Triangle cutout (top-left corner)
+      s.appendChild(el('polygon',{
+        points:`${tL},${topY} ${tL+tW},${topY} ${tL},${baseY}`,
+        fill:'#fdfaf4',stroke:'var(--ink)','stroke-width':'2','stroke-dasharray':'6,3'}));
+      // Para base dim
+      dimLine(s,bL,baseY+20,bR,baseY+20); tickV(s,bL,baseY+20); tickV(s,bR,baseY+20);
+      s.appendChild(lbl(cx,baseY+38,`b=${pb}`));
+      // Para height dim (right)
+      dimLine(s,bR+26,baseY,bR+26,topY,'var(--accent2)'); tickH(s,bR+26,baseY); tickH(s,bR+26,topY);
+      s.appendChild(lbl(bR+54,(baseY+topY)/2,`h=${ph}`,'svg-label dim','middle'));
+      // Triangle base dim (top)
+      dimLine(s,tL,topY-20,tL+tW,topY-20,'var(--accent2)'); tickV(s,tL,topY-20,'var(--accent2)'); tickV(s,tL+tW,topY-20,'var(--accent2)');
+      s.appendChild(lbl(tL+tW/2,topY-38,`tb=${tb}`,'svg-label ht'));
+      // Labels
+    }
+  };
+}
+
+function makeRectMinusTrapezoid() {
+  const rw=rand(12,18), rh=rand(10,16);
+  const ta=rand(3,Math.floor(rw*0.5)), tb=rand(Math.floor(rw*0.5),rw-1), th=rand(3,Math.floor(rh*0.6));
+  const A_rect=rw*rh, A_trap=0.5*(ta+tb)*th;
+  const answer=A_rect-A_trap;
+  return {
+    op:'-', titleA:'Rectangle', titleB:'Trapezoid',
+    dimLabels:[
+      `Rectangle: l=${rw}, w=${rh}`,
+      `Trapezoid top=${ta}, base=${tb}`,
+      `Trapezoid height=${th}`,
+    ],
+    answer,
+    hint:`Area = Rectangle − Trapezoid = (l×w) − ½(a+b)h = (${rw}×${rh}) − ½(${ta}+${tb})×${th}`,
+    formula:`(${rw}×${rh}) − ½(${ta}+${tb})×${th}`,
+    draw(s) {
+      const cx=240, scale=15;
+      const W=rw*scale, H=rh*scale;
+      const rL=cx-W/2, rR=cx+W/2, rTop=220-H/2, rBot=220+H/2;
+      const trapScale=scale;
+      const tbW=tb*trapScale, taW=ta*trapScale, tH=th*trapScale;
+      // center the trapezoid cutout at bottom center of rect
+      const tbL=cx-tbW/2, tbR=cx+tbW/2;
+      const taL=cx-taW/2, taR=cx+taW/2;
+      const trapBot=rBot, trapTop=rBot-tH;
+      // Rectangle
+      s.appendChild(el('rect',{x:rL,y:rTop,width:W,height:H,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Trapezoid cutout
+      s.appendChild(el('polygon',{
+        points:`${tbL},${trapBot} ${tbR},${trapBot} ${taR},${trapTop} ${taL},${trapTop}`,
+        fill:'#fdfaf4',stroke:'var(--ink)','stroke-width':'2','stroke-dasharray':'6,3'}));
+      // Rect dims
+      dimLine(s,rL,rBot+22,rR,rBot+22); tickV(s,rL,rBot+22); tickV(s,rR,rBot+22);
+      s.appendChild(lbl(cx,rBot+40,`l=${rw}`));
+      dimLine(s,rR+24,rTop,rR+24,rBot,'var(--accent2)'); tickH(s,rR+24,rTop); tickH(s,rR+24,rBot);
+      s.appendChild(lbl(rR+52,(rTop+rBot)/2,`w=${rh}`,'svg-label dim','middle'));
+      // Trap dims
+      dimLine(s,taL,trapTop-18,taR,trapTop-18,'var(--accent2)'); tickV(s,taL,trapTop-18,'var(--accent2)'); tickV(s,taR,trapTop-18,'var(--accent2)');
+      s.appendChild(lbl(cx,trapTop-36,`a=${ta}`,'svg-label ht'));
+      dimLine(s,tbL,trapBot+18,tbR,trapBot+18,'var(--accent2)'); // note: overlaps bottom - use inner
+      // Height of trap
+      const trapMidX=tbR+24;
+      dimLine(s,trapMidX,trapTop,trapMidX,trapBot,'var(--accent2)'); tickH(s,trapMidX,trapTop,'var(--accent2)'); tickH(s,trapMidX,trapBot,'var(--accent2)');
+      s.appendChild(lbl(trapMidX+28,(trapTop+trapBot)/2,`h=${th}`,'svg-label ht','start'));
+      // Labels
+    }
+  };
+}
+
+function makeRectPlusParallelogram() {
+  const rw=rand(8,14), rh=rand(5,10), pb=rw, ph=rand(4,9);
+  const A_rect=rw*rh, A_para=pb*ph;
+  const answer=A_rect+A_para;
+  return {
+    op:'+', titleA:'Rectangle', titleB:'Parallelogram',
+    dimLabels:[
+      `Rectangle: w=${rw}, h=${rh}`,
+      `Parallelogram base=${pb} (shared)`,
+      `Parallelogram height=${ph}`,
+    ],
+    answer,
+    hint:`Area = Rectangle + Parallelogram = (w×h) + (b×h) = (${rw}×${rh}) + (${pb}×${ph})`,
+    formula:`(${rw}×${rh}) + (${pb}×${ph})`,
+    draw(s) {
+      const cx=240, scale=16;
+      const W=rw*scale, rH=rh*scale, pH=ph*scale;
+      const off=40;
+      const rL=cx-W/2, rR=cx+W/2;
+      const baseY=310, rectTop=baseY-rH;
+      const pBot=rectTop, pTop=rectTop-pH;
+      const pL=rL+off, pR=rR+off;
+      // Rectangle
+      s.appendChild(el('rect',{x:rL,y:rectTop,width:W,height:rH,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Parallelogram on top
+      s.appendChild(el('polygon',{
+        points:`${rL},${pBot} ${rR},${pBot} ${pR},${pTop} ${pL},${pTop}`,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Shared edge dashed
+      s.appendChild(el('line',{x1:rL,y1:pBot,x2:rR,y2:pBot,
+        stroke:'var(--muted)','stroke-width':'1.5','stroke-dasharray':'5,3'}));
+      // Para height line
+      dimLine(s,rR+26,pBot,rR+26,pTop,'var(--accent2)'); tickH(s,rR+26,pBot,'var(--accent2)'); tickH(s,rR+26,pTop,'var(--accent2)');
+      s.appendChild(lbl(rR+56,(pBot+pTop)/2,`h=${ph}`,'svg-label ht','middle'));
+      // Rect height line (left)
+      dimLine(s,rL-26,baseY,rL-26,rectTop,'var(--accent2)'); tickH(s,rL-26,baseY); tickH(s,rL-26,rectTop);
+      s.appendChild(lbl(rL-54,(baseY+rectTop)/2,`h=${rh}`,'svg-label dim','middle'));
+      // Width (bottom)
+      dimLine(s,rL,baseY+22,rR,baseY+22); tickV(s,rL,baseY+22); tickV(s,rR,baseY+22);
+      s.appendChild(lbl(cx,baseY+40,`w=${rw}`));
+      // Labels
+    }
+  };
+}
+
+function makeCircleMinusTriangle() {
+  const r=rand(6,12), tb=rand(4,r*2-2), th=rand(3,r-1);
+  const A_circ=Math.PI*r*r, A_tri=0.5*tb*th;
+  const answer=A_circ-A_tri;
+  return {
+    op:'-', titleA:'Circle', titleB:'Triangle',
+    dimLabels:[
+      `Circle radius = ${r}`,
+      `Triangle base = ${tb}`,
+      `Triangle height = ${th}`,
+    ],
+    answer,
+    hint:`Area = Circle − Triangle = πr² − ½bh = π×${r}² − ½×${tb}×${th}`,
+    formula:`π×${r}² − ½×${tb}×${th}`,
+    draw(s) {
+      const cx=240, cy=205, cr=r*13;
+      const tW=tb*13, tH=th*13;
+      const tL=cx-tW/2, tR=cx+tW/2, tBot=cy+cr*0.5, tTop=tBot-tH;
+      // Circle
+      s.appendChild(el('circle',{cx,cy,r:cr,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Triangle cutout
+      s.appendChild(el('polygon',{
+        points:`${tL},${tBot} ${tR},${tBot} ${cx},${tTop}`,
+        fill:'#fdfaf4',stroke:'var(--ink)','stroke-width':'2','stroke-dasharray':'6,3'}));
+      // Radius line
+      s.appendChild(el('line',{x1:cx,y1:cy,x2:cx+cr,y2:cy,stroke:'var(--accent2)','stroke-width':'2'}));
+      s.appendChild(el('circle',{cx,cy,r:4,fill:'var(--accent2)'}));
+      s.appendChild(lbl(cx+cr/2,cy-18,`r=${r}`));
+      // Triangle base dim
+      dimLine(s,tL,tBot+20,tR,tBot+20,'var(--accent2)'); tickV(s,tL,tBot+20,'var(--accent2)'); tickV(s,tR,tBot+20,'var(--accent2)');
+      s.appendChild(lbl(cx,tBot+38,`b=${tb}`,'svg-label ht'));
+      // Triangle height
+      dimLine(s,tR+20,tTop,tR+20,tBot,'var(--accent2)'); tickH(s,tR+20,tTop,'var(--accent2)'); tickH(s,tR+20,tBot,'var(--accent2)');
+      s.appendChild(lbl(tR+46,(tTop+tBot)/2,`h=${th}`,'svg-label ht','start'));
+      // Labels
+    }
+  };
+}
+
+function makeRectMinusSemiCircle() {
+  const rw=rand(10,18), rh=rand(8,14);
+  const r=Math.floor(rw/4);
+  const A_rect=rw*rh, A_semi=0.5*Math.PI*r*r;
+  const answer=A_rect-A_semi;
+  return {
+    op:'-', titleA:'Rectangle', titleB:'Semicircle',
+    dimLabels:[
+      `Rectangle: l=${rw}, w=${rh}`,
+      `Semicircle radius=${r} (cut from corner)`,
+    ],
+    answer,
+    hint:`Area = Rectangle − Semicircle = (l×w) − ½πr² = (${rw}×${rh}) − ½π×${r}²`,
+    formula:`(${rw}×${rh}) − ½×π×${r}²`,
+    draw(s) {
+      const cx=240, cy=210, scale=16;
+      const W=rw*scale, H=rh*scale, R=r*scale;
+      const rL=cx-W/2, rR=cx+W/2, rTop=cy-H/2, rBot=cy+H/2;
+      // Clipping: draw rect then mask semicircle at top-right corner
+      s.appendChild(el('rect',{x:rL,y:rTop,width:W,height:H,
+        fill:'rgba(41,128,185,0.18)',stroke:'var(--ink)','stroke-width':'2.5'}));
+      // Semicircle cutout at top-right
+      s.appendChild(el('path',{
+        d:`M ${rR-R},${rTop} A ${R},${R} 0 0 1 ${rR},${rTop+R} Z`,
+        fill:'#fdfaf4',stroke:'var(--ink)','stroke-width':'2','stroke-dasharray':'6,3'}));
+      // Dims
+      dimLine(s,rL,rBot+22,rR,rBot+22); tickV(s,rL,rBot+22); tickV(s,rR,rBot+22);
+      s.appendChild(lbl(cx,rBot+40,`l=${rw}`));
+      dimLine(s,rR+24,rTop,rR+24,rBot,'var(--accent2)'); tickH(s,rR+24,rTop); tickH(s,rR+24,rBot);
+      s.appendChild(lbl(rR+52,cy,`w=${rh}`,'svg-label dim','middle'));
+      // Radius of semi
+      s.appendChild(el('line',{x1:rR,y1:rTop,x2:rR-R,y2:rTop,stroke:'var(--accent2)','stroke-width':'2'}));
+      s.appendChild(lbl(rR-R/2,rTop-18,`r=${r}`,'svg-label ht'));
+      // Labels
+    }
+  };
+}
+
+// ── Problem pool ───────────────────────────────────────────────
+const problemMakers = [
+  makeRectPlusTriangle,
+  makeRectMinusCircle,
+  makeRectPlusSemiCircle,
+  makeTrapezoidPlusTriangle,
+  makeParallelogramMinusTriangle,
+  makeRectMinusTrapezoid,
+  makeRectPlusParallelogram,
+  makeCircleMinusTriangle,
+  makeRectMinusSemiCircle,
+];
+
+function makeProblem() {
+  return pick(problemMakers)();
+}
+
+// ── Draw ───────────────────────────────────────────────────────
+function drawShape() {
+  const s = document.getElementById('shapeSvg');
+  s.innerHTML = '';
+  prob.draw(s);
+  // (no watermark — students identify the shapes themselves)
+}
+
+// ── Info panel ─────────────────────────────────────────────────
+function updateInfoPanel() {
+  const html = prob.dimLabels.map(d =>
+    `<div>${d.replace(/(=\s*[\d.]+)/, '<span class="val">$1</span>')}</div>`
+  ).join('');
+  document.getElementById('givenDims').innerHTML = html;
+  document.getElementById('findText').textContent = 'the total shaded area';
+}
+
+// ── New problem ────────────────────────────────────────────────
+function newProblem() {
+  prob = makeProblem();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('hintText').className = 'hint-text';
+  document.getElementById('hintText').textContent = '';
+  updateInfoPanel();
+  drawShape();
+  document.getElementById('answerInput').focus();
+}
+
+// ── Check answer ───────────────────────────────────────────────
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function checkAnswer() {
+  if (answered) return;
+  const val = document.getElementById('answerInput').value;
+  if (val === '') { showFeedback('partial', 'Enter your answer first.'); return; }
+  const userAns = parseFloat(val);
+  const correctAns = prob.answer;
+  const pct = Math.abs(userAns - correctAns) / correctAns;
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+  if (pct <= cfg.tol) {
+    correct++; streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent = streak;
+    showFeedback('correct', streak >= 3
+      ? `🔥 ${streak} in a row! (Answer: ${correctAns.toFixed(1)} units²)`
+      : `✓ Correct! (Answer: ${correctAns.toFixed(1)} units²)`);
+    answered = true;
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    showFeedback(pct < 0.35 ? 'partial' : 'wrong',
+      pct < 0.35 ? 'Close! Double-check your arithmetic.' : 'Not quite. Try again or use the hint.');
+  }
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+function toggleHint() {
+  const hint = document.getElementById('hintText');
+  if (hint.classList.contains('show')) { hint.classList.remove('show'); return; }
+  hint.textContent = `${prob.hint}. Answer ≈ ${prob.answer.toFixed(1)} units²`;
+  hint.classList.add('show');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+newProblem();
+</script>
+</body>
+</html>
