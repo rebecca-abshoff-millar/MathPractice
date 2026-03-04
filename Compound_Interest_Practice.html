@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compound Interest Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #f0edf8;
+    --paper:   #faf8fe;
+    --ink:     #1a1520;
+    --muted:   #7060a0;
+    --border:  #c4b8e8;
+    --accent:  #6c3fcf;
+    --accent2: #3d1a8a;
+    --green:   #2e7d32;
+    --red:     #c0392b;
+    --orange:  #a05c00;
+    --shadow:  rgba(60,30,120,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg); color: var(--ink);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(108,63,207,0.08) 27px, rgba(108,63,207,0.08) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(108,63,207,0.05) 27px, rgba(108,63,207,0.05) 28px);
+  }
+
+  header { text-align: center; margin-bottom: 0.7rem; }
+  header h1 { font-size: clamp(1.3rem, 3vw, 1.9rem); font-weight: 700; color: var(--ink); letter-spacing: -0.5px; }
+  header p  { color: var(--muted); font-size: 0.82rem; font-style: italic; margin-top: 0.15rem; }
+
+  .card {
+    background: var(--paper); border: 1px solid var(--border); border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.4rem 1.8rem; width: 100%; max-width: 900px;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  .top-row { display: flex; flex-direction: row; gap: 1.2rem; align-items: stretch; }
+
+  .question-panel {
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column; justify-content: center;
+    background: #f4f0fc; border: 1px solid var(--border); border-radius: 4px;
+    min-height: 340px; padding: 1.6rem 1.4rem; gap: 1.1rem;
+  }
+
+  .type-badge {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: white; background: var(--accent);
+    border-radius: 3px; padding: 0.18rem 0.55rem; align-self: flex-start;
+  }
+  .type-badge.find-amount    { background: #6c3fcf; }
+  .type-badge.find-interest  { background: #2e7d32; }
+  .type-badge.find-principal { background: #1565c0; }
+  .type-badge.find-time      { background: #6a1099; }
+  .type-badge.find-rate      { background: #00695c; }
+  .type-badge.compare-freq   { background: #8e24aa; }
+  .type-badge.compare-si     { background: #37474f; }
+  .type-badge.find-time-hard { background: #c62828; }
+
+  .question-text { font-size: 1.02rem; color: var(--ink); line-height: 1.85; }
+  .question-text strong { font-weight: 700; color: var(--accent2); font-family: 'DM Mono', monospace; font-size: 0.97em; }
+  .question-text em { color: var(--muted); }
+
+  /* Growth bar chart visual */
+  .growth-vis { width: 100%; }
+  .growth-bars {
+    display: flex; align-items: flex-end; gap: 3px;
+    height: 64px; padding: 0 2px;
+  }
+  .growth-bar-wrap {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .growth-bar {
+    width: 100%; border-radius: 2px 2px 0 0;
+    transition: height 0.4s ease;
+    min-height: 3px;
+  }
+  .growth-bar.principal-part { background: #6c3fcf; }
+  .growth-bar.interest-part  { background: #2e7d32; border-radius: 2px 2px 0 0; }
+  .growth-bar-label {
+    font-family: 'DM Mono', monospace; font-size: 0.6rem;
+    color: var(--muted); text-align: center;
+  }
+  .growth-vis-legend {
+    display: flex; gap: 1rem; margin-top: 5px;
+    font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted);
+  }
+  .legend-dot {
+    display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+    margin-right: 4px; vertical-align: middle;
+  }
+
+  .steps-box {
+    width: 100%; background: rgba(108,63,207,0.06);
+    border: 1px solid rgba(108,63,207,0.22); border-radius: 4px;
+    padding: 0.7rem 0.9rem; font-size: 0.82rem; color: var(--ink);
+    line-height: 1.8; font-style: italic; display: none;
+  }
+  .steps-box.show { display: block; }
+  .steps-box .step-line  { font-family: 'DM Mono', monospace; font-style: normal; font-size: 0.83rem; }
+  .steps-box .step-label { color: var(--accent2); font-weight: 700; font-style: normal; }
+
+  .info-panel { flex: 0 0 248px; display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .formula-box {
+    background: rgba(46,125,50,0.06); border: 1.5px solid rgba(46,125,50,0.28);
+    border-radius: 4px; padding: 0.55rem 0.9rem;
+  }
+  .formula-box p {
+    font-family: 'DM Mono', monospace; font-size: 0.82rem;
+    color: #1a4d1c; font-weight: 700; letter-spacing: 0.3px; text-align: center; line-height: 1.6;
+  }
+
+  .given-box {
+    background: rgba(108,63,207,0.07); border: 1.5px solid rgba(108,63,207,0.3);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .given-box h3 {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent); margin-bottom: 0.4rem;
+  }
+  .given-item { font-size: 0.86rem; color: var(--ink); line-height: 1.75; }
+  .given-item .val { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--accent2); }
+
+  .find-box {
+    background: rgba(61,26,138,0.06); border: 1.5px solid rgba(61,26,138,0.28);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .find-box h3 {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent2); margin-bottom: 0.4rem;
+  }
+  .find-box p { font-size: 0.92rem; color: var(--ink); font-style: italic; }
+  .find-box .find-question {
+    font-style: normal; font-size: 0.88rem; color: var(--accent2);
+    font-weight: 700; margin-top: 0.35rem; line-height: 1.5;
+  }
+
+  .answer-row { display: flex; gap: 0.7rem; align-items: flex-start; }
+  .answer-wrap { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+
+  input[type="text"] {
+    width: 100%; background: white; border: 1.5px solid var(--border);
+    border-radius: 4px; padding: 0.6rem 0.9rem;
+    font-size: 1.1rem; font-family: 'DM Mono', monospace;
+    color: var(--ink); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,63,207,0.14);
+  }
+  .input-note { font-size: 0.7rem; color: var(--muted); font-style: italic; }
+
+  .btn-row { display: flex; gap: 0.6rem; }
+  button {
+    flex: 1; border: none; border-radius: 4px; padding: 0.65rem 1rem;
+    font-family: 'Libre Baskerville', serif; font-size: 0.88rem;
+    font-weight: 700; cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-check { background: var(--accent2); color: white; box-shadow: 2px 2px 0 rgba(61,26,138,0.4); }
+  .btn-check:hover { filter: brightness(1.2); }
+  .btn-new { background: var(--paper); color: var(--ink); border: 1.5px solid var(--border); box-shadow: 2px 2px 0 var(--border); }
+  .btn-new:hover { background: var(--bg); }
+
+  .hint-btn {
+    width: 100%; background: transparent; border: 1px dashed var(--border);
+    color: var(--muted); font-size: 0.78rem; padding: 0.42rem; border-radius: 4px;
+    font-family: 'Libre Baskerville', serif; font-style: italic; cursor: pointer;
+  }
+  .hint-btn:hover { border-color: var(--accent); color: var(--ink); }
+
+  .hint-text {
+    display: none; background: rgba(108,63,207,0.06);
+    border: 1px solid rgba(108,63,207,0.25); border-radius: 4px;
+    padding: 0.6rem 0.8rem; font-size: 0.82rem; color: #2d1660;
+    line-height: 1.7; font-style: italic;
+  }
+  .hint-text.show { display: block; }
+
+  .feedback {
+    border-radius: 4px; padding: 0.55rem 0.9rem; font-size: 0.88rem;
+    font-weight: 700; text-align: center; min-height: 2rem;
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .feedback.correct { background: rgba(46,125,50,0.1);  border: 1.5px solid rgba(46,125,50,0.4);  color: var(--green); }
+  .feedback.wrong   { background: rgba(192,57,43,0.08); border: 1.5px solid rgba(192,57,43,0.3);  color: var(--red); }
+  .feedback.partial { background: rgba(160,92,0,0.08);  border: 1.5px solid rgba(160,92,0,0.3);   color: var(--orange); }
+
+  .stats-row { display: flex; gap: 1rem; justify-content: center; border-top: 1px solid var(--border); padding-top: 0.7rem; }
+  .stat { text-align: center; font-size: 0.75rem; color: var(--muted); }
+  .stat strong { display: block; font-size: 1.1rem; color: var(--ink); font-family: 'DM Mono', monospace; }
+
+  .difficulty-row { display: flex; gap: 0.5rem; align-items: center; font-size: 0.78rem; color: var(--muted); font-style: italic; }
+  .diff-btn {
+    flex: none; padding: 0.3rem 0.7rem; font-size: 0.75rem; font-weight: 700;
+    border-radius: 3px; border: 1.5px solid var(--border); background: var(--paper);
+    color: var(--muted); cursor: pointer; font-family: 'Libre Baskerville', serif; transition: all 0.15s;
+  }
+  .diff-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .diff-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Compound Interest</h1>
+  <p>Practice with the formula A = P(1 + r/n)<sup>nt</sup></p>
+</header>
+
+<div class="card">
+  <div class="difficulty-row">
+    Difficulty:
+    <button class="diff-btn active" id="dEasy"   onclick="setDiff('easy')">Easy</button>
+    <button class="diff-btn"        id="dMedium" onclick="setDiff('medium')">Medium</button>
+    <button class="diff-btn"        id="dHard"   onclick="setDiff('hard')">Hard</button>
+  </div>
+
+  <div class="top-row">
+    <div class="question-panel">
+      <div class="type-badge" id="typeBadge">Find Amount</div>
+      <div class="question-text" id="questionText">—</div>
+      <div class="growth-vis" id="growthVis"></div>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+
+    <div class="info-panel">
+      <div class="formula-box">
+        <p>A = P(1 + r/n)<sup style="font-size:0.7em">nt</sup></p>
+        <p style="font-size:0.72rem;font-weight:400;color:#2e5c30;margin-top:3px;">I = A − P</p>
+      </div>
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Find</h3>
+        <p id="findDesc">—</p>
+        <div class="find-question" id="findQuestion"></div>
+      </div>
+      <div class="answer-row">
+        <div class="answer-wrap">
+          <input type="text" id="answerInput" placeholder="e.g. 1276.28" onkeydown="handleKey(event)" autocomplete="off">
+          <span class="input-note" id="inputNote">Round to 2 decimal places.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new"   onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show solution</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback"   id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let prob = {};
+let attempts = 0, correct = 0, streak = 0;
+let answered = false;
+let difficulty = 'easy';
+
+// ── Helpers ────────────────────────────────────────────────────
+function rand(min, max)  { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randItem(arr)   { return arr[Math.floor(Math.random() * arr.length)]; }
+function r2(x)           { return Math.round(x * 100) / 100; }
+function r4(x)           { return Math.round(x * 10000) / 10000; }
+function fmt$(n)         { return '$' + r2(n).toFixed(2); }
+function fmtPct(r)       { return (r * 100) % 1 === 0 ? (r * 100) + '%' : r2(r * 100) + '%'; }
+
+// Core compound interest formula
+// A = P * (1 + r/n)^(n*t)
+function compA(P, r, n, t) { return r2(P * Math.pow(1 + r / n, n * t)); }
+
+// ── Compounding frequency options ─────────────────────────────
+const freqOptions = [
+  { n: 1,   label: 'annually',    labelN: 'annually (n=1)',   nLabel: '1' },
+  { n: 2,   label: 'semi-annually', labelN: 'semi-annually (n=2)', nLabel: '2' },
+  { n: 4,   label: 'quarterly',   labelN: 'quarterly (n=4)',  nLabel: '4' },
+  { n: 12,  label: 'monthly',     labelN: 'monthly (n=12)',   nLabel: '12' },
+  { n: 365, label: 'daily',       labelN: 'daily (n=365)',    nLabel: '365' },
+];
+const easyFreqs  = freqOptions.slice(0, 3);  // annual, semi, quarterly
+const allFreqs   = freqOptions;
+
+// ── Context pools ──────────────────────────────────────────────
+const savingsCtx = [
+  'savings account', 'high-yield savings account',
+  'certificate of deposit', 'savings bond', 'investment account',
+];
+const loanCtx = [
+  'car loan', 'student loan', 'personal loan', 'mortgage',
+];
+const names = ['Alex','Jordan','Sam','Taylor','Morgan','Casey','Jamie','Riley','Dana','Avery'];
+function randName() { return randItem(names); }
+
+// ── Rate / principal pools ─────────────────────────────────────
+const easyRates = [0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.10];
+const medRates  = [0.025, 0.035, 0.045, 0.055, 0.065, 0.075, 0.085];
+const hardRates = [0.0325, 0.0425, 0.0525, 0.0625, 0.0725, 0.0875, 0.1125];
+
+const easyPrincipals = [500, 1000, 1500, 2000, 2500, 3000, 5000];
+const medPrincipals  = [1000, 2000, 2500, 3000, 4000, 5000, 7500, 8000, 10000];
+const hardPrincipals = [5000, 7500, 10000, 12500, 15000, 20000, 25000, 50000];
+
+const easyTimes = [1, 2, 3, 4, 5];
+const medTimes  = [2, 3, 4, 5, 6, 8, 10];
+const hardTimes = [5, 10, 15, 20, 25, 30];
+
+// ══════════════════════════════════════════════════════════════
+// EASY — Find A or Find I (annual / semi / quarterly only)
+// ══════════════════════════════════════════════════════════════
+
+function makeFindAmount() {
+  const name = randName();
+  const ctx  = randItem(savingsCtx);
+  const freq = randItem(easyFreqs);
+  const P    = randItem(easyPrincipals);
+  const r    = randItem(easyRates);
+  const t    = randItem(easyTimes);
+  const A    = compA(P, r, freq.n, t);
+  const rPct = fmtPct(r);
+  const mult = r4(1 + r / freq.n);
+  const exp  = freq.n * t;
+
+  return {
+    typeLabel: 'Find Total Amount', typeCls: 'find-amount',
+    question: `${name} deposits <strong>${fmt$(P)}</strong> into a ${ctx} that earns <strong>${rPct}</strong> interest per year, compounded <strong>${freq.label}</strong>. What is the total amount after <strong>${t} year${t>1?'s':''}?</strong>`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Annual rate (r): ${rPct}`,
+      `Compounded: ${freq.labelN}`,
+      `Time (t): ${t} year${t>1?'s':''}`,
+    ],
+    findDesc: 'Find the total amount (A) after the given time.',
+    findQ: 'A = ?',
+    answerVal: A, unit: '$',
+    inputNote: 'Round to 2 decimal places.',
+    vis: { P, A, t },
+    steps: [
+      ['Write the formula', 'A = P(1 + r/n)^(nt)'],
+      ['Identify values', `P=${fmt$(P)}, r=${r}, n=${freq.n}, t=${t}`],
+      ['Calculate (1 + r/n)', `1 + ${r}/${freq.n} = ${mult}`],
+      ['Calculate exponent nt', `${freq.n} × ${t} = ${exp}`],
+      ['Calculate final amount', `A = ${fmt$(P)} × ${mult}^${exp} = ${fmt$(A)}`],
+    ],
+    hint: `A = ${fmt$(P)} × (1 + ${r}/${freq.n})^(${freq.n}×${t}) = ${fmt$(P)} × ${mult}^${exp} = ${fmt$(A)}.`,
+  };
+}
+
+function makeFindInterest() {
+  const name = randName();
+  const ctx  = randItem(savingsCtx);
+  const freq = randItem(easyFreqs);
+  const P    = randItem(easyPrincipals);
+  const r    = randItem(easyRates);
+  const t    = randItem(easyTimes);
+  const A    = compA(P, r, freq.n, t);
+  const I    = r2(A - P);
+  const rPct = fmtPct(r);
+  const mult = r4(1 + r / freq.n);
+  const exp  = freq.n * t;
+
+  return {
+    typeLabel: 'Find Interest Earned', typeCls: 'find-interest',
+    question: `${name} invests <strong>${fmt$(P)}</strong> at <strong>${rPct}</strong> per year, compounded <strong>${freq.label}</strong>, for <strong>${t} year${t>1?'s':''}.</strong> How much <em>interest</em> is earned?`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Annual rate (r): ${rPct}`,
+      `Compounded: ${freq.labelN}`,
+      `Time (t): ${t} year${t>1?'s':''}`,
+    ],
+    findDesc: 'Find the compound interest earned (I = A − P).',
+    findQ: 'I = A − P = ?',
+    answerVal: I, unit: '$',
+    inputNote: 'Round to 2 decimal places.',
+    vis: { P, A, t },
+    steps: [
+      ['Find total amount A', `A = ${fmt$(P)} × (1 + ${r}/${freq.n})^(${freq.n}×${t}) = ${fmt$(P)} × ${mult}^${exp} = ${fmt$(A)}`],
+      ['Subtract principal', `I = A − P = ${fmt$(A)} − ${fmt$(P)} = ${fmt$(I)}`],
+    ],
+    hint: `First find A = ${fmt$(A)}, then I = A − P = ${fmt$(A)} − ${fmt$(P)} = ${fmt$(I)}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// MEDIUM — All frequencies; find P, r, or t (approx)
+// ══════════════════════════════════════════════════════════════
+
+function makeFindPrincipal() {
+  const name = randName();
+  const ctx  = randItem(savingsCtx);
+  const freq = randItem(allFreqs);
+  const P    = randItem(medPrincipals);
+  const r    = randItem([...easyRates, ...medRates]);
+  const t    = randItem(medTimes);
+  const A    = compA(P, r, freq.n, t);
+  const rPct = fmtPct(r);
+  const mult = r4(1 + r / freq.n);
+  const exp  = freq.n * t;
+  const factor = r4(Math.pow(1 + r / freq.n, freq.n * t));
+
+  return {
+    typeLabel: 'Find Principal', typeCls: 'find-principal',
+    question: `${name} wants to have <strong>${fmt$(A)}</strong> after <strong>${t} year${t>1?'s':''}</strong> in a ${ctx} earning <strong>${rPct}</strong> per year, compounded <strong>${freq.label}.</strong> How much should ${name} deposit now?`,
+    given: [
+      `Target amount (A): ${fmt$(A)}`,
+      `Annual rate (r): ${rPct}`,
+      `Compounded: ${freq.labelN}`,
+      `Time (t): ${t} year${t>1?'s':''}`,
+    ],
+    findDesc: 'Find the present value (principal P).',
+    findQ: 'P = ?',
+    answerVal: P, unit: '$',
+    inputNote: 'Round to 2 decimal places.',
+    vis: { P, A, t },
+    steps: [
+      ['Write the formula', 'A = P(1 + r/n)^(nt)  →  P = A ÷ (1 + r/n)^(nt)'],
+      ['Calculate (1 + r/n)^(nt)', `(1 + ${r}/${freq.n})^(${freq.n}×${t}) = ${mult}^${exp} = ${factor}`],
+      ['Divide A by the factor', `P = ${fmt$(A)} ÷ ${factor} = ${fmt$(P)}`],
+    ],
+    hint: `P = A ÷ (1+r/n)^(nt) = ${fmt$(A)} ÷ ${factor} = ${fmt$(P)}.`,
+  };
+}
+
+function makeFindAmountMed() {
+  const name = randName();
+  const ctx  = randItem([...savingsCtx, ...loanCtx]);
+  const freq = randItem(allFreqs);
+  const P    = randItem(medPrincipals);
+  const r    = randItem([...easyRates, ...medRates]);
+  const t    = randItem(medTimes);
+  const A    = compA(P, r, freq.n, t);
+  const I    = r2(A - P);
+  const rPct = fmtPct(r);
+  const mult = r4(1 + r / freq.n);
+  const exp  = freq.n * t;
+
+  return {
+    typeLabel: 'Find Total Amount', typeCls: 'find-amount',
+    question: `${name} takes out a ${ctx} for <strong>${fmt$(P)}</strong> at <strong>${rPct}</strong> interest, compounded <strong>${freq.label},</strong> for <strong>${t} year${t>1?'s':''}.</strong> What is the total amount owed?`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Annual rate (r): ${rPct}`,
+      `Compounded: ${freq.labelN}`,
+      `Time (t): ${t} year${t>1?'s':''}`,
+    ],
+    findDesc: 'Find the total amount (A) after compound interest.',
+    findQ: 'A = ?',
+    answerVal: A, unit: '$',
+    inputNote: 'Round to 2 decimal places.',
+    vis: { P, A, t },
+    steps: [
+      ['Write the formula', 'A = P(1 + r/n)^(nt)'],
+      ['Identify values', `P=${fmt$(P)}, r=${r}, n=${freq.n}, t=${t}`],
+      ['Calculate (1 + r/n)', `1 + ${r}/${freq.n} = ${mult}`],
+      ['Raise to power nt = ${freq.n}×${t} = ${exp}', `${mult}^${exp} = ${r4(Math.pow(mult, exp))}`],
+      ['Multiply by P', `A = ${fmt$(P)} × ${r4(Math.pow(mult, exp))} = ${fmt$(A)}`],
+    ],
+    hint: `A = ${fmt$(P)} × (1 + ${r}/${freq.n})^${exp} = ${fmt$(A)}.`,
+  };
+}
+
+function makeCompareFrequency() {
+  // Same P, r, t — compare two compounding frequencies
+  const name = randName();
+  const ctx  = randItem(savingsCtx);
+  const P    = randItem(medPrincipals);
+  const r    = randItem([...easyRates, ...medRates]);
+  const t    = randItem([2, 3, 4, 5]);
+  const freqA = randItem([freqOptions[0], freqOptions[1], freqOptions[2]]); // annual/semi/quarterly
+  const freqB = randItem([freqOptions[2], freqOptions[3], freqOptions[4]]); // quarterly/monthly/daily
+  const AA   = compA(P, r, freqA.n, t);
+  const AB   = compA(P, r, freqB.n, t);
+  const diff = r2(Math.abs(AB - AA));
+  const rPct = fmtPct(r);
+
+  return {
+    typeLabel: 'Compare Frequencies', typeCls: 'compare-freq',
+    question: `${name} is comparing two ${ctx}s, both with <strong>${fmt$(P)}</strong> at <strong>${rPct}</strong> per year for <strong>${t} year${t>1?'s':''}.</strong><br><br>
+      Account A: compounded <strong>${freqA.label}</strong><br>
+      Account B: compounded <strong>${freqB.label}</strong><br><br>
+      How much more does Account B earn than Account A?`,
+    given: [
+      `Principal: ${fmt$(P)} (both)`,
+      `Rate: ${rPct} (both)`,
+      `Time: ${t} year${t>1?'s':''} (both)`,
+      `Account A: ${freqA.labelN}`,
+      `Account B: ${freqB.labelN}`,
+    ],
+    findDesc: 'Find the difference in total amounts (A_B − A_A).',
+    findQ: 'Difference = ?',
+    answerVal: diff, unit: '$',
+    inputNote: 'Round to 2 decimal places.',
+    vis: { P, A: AB, t },
+    steps: [
+      ['Find A for Account A', `A_A = ${fmt$(P)}(1+${r}/${freqA.n})^(${freqA.n}×${t}) = ${fmt$(AA)}`],
+      ['Find A for Account B', `A_B = ${fmt$(P)}(1+${r}/${freqB.n})^(${freqB.n}×${t}) = ${fmt$(AB)}`],
+      ['Find the difference', `${fmt$(AB)} − ${fmt$(AA)} = ${fmt$(diff)}`],
+    ],
+    hint: `A_A = ${fmt$(AA)}, A_B = ${fmt$(AB)}. Difference = ${fmt$(diff)}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// HARD — Find time (logs), find rate (nth root), compare CI vs SI
+// ══════════════════════════════════════════════════════════════
+
+function makeCompareSimpleVsCompound() {
+  const name = randName();
+  const P    = randItem(hardPrincipals);
+  const r    = randItem([...easyRates, ...medRates]);
+  const t    = randItem([3, 4, 5, 6, 8, 10]);
+  const freq = randItem([freqOptions[1], freqOptions[2], freqOptions[3]]); // semi/quarterly/monthly
+  const A_ci = compA(P, r, freq.n, t);
+  const I_ci = r2(A_ci - P);
+  const I_si = r2(P * r * t);
+  const diff = r2(I_ci - I_si);
+  const rPct = fmtPct(r);
+
+  return {
+    typeLabel: 'CI vs Simple Interest', typeCls: 'compare-si',
+    question: `${name} invests <strong>${fmt$(P)}</strong> at <strong>${rPct}</strong> per year for <strong>${t} years.</strong><br><br>
+      Account A earns <em>simple interest.</em><br>
+      Account B compounds <strong>${freq.label}.</strong><br><br>
+      How much more interest does Account B earn?`,
+    given: [
+      `Principal: ${fmt$(P)}`,
+      `Rate: ${rPct} per year`,
+      `Time: ${t} years`,
+      `Account B compounds: ${freq.labelN}`,
+    ],
+    findDesc: 'Find how much more interest compound interest earns.',
+    findQ: 'Extra interest = ?',
+    answerVal: diff, unit: '$',
+    inputNote: 'Round to 2 decimal places.',
+    vis: { P, A: A_ci, t },
+    steps: [
+      ['Simple interest', `I_SI = P×r×t = ${fmt$(P)}×${r}×${t} = ${fmt$(I_si)}`],
+      ['Compound interest total', `A_CI = ${fmt$(P)}(1+${r}/${freq.n})^(${freq.n}×${t}) = ${fmt$(A_ci)}`],
+      ['Compound interest earned', `I_CI = ${fmt$(A_ci)} − ${fmt$(P)} = ${fmt$(I_ci)}`],
+      ['Extra from compounding', `${fmt$(I_ci)} − ${fmt$(I_si)} = ${fmt$(diff)}`],
+    ],
+    hint: `I_SI = ${fmt$(I_si)}. I_CI = ${fmt$(I_ci)}. Extra = ${fmt$(diff)}.`,
+  };
+}
+
+function makeFindTimeLog() {
+  // Find t using logarithms: t = log(A/P) / (n × log(1 + r/n))
+  const name = randName();
+  const ctx  = randItem(savingsCtx);
+  const freq = randItem([freqOptions[0], freqOptions[1], freqOptions[2]]); // keep cleaner
+  const P    = randItem(hardPrincipals);
+  const r    = randItem([0.04, 0.05, 0.06, 0.07, 0.08, 0.10]);
+  const t    = randItem([5, 8, 10, 12, 15, 20]);
+  const A    = compA(P, r, freq.n, t);
+  const rPct = fmtPct(r);
+  const logAP   = r4(Math.log(A / P));
+  const logBase = r4(Math.log(1 + r / freq.n));
+
+  return {
+    typeLabel: 'Find the Time', typeCls: 'find-time-hard',
+    question: `${name} wants to grow <strong>${fmt$(P)}</strong> to <strong>${fmt$(A)}</strong> in a ${ctx} earning <strong>${rPct}</strong> per year, compounded <strong>${freq.label}.</strong> How many years will this take?`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Target amount (A): ${fmt$(A)}`,
+      `Annual rate (r): ${rPct}`,
+      `Compounded: ${freq.labelN}`,
+    ],
+    findDesc: 'Find the time (t) in years. Use logarithms.',
+    findQ: 't = ? years',
+    answerVal: t, unit: 'years',
+    inputNote: 'Enter a whole number of years.',
+    vis: { P, A, t },
+    steps: [
+      ['Write the formula', `A = P(1 + r/n)^(nt)   →   A/P = (1+r/n)^(nt)`],
+      ['Take ln of both sides', `ln(A/P) = nt × ln(1+r/n)`],
+      ['Solve for t', `t = ln(A/P) ÷ [n × ln(1+r/n)]`],
+      ['Substitute', `t = ln(${fmt$(A)}/${fmt$(P)}) ÷ [${freq.n} × ln(1+${r}/${freq.n})]`],
+      ['Calculate', `t = ${logAP} ÷ [${freq.n} × ${logBase}] = ${logAP} ÷ ${r4(freq.n * logBase)} ≈ ${t} years`],
+    ],
+    hint: `t = ln(A/P) ÷ (n × ln(1+r/n)) = ${logAP} ÷ ${r4(freq.n * logBase)} ≈ ${t} years.`,
+  };
+}
+
+function makeFindRateHard() {
+  // Find r given A, P, n, t using nth root: r = n × [(A/P)^(1/(nt)) − 1]
+  const name = randName();
+  const ctx  = randItem(savingsCtx);
+  const freq = randItem([freqOptions[0], freqOptions[1], freqOptions[2]]);
+  const P    = randItem(hardPrincipals);
+  const r    = randItem([0.04, 0.05, 0.06, 0.07, 0.08]);
+  const t    = randItem([3, 4, 5, 6, 8, 10]);
+  const A    = compA(P, r, freq.n, t);
+  const rPct = fmtPct(r);
+  const exp  = freq.n * t;
+  const root = r4(Math.pow(A / P, 1 / exp));
+
+  return {
+    typeLabel: 'Find the Rate', typeCls: 'find-rate',
+    question: `${name} invested <strong>${fmt$(P)}</strong> in a ${ctx}, compounded <strong>${freq.label},</strong> and after <strong>${t} year${t>1?'s':''}</strong> the account was worth <strong>${fmt$(A)}.</strong> What was the annual interest rate?`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Total amount (A): ${fmt$(A)}`,
+      `Compounded: ${freq.labelN}`,
+      `Time (t): ${t} year${t>1?'s':''}`,
+    ],
+    findDesc: 'Find the annual interest rate (r). Give as a percentage.',
+    findQ: 'r = ? %',
+    answerVal: r2(r * 100), unit: '%',
+    inputNote: 'Enter the rate as a percentage (e.g. 5 for 5%).',
+    vis: { P, A, t },
+    steps: [
+      ['Write formula, isolate (1+r/n)', `(1+r/n)^(nt) = A/P`],
+      ['Take the (nt)th root', `1 + r/n = (A/P)^(1/(nt))`],
+      ['Substitute', `1 + r/${freq.n} = (${fmt$(A)}/${fmt$(P)})^(1/${exp}) = ${root}`],
+      ['Solve for r', `r/n = ${root} − 1 = ${r4(root - 1)}`],
+      ['Multiply by n', `r = ${r4(root - 1)} × ${freq.n} = ${r2((root - 1) * freq.n)} = ${rPct}`],
+    ],
+    hint: `r = n × [(A/P)^(1/(nt)) − 1] = ${freq.n} × [${root} − 1] = ${rPct}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// Dispatcher
+// ══════════════════════════════════════════════════════════════
+function makeProblem() {
+  let p;
+  if (difficulty === 'easy') {
+    p = randItem([makeFindAmount, makeFindAmount, makeFindInterest])();
+  } else if (difficulty === 'medium') {
+    p = randItem([makeFindPrincipal, makeFindAmountMed, makeFindAmountMed, makeCompareFrequency])();
+  } else {
+    p = randItem([makeCompareSimpleVsCompound, makeFindTimeLog, makeFindRateHard])();
+  }
+  p.difficulty = difficulty;
+  return p;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Difficulty
+// ══════════════════════════════════════════════════════════════
+function setDiff(d) {
+  difficulty = d;
+  ['easy','medium','hard'].forEach(x => {
+    document.getElementById('d' + x.charAt(0).toUpperCase() + x.slice(1))
+      .classList.toggle('active', x === d);
+  });
+  newProblem();
+}
+
+// ══════════════════════════════════════════════════════════════
+// Growth bar chart visual — shows value growing year by year
+// ══════════════════════════════════════════════════════════════
+function renderVis(vis) {
+  const el = document.getElementById('growthVis');
+  if (!vis) { el.innerHTML = ''; return; }
+
+  const { P, A, t } = vis;
+  // Build per-year values — use prob's r and n
+  const r = prob._r, n = prob._n;
+  const maxBars = Math.min(t, 10);
+  const step    = Math.max(1, Math.floor(t / maxBars));
+  const years   = [];
+  for (let yr = 0; yr <= t; yr += step) years.push(yr);
+  if (years[years.length - 1] !== t) years.push(t);
+
+  const vals = years.map(yr => compA(P, r, n, yr));
+  const maxVal = Math.max(...vals);
+  const barH   = 56; // total bar height in px
+
+  let barsHTML = '';
+  vals.forEach((val, i) => {
+    const yr      = years[i];
+    const pPct    = Math.round((P / maxVal) * barH);
+    const iPct    = Math.round(((val - P) / maxVal) * barH);
+    const pxP     = Math.max(pPct, 2);
+    const pxI     = Math.max(iPct, 0);
+    barsHTML += `
+      <div class="growth-bar-wrap">
+        <div style="display:flex;flex-direction:column;align-items:stretch;width:100%;height:${barH}px;justify-content:flex-end;">
+          <div class="growth-bar interest-part"  style="height:${pxI}px;"></div>
+          <div class="growth-bar principal-part" style="height:${pxP}px;border-radius:${pxI>0?'0':'2px 2px'} 0 0;"></div>
+        </div>
+        <div class="growth-bar-label">yr ${yr}</div>
+      </div>`;
+  });
+
+  el.innerHTML = `
+    <div class="growth-bars">${barsHTML}</div>
+    <div class="growth-vis-legend">
+      <span><span class="legend-dot" style="background:#6c3fcf"></span>Principal ${fmt$(P)}</span>
+      <span><span class="legend-dot" style="background:#2e7d32"></span>Interest earned</span>
+      <span style="margin-left:auto;color:var(--accent2);font-weight:700">→ ${fmt$(A)}</span>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Panel + problem lifecycle
+// ══════════════════════════════════════════════════════════════
+function updatePanel() {
+  const badge = document.getElementById('typeBadge');
+  badge.textContent = prob.typeLabel;
+  badge.className   = 'type-badge ' + (prob.typeCls || '');
+
+  document.getElementById('questionText').innerHTML = prob.question;
+
+  const given = document.getElementById('givenDims');
+  given.innerHTML = prob.given.map(g =>
+    `<div>${g.replace(/(\$[\d.,]+|\d[\d.,]*\s*%?)/g, '<span class="val">$1</span>')}</div>`
+  ).join('');
+
+  document.getElementById('findDesc').textContent     = prob.findDesc;
+  document.getElementById('findQuestion').textContent = prob.findQ;
+  document.getElementById('inputNote').textContent    = prob.inputNote;
+  renderVis(prob.vis);
+}
+
+function newProblem() {
+  prob = makeProblem();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('hintText').className = 'hint-text';
+  document.getElementById('hintText').textContent = '';
+  document.getElementById('stepsBox').className = 'steps-box';
+  document.getElementById('stepsBox').innerHTML = '';
+  updatePanel();
+  document.getElementById('answerInput').focus();
+}
+
+// ══════════════════════════════════════════════════════════════
+// Answer checking
+// ══════════════════════════════════════════════════════════════
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function checkAnswer() {
+  if (answered) return;
+  const raw = document.getElementById('answerInput').value.trim().replace(/[$,%\s]/g, '');
+  if (!raw) { showFeedback('partial', 'Enter your answer first.'); return; }
+
+  const userVal = parseFloat(raw);
+  if (isNaN(userVal)) { showFeedback('partial', 'Please enter a number.'); return; }
+
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+
+  // Tolerance: 1.5% or $0.05, whichever is larger
+  const tol = Math.max(0.015 * Math.abs(prob.answerVal), 0.05);
+
+  if (Math.abs(userVal - prob.answerVal) <= tol) {
+    correct++; streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent  = streak;
+    let dispAns;
+    if      (prob.unit === '$')     dispAns = fmt$(prob.answerVal);
+    else if (prob.unit === '%')     dispAns = r2(prob.answerVal) + '%';
+    else if (prob.unit === 'years') dispAns = prob.answerVal + ' year' + (prob.answerVal !== 1 ? 's' : '');
+    else dispAns = prob.answerVal;
+    showFeedback('correct', streak >= 3
+      ? `🔥 ${streak} in a row! Answer: ${dispAns}`
+      : `✓ Correct! Answer: ${dispAns}`);
+    answered = true;
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    const pctOff = Math.abs(userVal - prob.answerVal) / Math.abs(prob.answerVal);
+    showFeedback(pctOff < 0.1 ? 'partial' : 'wrong',
+      pctOff < 0.1 ? 'Very close — check your rounding.' : 'Not quite. Use the hint for a step-by-step solution.');
+  }
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Hint / steps
+// ══════════════════════════════════════════════════════════════
+function toggleHint() {
+  const hint  = document.getElementById('hintText');
+  const steps = document.getElementById('stepsBox');
+  if (hint.classList.contains('show')) {
+    hint.classList.remove('show'); steps.classList.remove('show'); return;
+  }
+  let html = '<strong style="font-style:normal;color:var(--accent2);font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;">Solution</strong><br>';
+  prob.steps.forEach(([label, expr], i) => {
+    html += `<span class="step-label">Step ${i+1}: ${label}</span><br>`;
+    html += `<span class="step-line">&nbsp;&nbsp;${expr}</span><br>`;
+  });
+  steps.innerHTML = html;
+  steps.classList.add('show');
+  hint.textContent = `Hint: ${prob.hint}`;
+  hint.classList.add('show');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+// Store r and n on prob so renderVis can access them
+const _origMakeFindAmount = makeFindAmount;
+function withRN(fn) {
+  return function() {
+    const p = fn();
+    // r and n are captured in closure — attach to prob after generation
+    return p;
+  };
+}
+
+// Patch: after makeProblem, extract r & n from the vis for the chart
+// We store _r and _n directly in each problem maker
+(function patchMakers() {
+  const makers = [makeFindAmount, makeFindInterest, makeFindPrincipal,
+                  makeFindAmountMed, makeCompareFrequency,
+                  makeCompareSimpleVsCompound, makeFindTimeLog, makeFindRateHard];
+})();
+
+// Since r and n are local to each maker, re-extract from steps/given for vis
+// Simpler: store _r, _n directly — patch makeProblem wrapper
+const _mp = makeProblem;
+function makeProblemWrapped() {
+  const p = _mp();
+  // Extract n from given text (labelN pattern "n=X")
+  const nMatch = p.given.join('|').match(/n=(\d+)/);
+  p._n = nMatch ? parseInt(nMatch[1]) : 1;
+  // Extract r from given text (rate like "5%" → 0.05)
+  const rMatch = p.given.join('|').match(/(\d+\.?\d*)%/);
+  p._r = rMatch ? parseFloat(rMatch[1]) / 100 : 0.05;
+  return p;
+}
+
+// Override newProblem to use wrapper
+const _origNewProblem = newProblem;
+function newProblem() {
+  prob = makeProblemWrapped();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('hintText').className = 'hint-text';
+  document.getElementById('hintText').textContent = '';
+  document.getElementById('stepsBox').className = 'steps-box';
+  document.getElementById('stepsBox').innerHTML = '';
+  updatePanel();
+  document.getElementById('answerInput').focus();
+}
+
+newProblem();
+</script>
+</body>
+</html>
