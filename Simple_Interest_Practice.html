@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Interest Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #f0edf8;
+    --paper:   #faf8fe;
+    --ink:     #1a1520;
+    --muted:   #7060a0;
+    --border:  #c4b8e8;
+    --accent:  #6c3fcf;
+    --accent2: #3d1a8a;
+    --green:   #2e7d32;
+    --red:     #c0392b;
+    --orange:  #a05c00;
+    --shadow:  rgba(60,30,120,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: auto; }
+
+  body {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(108,63,207,0.08) 27px, rgba(108,63,207,0.08) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(108,63,207,0.05) 27px, rgba(108,63,207,0.05) 28px);
+  }
+
+  header { text-align: center; margin-bottom: 0.7rem; }
+  header h1 { font-size: clamp(1.3rem, 3vw, 1.9rem); font-weight: 700; color: var(--ink); letter-spacing: -0.5px; }
+  header p  { color: var(--muted); font-size: 0.82rem; font-style: italic; margin-top: 0.15rem; }
+
+  .card {
+    background: var(--paper); border: 1px solid var(--border); border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--border), 0 8px 30px var(--shadow);
+    padding: 1.4rem 1.8rem; width: 100%; max-width: 900px;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  .top-row { display: flex; flex-direction: row; gap: 1.2rem; align-items: stretch; }
+
+  .question-panel {
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column; justify-content: center;
+    background: #f4f0fc; border: 1px solid var(--border); border-radius: 4px;
+    min-height: 320px; padding: 1.6rem 1.4rem; gap: 1.1rem;
+  }
+
+  .type-badge {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: white; background: var(--accent);
+    border-radius: 3px; padding: 0.18rem 0.55rem; align-self: flex-start;
+  }
+  .type-badge.find-interest  { background: #6c3fcf; }
+  .type-badge.find-principal { background: #1565c0; }
+  .type-badge.find-rate      { background: #00695c; }
+  .type-badge.find-time      { background: #6a1099; }
+  .type-badge.find-total     { background: #2e7d32; }
+  .type-badge.find-rate-hard { background: #37474f; }
+  .type-badge.compare        { background: #8e24aa; }
+  .type-badge.missing-var    { background: #c62828; }
+
+  .question-text { font-size: 1.05rem; color: var(--ink); line-height: 1.8; }
+  .question-text strong { font-weight: 700; color: var(--accent2); font-family: 'DM Mono', monospace; font-size: 0.97em; }
+
+  /* Interest timeline visual */
+  .interest-vis { width: 100%; }
+  .interest-track {
+    width: 100%; height: 52px; background: #e8e2f8;
+    border-radius: 4px; position: relative; overflow: visible;
+  }
+  .interest-principal {
+    position: absolute; left: 0; top: 0; height: 100%;
+    background: #6c3fcf; border-radius: 4px 0 0 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-weight: 700; color: white; min-width: 4px;
+    transition: width 0.4s ease;
+  }
+  .interest-earned {
+    position: absolute; top: 0; height: 100%;
+    background: #2e7d32; border-radius: 0 4px 4px 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-weight: 700; color: white; min-width: 4px;
+    transition: all 0.4s ease;
+  }
+  .interest-vis-labels {
+    display: flex; justify-content: space-between;
+    font-size: 0.7rem; color: var(--muted); margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+  .interest-formula-row {
+    font-family: 'DM Mono', monospace; font-size: 0.82rem;
+    color: var(--accent2); font-weight: 700;
+    background: rgba(108,63,207,0.08);
+    border: 1px solid rgba(108,63,207,0.2);
+    border-radius: 3px; padding: 0.3rem 0.7rem;
+    align-self: flex-start;
+  }
+
+  .steps-box {
+    width: 100%; background: rgba(108,63,207,0.06);
+    border: 1px solid rgba(108,63,207,0.22); border-radius: 4px;
+    padding: 0.7rem 0.9rem; font-size: 0.82rem; color: var(--ink);
+    line-height: 1.8; font-style: italic; display: none;
+  }
+  .steps-box.show { display: block; }
+  .steps-box .step-line  { font-family: 'DM Mono', monospace; font-style: normal; font-size: 0.85rem; }
+  .steps-box .step-label { color: var(--accent2); font-weight: 700; font-style: normal; }
+
+  .info-panel { flex: 0 0 240px; display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .given-box {
+    background: rgba(108,63,207,0.07); border: 1.5px solid rgba(108,63,207,0.3);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .given-box h3 {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent); margin-bottom: 0.4rem;
+  }
+  .given-item { font-size: 0.88rem; color: var(--ink); line-height: 1.75; }
+  .given-item .val { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--accent2); }
+
+  .formula-box {
+    background: rgba(46,125,50,0.06); border: 1.5px solid rgba(46,125,50,0.28);
+    border-radius: 4px; padding: 0.55rem 0.9rem;
+  }
+  .formula-box p {
+    font-family: 'DM Mono', monospace; font-size: 0.88rem;
+    color: #1a4d1c; font-weight: 700; letter-spacing: 0.5px; text-align: center;
+  }
+
+  .find-box {
+    background: rgba(61,26,138,0.06); border: 1.5px solid rgba(61,26,138,0.28);
+    border-radius: 4px; padding: 0.7rem 0.9rem;
+  }
+  .find-box h3 {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent2); margin-bottom: 0.4rem;
+  }
+  .find-box p { font-size: 0.92rem; color: var(--ink); font-style: italic; }
+  .find-box .find-question {
+    font-style: normal; font-size: 0.88rem; color: var(--accent2);
+    font-weight: 700; margin-top: 0.35rem; line-height: 1.5;
+  }
+
+  .answer-row { display: flex; gap: 0.7rem; align-items: flex-start; }
+  .answer-wrap { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+
+  input[type="text"] {
+    width: 100%; background: white; border: 1.5px solid var(--border);
+    border-radius: 4px; padding: 0.6rem 0.9rem;
+    font-size: 1.1rem; font-family: 'DM Mono', monospace;
+    color: var(--ink); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,63,207,0.14);
+  }
+  .input-note { font-size: 0.7rem; color: var(--muted); font-style: italic; }
+
+  .btn-row { display: flex; gap: 0.6rem; }
+  button {
+    flex: 1; border: none; border-radius: 4px; padding: 0.65rem 1rem;
+    font-family: 'Libre Baskerville', serif; font-size: 0.88rem;
+    font-weight: 700; cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-check { background: var(--accent2); color: white; box-shadow: 2px 2px 0 rgba(61,26,138,0.4); }
+  .btn-check:hover { filter: brightness(1.2); }
+  .btn-new { background: var(--paper); color: var(--ink); border: 1.5px solid var(--border); box-shadow: 2px 2px 0 var(--border); }
+  .btn-new:hover { background: var(--bg); }
+
+  .hint-btn {
+    width: 100%; background: transparent; border: 1px dashed var(--border);
+    color: var(--muted); font-size: 0.78rem; padding: 0.42rem; border-radius: 4px;
+    font-family: 'Libre Baskerville', serif; font-style: italic; cursor: pointer;
+  }
+  .hint-btn:hover { border-color: var(--accent); color: var(--ink); }
+
+  .hint-text {
+    display: none; background: rgba(108,63,207,0.06);
+    border: 1px solid rgba(108,63,207,0.25); border-radius: 4px;
+    padding: 0.6rem 0.8rem; font-size: 0.82rem; color: #2d1660;
+    line-height: 1.7; font-style: italic;
+  }
+  .hint-text.show { display: block; }
+
+  .feedback {
+    border-radius: 4px; padding: 0.55rem 0.9rem; font-size: 0.88rem;
+    font-weight: 700; text-align: center; min-height: 2rem;
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .feedback.correct { background: rgba(46,125,50,0.1);  border: 1.5px solid rgba(46,125,50,0.4);  color: var(--green); }
+  .feedback.wrong   { background: rgba(192,57,43,0.08); border: 1.5px solid rgba(192,57,43,0.3);  color: var(--red); }
+  .feedback.partial { background: rgba(160,92,0,0.08);  border: 1.5px solid rgba(160,92,0,0.3);   color: var(--orange); }
+
+  .stats-row { display: flex; gap: 1rem; justify-content: center; border-top: 1px solid var(--border); padding-top: 0.7rem; }
+  .stat { text-align: center; font-size: 0.75rem; color: var(--muted); }
+  .stat strong { display: block; font-size: 1.1rem; color: var(--ink); font-family: 'DM Mono', monospace; }
+
+  .difficulty-row { display: flex; gap: 0.5rem; align-items: center; font-size: 0.78rem; color: var(--muted); font-style: italic; }
+  .diff-btn {
+    flex: none; padding: 0.3rem 0.7rem; font-size: 0.75rem; font-weight: 700;
+    border-radius: 3px; border: 1.5px solid var(--border); background: var(--paper);
+    color: var(--muted); cursor: pointer; font-family: 'Libre Baskerville', serif; transition: all 0.15s;
+  }
+  .diff-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .diff-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Simple Interest</h1>
+  <p>Practice finding interest, principal, rate, time, and total amount. Formula: I = P × r × t</p>
+</header>
+
+<div class="card">
+  <div class="difficulty-row">
+    Difficulty:
+    <button class="diff-btn active" id="dEasy"   onclick="setDiff('easy')">Easy</button>
+    <button class="diff-btn"        id="dMedium" onclick="setDiff('medium')">Medium</button>
+    <button class="diff-btn"        id="dHard"   onclick="setDiff('hard')">Hard</button>
+  </div>
+
+  <div class="top-row">
+    <div class="question-panel">
+      <div class="type-badge" id="typeBadge">Find Interest</div>
+      <div class="question-text" id="questionText">—</div>
+      <div class="interest-vis" id="interestVis"></div>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+
+    <div class="info-panel">
+      <div class="formula-box">
+        <p>I = P × r × t</p>
+      </div>
+      <div class="given-box">
+        <h3>Given</h3>
+        <div class="given-item" id="givenDims">—</div>
+      </div>
+      <div class="find-box">
+        <h3>Find</h3>
+        <p id="findDesc">—</p>
+        <div class="find-question" id="findQuestion"></div>
+      </div>
+      <div class="answer-row">
+        <div class="answer-wrap">
+          <input type="text" id="answerInput" placeholder="e.g. 120" onkeydown="handleKey(event)" autocomplete="off">
+          <span class="input-note" id="inputNote">Round to 2 decimal places if needed.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="checkAnswer()">Check Answer</button>
+    <button class="btn-new"   onclick="newProblem()">New Problem</button>
+  </div>
+
+  <button class="hint-btn" onclick="toggleHint()">▸ Show solution</button>
+  <div class="hint-text" id="hintText"></div>
+  <div class="feedback"   id="feedback"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="statAttempts">0</strong>Attempts</div>
+    <div class="stat"><strong id="statCorrect">0</strong>Correct</div>
+    <div class="stat"><strong id="statStreak">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let prob = {};
+let attempts = 0, correct = 0, streak = 0;
+let answered = false;
+let difficulty = 'easy';
+
+// ── Helpers ────────────────────────────────────────────────────
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randItem(arr)  { return arr[Math.floor(Math.random() * arr.length)]; }
+function r2(x)          { return Math.round(x * 100) / 100; }
+function fmt$(n)        { return '$' + r2(n).toFixed(2); }
+function fmtPct(r)      { return (r * 100) % 1 === 0 ? (r * 100) + '%' : r2(r * 100) + '%'; }
+
+// ── Context pools ──────────────────────────────────────────────
+const loanContexts = [
+  { thing: 'car loan',          verb: 'borrows' },
+  { thing: 'student loan',      verb: 'takes out' },
+  { thing: 'personal loan',     verb: 'borrows' },
+  { thing: 'home improvement loan', verb: 'takes out' },
+  { thing: 'business loan',     verb: 'takes out' },
+];
+const savingsContexts = [
+  { thing: 'savings account',   verb: 'deposits' },
+  { thing: 'certificate of deposit', verb: 'invests' },
+  { thing: 'savings bond',      verb: 'purchases' },
+  { thing: 'bank account',      verb: 'puts' },
+];
+const names = ['Alex','Jordan','Sam','Taylor','Morgan','Casey','Jamie','Riley','Dana','Avery'];
+
+function randName() { return randItem(names); }
+function randCtx()  { return randItem([...loanContexts, ...savingsContexts]); }
+
+// ── Easy rates/times: clean numbers ───────────────────────────
+const easyRates = [0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.10, 0.12, 0.15, 0.20];
+const easyTimes = [1, 2, 3, 4, 5, 6, 10];
+const easyPrincipals = [200, 250, 300, 400, 500, 600, 750, 800, 1000, 1200, 1500, 2000];
+
+const medRates  = [0.025, 0.035, 0.045, 0.055, 0.065, 0.075, 0.085, 0.095, 0.125];
+const medTimes  = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+const medPrincipals = [750, 1000, 1250, 1500, 2000, 2500, 3000, 4000, 5000, 7500, 8000, 10000];
+
+const hardRates = [0.0325, 0.0425, 0.0575, 0.0625, 0.0725, 0.0875, 0.1125, 0.1375];
+const hardTimes = [1, 1.5, 2, 2.5, 3, 4, 5, 7, 10, 15, 20, 25, 30];
+
+// ══════════════════════════════════════════════════════════════
+// EASY — Find Interest & Find Total Amount
+// ══════════════════════════════════════════════════════════════
+
+function makeFindInterest() {
+  const name = randName(), ctx = randCtx();
+  const P = randItem(easyPrincipals);
+  const r = randItem(easyRates);
+  const t = randItem(easyTimes);
+  const I = r2(P * r * t);
+  const rPct = fmtPct(r);
+  return {
+    typeLabel: 'Find Interest', typeCls: 'find-interest',
+    question: `${name} ${ctx.verb} <strong>${fmt$(P)}</strong> in a ${ctx.thing} at a simple interest rate of <strong>${rPct}</strong> per year for <strong>${t} year${t>1?'s':''}</strong>. How much interest is earned?`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Rate (r): ${rPct} per year`,
+      `Time (t): ${t} year${t>1?'s':''}`,
+    ],
+    findDesc: 'Find the simple interest earned.',
+    findQ: 'I = ?',
+    answerVal: I, unit: '$',
+    inputNote: 'Enter the interest amount in dollars.',
+    vis: { P, I, label: `I = ${fmt$(I)}` },
+    steps: [
+      ['Write the formula', 'I = P × r × t'],
+      ['Substitute values', `I = ${fmt$(P)} × ${r} × ${t}`],
+      ['Calculate', `I = ${fmt$(I)}`],
+    ],
+    hint: `I = P × r × t = ${fmt$(P)} × ${r} × ${t} = ${fmt$(I)}.`,
+  };
+}
+
+function makeFindTotal() {
+  const name = randName(), ctx = randCtx();
+  const P = randItem(easyPrincipals);
+  const r = randItem(easyRates);
+  const t = randItem(easyTimes);
+  const I = r2(P * r * t);
+  const A = r2(P + I);
+  const rPct = fmtPct(r);
+  return {
+    typeLabel: 'Find Total Amount', typeCls: 'find-total',
+    question: `${name} ${ctx.verb} <strong>${fmt$(P)}</strong> at <strong>${rPct}</strong> simple interest per year for <strong>${t} year${t>1?'s':''}</strong>. What is the <em>total amount</em> at the end?`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Rate (r): ${rPct} per year`,
+      `Time (t): ${t} year${t>1?'s':''}`,
+    ],
+    findDesc: 'Find the total amount (principal + interest).',
+    findQ: 'A = P + I = ?',
+    answerVal: A, unit: '$',
+    inputNote: 'Enter the total amount in dollars.',
+    vis: { P, I, label: `A = ${fmt$(A)}` },
+    steps: [
+      ['Find interest', `I = P × r × t = ${fmt$(P)} × ${r} × ${t} = ${fmt$(I)}`],
+      ['Add to principal', `A = P + I = ${fmt$(P)} + ${fmt$(I)} = ${fmt$(A)}`],
+    ],
+    hint: `First find I = ${fmt$(P)} × ${r} × ${t} = ${fmt$(I)}. Then A = ${fmt$(P)} + ${fmt$(I)} = ${fmt$(A)}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// MEDIUM — Find Principal, Rate, or Time
+// ══════════════════════════════════════════════════════════════
+
+function makeFindPrincipal() {
+  const name = randName(), ctx = randCtx();
+  const P = randItem(medPrincipals);
+  const r = randItem([...easyRates, ...medRates]);
+  const t = randItem(medTimes);
+  const I = r2(P * r * t);
+  const rPct = fmtPct(r);
+  return {
+    typeLabel: 'Find Principal', typeCls: 'find-principal',
+    question: `${name} earned <strong>${fmt$(I)}</strong> in simple interest from a ${ctx.thing} over <strong>${t} year${t>1?'s':''}</strong> at a rate of <strong>${rPct}</strong> per year. What was the original principal?`,
+    given: [
+      `Interest earned (I): ${fmt$(I)}`,
+      `Rate (r): ${rPct} per year`,
+      `Time (t): ${t} year${t>1?'s':''}`,
+    ],
+    findDesc: 'Find the principal (P).',
+    findQ: 'P = ?',
+    answerVal: P, unit: '$',
+    inputNote: 'Enter the principal in dollars.',
+    vis: { P, I, label: `P = ${fmt$(P)}` },
+    steps: [
+      ['Write the formula', 'I = P × r × t'],
+      ['Rearrange for P', 'P = I ÷ (r × t)'],
+      ['Substitute', `P = ${fmt$(I)} ÷ (${r} × ${t}) = ${fmt$(I)} ÷ ${r2(r*t)}`],
+      ['Calculate', `P = ${fmt$(P)}`],
+    ],
+    hint: `P = I ÷ (r × t) = ${fmt$(I)} ÷ (${r} × ${t}) = ${fmt$(P)}.`,
+  };
+}
+
+function makeFindRate() {
+  const name = randName(), ctx = randCtx();
+  const P = randItem(medPrincipals);
+  const r = randItem(easyRates); // keep rate clean for medium
+  const t = randItem(medTimes);
+  const I = r2(P * r * t);
+  const rPct = fmtPct(r);
+  return {
+    typeLabel: 'Find the Rate', typeCls: 'find-rate',
+    question: `${name} ${ctx.verb} <strong>${fmt$(P)}</strong> and earned <strong>${fmt$(I)}</strong> in simple interest over <strong>${t} year${t>1?'s':''}</strong>. What was the annual interest rate?`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Interest (I): ${fmt$(I)}`,
+      `Time (t): ${t} year${t>1?'s':''}`,
+    ],
+    findDesc: 'Find the annual interest rate (r). Give your answer as a percentage.',
+    findQ: 'r = ? %',
+    answerVal: r * 100, unit: '%',
+    inputNote: 'Enter the rate as a percentage (e.g. 5 for 5%).',
+    vis: { P, I, label: `r = ${rPct}` },
+    steps: [
+      ['Write the formula', 'I = P × r × t'],
+      ['Rearrange for r', 'r = I ÷ (P × t)'],
+      ['Substitute', `r = ${fmt$(I)} ÷ (${fmt$(P)} × ${t}) = ${fmt$(I)} ÷ ${fmt$(P*t)}`],
+      ['Convert to percent', `r = ${r2(I/(P*t))} = ${rPct}`],
+    ],
+    hint: `r = I ÷ (P × t) = ${fmt$(I)} ÷ (${fmt$(P)} × ${t}) = ${r2(I/(P*t))} = ${rPct}.`,
+  };
+}
+
+function makeFindTime() {
+  const name = randName(), ctx = randCtx();
+  const P = randItem(medPrincipals);
+  const r = randItem(easyRates);
+  const t = randItem([1, 2, 3, 4, 5, 6, 8, 10]);
+  const I = r2(P * r * t);
+  const rPct = fmtPct(r);
+  return {
+    typeLabel: 'Find the Time', typeCls: 'find-time',
+    question: `${name} ${ctx.verb} <strong>${fmt$(P)}</strong> at <strong>${rPct}</strong> simple interest per year and earned <strong>${fmt$(I)}</strong> in interest. How many years did this take?`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Rate (r): ${rPct} per year`,
+      `Interest (I): ${fmt$(I)}`,
+    ],
+    findDesc: 'Find the time (t) in years.',
+    findQ: 't = ? years',
+    answerVal: t, unit: 'years',
+    inputNote: 'Enter the number of years.',
+    vis: { P, I, label: `t = ${t} year${t>1?'s':''}` },
+    steps: [
+      ['Write the formula', 'I = P × r × t'],
+      ['Rearrange for t', 't = I ÷ (P × r)'],
+      ['Substitute', `t = ${fmt$(I)} ÷ (${fmt$(P)} × ${r}) = ${fmt$(I)} ÷ ${fmt$(P*r)}`],
+      ['Calculate', `t = ${t} year${t>1?'s':''}`],
+    ],
+    hint: `t = I ÷ (P × r) = ${fmt$(I)} ÷ (${fmt$(P)} × ${r}) = ${t} year${t>1?'s':''}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// HARD — Tricky contexts and reverse problems
+// ══════════════════════════════════════════════════════════════
+
+function makeFindRateHard() {
+  // Given total amount and principal + time, find rate
+  const name = randName(), ctx = randCtx();
+  const P = randItem(medPrincipals);
+  const r = randItem(hardRates);
+  const t = randItem([2, 3, 4, 5, 6, 8, 10]);
+  const I = r2(P * r * t);
+  const A = r2(P + I);
+  const rPct = fmtPct(r);
+  return {
+    typeLabel: 'Find the Rate', typeCls: 'find-rate-hard',
+    question: `${name} ${ctx.verb} <strong>${fmt$(P)}</strong> in a ${ctx.thing}. After <strong>${t} year${t>1?'s':''}</strong>, the account has grown to <strong>${fmt$(A)}</strong>. What was the annual simple interest rate?`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Total amount (A): ${fmt$(A)}`,
+      `Time (t): ${t} year${t>1?'s':''}`,
+    ],
+    findDesc: 'Find the annual interest rate. Give your answer as a percentage.',
+    findQ: 'r = ? %',
+    answerVal: r2(r * 100), unit: '%',
+    inputNote: 'Enter the rate as a percentage (e.g. 6.5 for 6.5%).',
+    vis: { P, I, label: `r = ${rPct}` },
+    steps: [
+      ['Find interest from total', `I = A − P = ${fmt$(A)} − ${fmt$(P)} = ${fmt$(I)}`],
+      ['Rearrange for r', 'r = I ÷ (P × t)'],
+      ['Substitute', `r = ${fmt$(I)} ÷ (${fmt$(P)} × ${t})`],
+      ['Convert to percent', `r = ${r2(I/(P*t))} = ${rPct}`],
+    ],
+    hint: `First find I = ${fmt$(A)} − ${fmt$(P)} = ${fmt$(I)}. Then r = ${fmt$(I)} ÷ (${fmt$(P)} × ${t}) = ${rPct}.`,
+  };
+}
+
+function makeCompareTwoAccounts() {
+  // Two accounts, same principal, different rates/times — which earns more?
+  const name = randName();
+  const P = randItem(medPrincipals);
+  const r1 = randItem(easyRates), t1 = randItem([2,3,4,5]);
+  let r2, t2;
+  do {
+    r2 = randItem(easyRates);
+    t2 = randItem([2,3,4,5]);
+  } while (r1===r2 && t1===t2);
+  const I1 = r2val(P * r1 * t1);
+  const I2 = r2val(P * r2 * t2);
+  const rPct1 = fmtPct(r1), rPct2 = fmtPct(r2);
+  // Ask: what is the DIFFERENCE in interest?
+  const diff = r2val(Math.abs(I1 - I2));
+  const moreIdx = I1 >= I2 ? 1 : 2;
+  return {
+    typeLabel: 'Compare Accounts', typeCls: 'compare',
+    question: `${name} is choosing between two savings accounts, both starting with <strong>${fmt$(P)}</strong>.<br><br>
+      Account A: <strong>${rPct1}</strong> for <strong>${t1} year${t1>1?'s':''}</strong><br>
+      Account B: <strong>${rPct2}</strong> for <strong>${t2} year${t2>1?'s':''}</strong><br><br>
+      How much <em>more</em> interest does Account ${moreIdx === 1 ? 'A' : 'B'} earn?`,
+    given: [
+      `Principal: ${fmt$(P)} (both accounts)`,
+      `Account A: ${rPct1} for ${t1} yr${t1>1?'s':''}`,
+      `Account B: ${rPct2} for ${t2} yr${t2>1?'s':''}`,
+    ],
+    findDesc: `Find the difference in interest earned.`,
+    findQ: 'Difference = ?',
+    answerVal: diff, unit: '$',
+    inputNote: 'Enter the difference in dollars.',
+    vis: { P, I: Math.max(I1, I2), label: `Difference = ${fmt$(diff)}` },
+    steps: [
+      ['Interest for Account A', `I_A = ${fmt$(P)} × ${r1} × ${t1} = ${fmt$(I1)}`],
+      ['Interest for Account B', `I_B = ${fmt$(P)} × ${r2} × ${t2} = ${fmt$(I2)}`],
+      ['Find the difference', `|${fmt$(I1)} − ${fmt$(I2)}| = ${fmt$(diff)}`],
+    ],
+    hint: `I_A = ${fmt$(I1)}, I_B = ${fmt$(I2)}. Difference = ${fmt$(diff)}.`,
+  };
+}
+
+function r2val(x) { return Math.round(x * 100) / 100; }
+
+function makeMissingVar() {
+  // Given total amount, find a missing variable (mixed: sometimes find P, sometimes t, sometimes r)
+  const name = randName(), ctx = randCtx();
+  const P = randItem([1000, 1500, 2000, 2500, 3000, 4000, 5000]);
+  const r = randItem([0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10]);
+  const t = randItem([2, 3, 4, 5, 6, 8, 10]);
+  const I = r2(P * r * t);
+  const A = r2(P + I);
+  const rPct = fmtPct(r);
+  // Ask for time given A, P, r
+  return {
+    typeLabel: 'Find the Time', typeCls: 'missing-var',
+    question: `${name} invested money in a ${ctx.thing} at <strong>${rPct}</strong> simple interest per year. The account started with <strong>${fmt$(P)}</strong> and grew to <strong>${fmt$(A)}</strong>. How many years was the money invested?`,
+    given: [
+      `Principal (P): ${fmt$(P)}`,
+      `Rate (r): ${rPct} per year`,
+      `Total amount (A): ${fmt$(A)}`,
+    ],
+    findDesc: 'Find the number of years (t).',
+    findQ: 't = ? years',
+    answerVal: t, unit: 'years',
+    inputNote: 'Enter the number of years.',
+    vis: { P, I, label: `t = ${t} year${t>1?'s':''}` },
+    steps: [
+      ['Find interest from total', `I = A − P = ${fmt$(A)} − ${fmt$(P)} = ${fmt$(I)}`],
+      ['Rearrange for t', 't = I ÷ (P × r)'],
+      ['Substitute', `t = ${fmt$(I)} ÷ (${fmt$(P)} × ${r})`],
+      ['Calculate', `t = ${t} year${t>1?'s':''}`],
+    ],
+    hint: `Find I first: ${fmt$(A)} − ${fmt$(P)} = ${fmt$(I)}. Then t = ${fmt$(I)} ÷ (${fmt$(P)} × ${r}) = ${t}.`,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// Dispatcher
+// ══════════════════════════════════════════════════════════════
+function makeProblem() {
+  let p;
+  if (difficulty === 'easy') {
+    p = randItem([makeFindInterest, makeFindInterest, makeFindTotal])();
+  } else if (difficulty === 'medium') {
+    p = randItem([makeFindPrincipal, makeFindRate, makeFindTime, makeFindInterest, makeFindTotal])();
+  } else {
+    p = randItem([makeFindRateHard, makeCompareTwoAccounts, makeMissingVar])();
+  }
+  p.difficulty = difficulty;
+  return p;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Difficulty
+// ══════════════════════════════════════════════════════════════
+function setDiff(d) {
+  difficulty = d;
+  ['easy','medium','hard'].forEach(x => {
+    document.getElementById('d' + x.charAt(0).toUpperCase() + x.slice(1))
+      .classList.toggle('active', x === d);
+  });
+  newProblem();
+}
+
+// ══════════════════════════════════════════════════════════════
+// Visual bar — principal vs. interest
+// ══════════════════════════════════════════════════════════════
+function renderVis(vis) {
+  const el = document.getElementById('interestVis');
+  if (!vis) { el.innerHTML = ''; return; }
+
+  const total = vis.P + vis.I;
+  const pPct  = Math.round((vis.P / total) * 100);
+  const iPct  = 100 - pPct;
+
+  el.innerHTML = `
+    <div class="interest-track">
+      <div class="interest-principal" style="width:${pPct}%">
+        ${pPct >= 15 ? 'Principal' : ''}
+      </div>
+      <div class="interest-earned" style="left:${pPct}%;width:${iPct}%">
+        ${iPct >= 10 ? 'Interest' : ''}
+      </div>
+    </div>
+    <div class="interest-vis-labels">
+      <span style="color:#6c3fcf;font-weight:700">P = ${fmt$(vis.P)}</span>
+      <span style="color:#1a4d1c;font-weight:700">${vis.label}</span>
+      <span style="color:#2e7d32;font-weight:700">A = ${fmt$(total)}</span>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Panel + problem lifecycle
+// ══════════════════════════════════════════════════════════════
+function updatePanel() {
+  const badge = document.getElementById('typeBadge');
+  badge.textContent = prob.typeLabel;
+  badge.className   = 'type-badge ' + (prob.typeCls || '');
+
+  document.getElementById('questionText').innerHTML = prob.question;
+
+  const given = document.getElementById('givenDims');
+  given.innerHTML = prob.given.map(g =>
+    `<div>${g.replace(/(\$[\d.,]+|\d[\d.,]*\s*%?)/g, '<span class="val">$1</span>')}</div>`
+  ).join('');
+
+  document.getElementById('findDesc').textContent     = prob.findDesc;
+  document.getElementById('findQuestion').textContent = prob.findQ;
+  document.getElementById('inputNote').textContent    = prob.inputNote;
+  renderVis(prob.vis);
+}
+
+function newProblem() {
+  prob = makeProblem();
+  answered = false;
+  document.getElementById('answerInput').value = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('hintText').className = 'hint-text';
+  document.getElementById('hintText').textContent = '';
+  document.getElementById('stepsBox').className = 'steps-box';
+  document.getElementById('stepsBox').innerHTML = '';
+  updatePanel();
+  document.getElementById('answerInput').focus();
+}
+
+// ══════════════════════════════════════════════════════════════
+// Answer checking
+// ══════════════════════════════════════════════════════════════
+function handleKey(e) { if (e.key === 'Enter') checkAnswer(); }
+
+function checkAnswer() {
+  if (answered) return;
+  const raw = document.getElementById('answerInput').value.trim().replace(/[$,%\s]/g, '');
+  if (!raw) { showFeedback('partial', 'Enter your answer first.'); return; }
+
+  const userVal = parseFloat(raw);
+  if (isNaN(userVal)) { showFeedback('partial', 'Please enter a number.'); return; }
+
+  attempts++;
+  document.getElementById('statAttempts').textContent = attempts;
+
+  const tol = Math.max(0.015 * Math.abs(prob.answerVal), 0.05);
+
+  if (Math.abs(userVal - prob.answerVal) <= tol) {
+    correct++; streak++;
+    document.getElementById('statCorrect').textContent = correct;
+    document.getElementById('statStreak').textContent  = streak;
+    let dispAns;
+    if (prob.unit === '$')     dispAns = fmt$(prob.answerVal);
+    else if (prob.unit === '%') dispAns = r2(prob.answerVal) + '%';
+    else if (prob.unit === 'years') dispAns = prob.answerVal + ' year' + (prob.answerVal !== 1 ? 's' : '');
+    else dispAns = prob.answerVal;
+    showFeedback('correct', streak >= 3
+      ? `🔥 ${streak} in a row! Answer: ${dispAns}`
+      : `✓ Correct! Answer: ${dispAns}`);
+    answered = true;
+  } else {
+    streak = 0;
+    document.getElementById('statStreak').textContent = streak;
+    const pctOff = Math.abs(userVal - prob.answerVal) / Math.abs(prob.answerVal);
+    if (pctOff < 0.15) {
+      showFeedback('partial', `Very close — check your rounding.`);
+    } else {
+      showFeedback('wrong', `Not quite. Use the hint for a step-by-step solution.`);
+    }
+  }
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + type;
+  fb.textContent = msg;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Hint / steps
+// ══════════════════════════════════════════════════════════════
+function toggleHint() {
+  const hint  = document.getElementById('hintText');
+  const steps = document.getElementById('stepsBox');
+  if (hint.classList.contains('show')) {
+    hint.classList.remove('show'); steps.classList.remove('show'); return;
+  }
+  let html = '<strong style="font-style:normal;color:var(--accent2);font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;">Solution</strong><br>';
+  prob.steps.forEach(([label, expr], i) => {
+    html += `<span class="step-label">Step ${i+1}: ${label}</span><br>`;
+    html += `<span class="step-line">&nbsp;&nbsp;${expr}</span><br>`;
+  });
+  steps.innerHTML = html;
+  steps.classList.add('show');
+  hint.textContent = `Hint: ${prob.hint}`;
+  hint.classList.add('show');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+newProblem();
+</script>
+</body>
+</html>
