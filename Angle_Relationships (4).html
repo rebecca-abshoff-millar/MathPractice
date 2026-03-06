@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angle Relationships</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #fdf0ee;
+    --paper:   #fffaf9;
+    --ink:     #1a0a08;
+    --muted:   #9a5a52;
+    --border:  #e8b8b0;
+    --accent:  #c0392b;
+    --accent2: #7b1a10;
+    --green:   #2e7d32;
+    --red:     #c0392b;
+    --orange:  #a05c00;
+    --shadow:  rgba(120,30,20,0.13);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { overflow-y:auto; }
+  body {
+    font-family:'Libre Baskerville',Georgia,serif;
+    background:var(--bg); color:var(--ink);
+    min-height:100vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-start; padding:1.5rem 1rem;
+    background-image:
+      repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(192,57,43,0.07) 27px,rgba(192,57,43,0.07) 28px),
+      repeating-linear-gradient(90deg,transparent,transparent 27px,rgba(192,57,43,0.04) 27px,rgba(192,57,43,0.04) 28px);
+  }
+  header { text-align:center; margin-bottom:0.7rem; }
+  header h1 { font-size:clamp(1.3rem,3vw,1.9rem); font-weight:700; color:var(--ink); letter-spacing:-0.5px; }
+  header p  { color:var(--muted); font-size:0.82rem; font-style:italic; margin-top:0.15rem; }
+  .card {
+    background:var(--paper); border:1px solid var(--border); border-radius:4px;
+    box-shadow:4px 4px 0 var(--border),0 8px 30px var(--shadow);
+    padding:1.4rem 1.8rem; width:100%; max-width:920px;
+    display:flex; flex-direction:column; gap:1rem;
+  }
+  .top-row { display:flex; gap:1.2rem; align-items:stretch; }
+  .diagram-panel {
+    flex:1 1 0; min-width:0; display:flex; flex-direction:column;
+    background:#fdf5f4; border:1px solid var(--border); border-radius:4px;
+    min-height:280px; padding:0.8rem; align-items:center;
+    justify-content:space-between; gap:0.5rem;
+  }
+  .badge-row { width:100%; }
+  .type-badge {
+    font-size:0.66rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:1.5px; color:white; border-radius:3px;
+    padding:0.2rem 0.6rem; display:inline-block;
+  }
+  .badge-comp { background:#c0392b; }
+  .badge-supp { background:#a93226; }
+  .badge-para { background:#7b241c; }
+  .badge-astt { background:#cb4335; }
+  .badge-asqt { background:#922b21; }
+  .badge-opp  { background:#6e1a0e; }
+  #angleSvg   { display:block; width:100%; height:220px; }
+  .steps-box  {
+    width:100%; background:rgba(192,57,43,0.06);
+    border:1px solid rgba(192,57,43,0.22); border-radius:4px;
+    padding:0.7rem 0.9rem; font-size:0.82rem; color:var(--ink);
+    line-height:1.85; font-style:italic; display:none;
+  }
+  .steps-box.show { display:block; }
+  .step-lbl  { color:var(--accent2); font-weight:700; font-style:normal; }
+  .step-expr { font-family:'DM Mono',monospace; font-style:normal; font-size:0.83rem; }
+  .info-panel { flex:0 0 244px; display:flex; flex-direction:column; gap:0.7rem; }
+  .box {
+    border-radius:4px; padding:0.7rem 0.9rem;
+  }
+  .box h3 {
+    font-size:0.63rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:1.6px; margin-bottom:0.35rem;
+  }
+  .box-given  { background:rgba(192,57,43,0.07); border:1.5px solid rgba(192,57,43,0.3); }
+  .box-given h3 { color:var(--accent); }
+  .box-rule   { background:rgba(123,26,16,0.05); border:1.5px solid rgba(123,26,16,0.22); }
+  .box-rule h3 { color:var(--accent2); }
+  .box-rule p  { font-size:0.83rem; color:var(--accent2); font-style:italic; line-height:1.5; }
+  .box-find   { background:rgba(123,26,16,0.05); border:1.5px solid rgba(123,26,16,0.25); }
+  .box-find h3 { color:var(--accent2); }
+  .box-find p  { font-size:0.9rem; color:var(--ink); font-style:italic; }
+  .find-q { font-style:normal; font-size:0.9rem; color:var(--accent2); font-weight:700; margin-top:0.3rem; }
+  .given-line { font-size:0.88rem; color:var(--ink); line-height:1.75; }
+  .given-line .v { font-family:'DM Mono',monospace; font-weight:600; color:var(--accent2); }
+  input[type="text"] {
+    width:100%; background:white; border:1.5px solid var(--border);
+    border-radius:4px; padding:0.6rem 0.9rem;
+    font-size:1.1rem; font-family:'DM Mono',monospace; color:var(--ink);
+    outline:none; transition:border-color 0.2s,box-shadow 0.2s;
+  }
+  input[type="text"]:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(192,57,43,0.14); }
+  .input-note { font-size:0.7rem; color:var(--muted); font-style:italic; margin-top:0.2rem; }
+  .btn-row { display:flex; gap:0.6rem; }
+  button {
+    flex:1; border:none; border-radius:4px; padding:0.65rem 1rem;
+    font-family:'Libre Baskerville',serif; font-size:0.88rem; font-weight:700;
+    cursor:pointer; transition:transform 0.1s,filter 0.15s;
+  }
+  button:active { transform:scale(0.97); }
+  .btn-check { background:var(--accent2); color:white; box-shadow:2px 2px 0 rgba(123,26,16,0.4); }
+  .btn-check:hover { filter:brightness(1.2); }
+  .btn-new   { background:var(--paper); color:var(--ink); border:1.5px solid var(--border); box-shadow:2px 2px 0 var(--border); }
+  .btn-new:hover { background:var(--bg); }
+  .hint-btn  {
+    width:100%; background:transparent; border:1px dashed var(--border);
+    color:var(--muted); font-size:0.78rem; padding:0.42rem; border-radius:4px;
+    font-family:'Libre Baskerville',serif; font-style:italic; cursor:pointer;
+  }
+  .hint-btn:hover { border-color:var(--accent); color:var(--ink); }
+  .hint-box  {
+    display:none; background:rgba(192,57,43,0.06);
+    border:1px solid rgba(192,57,43,0.22); border-radius:4px;
+    padding:0.6rem 0.8rem; font-size:0.82rem; color:#5a0e06;
+    line-height:1.7; font-style:italic;
+  }
+  .hint-box.show { display:block; }
+  .feedback  {
+    border-radius:4px; padding:0.55rem 0.9rem; font-size:0.88rem;
+    font-weight:700; text-align:center; min-height:2rem;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fb-ok   { background:rgba(46,125,50,0.1);  border:1.5px solid rgba(46,125,50,0.4);  color:var(--green); }
+  .fb-no   { background:rgba(192,57,43,0.08); border:1.5px solid rgba(192,57,43,0.3);  color:var(--red); }
+  .fb-near { background:rgba(160,92,0,0.08);  border:1.5px solid rgba(160,92,0,0.3);   color:var(--orange); }
+  .stats-row { display:flex; gap:1rem; justify-content:center; border-top:1px solid var(--border); padding-top:0.7rem; }
+  .stat      { text-align:center; font-size:0.75rem; color:var(--muted); }
+  .stat strong { display:block; font-size:1.1rem; color:var(--ink); font-family:'DM Mono',monospace; }
+  .topic-row { display:flex; gap:0.4rem; align-items:center; font-size:0.78rem; color:var(--muted); font-style:italic; flex-wrap:wrap; }
+  .tbtn {
+    padding:0.28rem 0.6rem; font-size:0.73rem; font-weight:700;
+    border-radius:3px; border:1.5px solid var(--border); background:var(--paper);
+    color:var(--muted); cursor:pointer; font-family:'Libre Baskerville',serif; transition:all 0.15s;
+  }
+  .tbtn.on  { background:var(--accent); color:white; border-color:var(--accent); }
+  .tbtn:hover:not(.on) { border-color:var(--accent); color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Angle Relationships</h1>
+  <p>Find the missing angle. Select a topic or practice all types.</p>
+</header>
+
+<div class="card">
+  <div class="topic-row">
+    Topic:
+    <button class="tbtn on"  id="t-all"  onclick="setTopic('all')">All</button>
+    <button class="tbtn"     id="t-comp" onclick="setTopic('comp')">Complementary</button>
+    <button class="tbtn"     id="t-supp" onclick="setTopic('supp')">Supplementary</button>
+    <button class="tbtn"     id="t-para" onclick="setTopic('para')">Parallel Lines</button>
+    <button class="tbtn"     id="t-astt" onclick="setTopic('astt')">△ Sum (ASTT)</button>
+    <button class="tbtn"     id="t-asqt" onclick="setTopic('asqt')">Quad Sum (ASQT)</button>
+    <button class="tbtn"     id="t-opp"  onclick="setTopic('opp')">Opposite ∠s</button>
+  </div>
+
+  <div class="top-row">
+    <div class="diagram-panel">
+      <div class="badge-row"><span class="type-badge" id="badge">—</span></div>
+      <svg id="angleSvg" viewBox="0 0 460 260" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+
+    <div class="info-panel">
+      <div class="box box-given">
+        <h3>Given</h3>
+        <div id="givenList">—</div>
+      </div>
+      <div class="box box-rule">
+        <h3>Rule</h3>
+        <p id="ruleText">—</p>
+      </div>
+      <div class="box box-find">
+        <h3>Find</h3>
+        <p id="findDesc">—</p>
+        <div class="find-q" id="findQ">—</div>
+      </div>
+      <input type="text" id="ans" placeholder="e.g. 47" onkeydown="if(event.key==='Enter')check()" autocomplete="off">
+      <div class="input-note">Enter the angle in degrees °</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-check" onclick="check()">Check Answer</button>
+    <button class="btn-new"   onclick="next()">New Problem</button>
+  </div>
+  <button class="hint-btn" onclick="showHint()">▸ Show solution steps</button>
+  <div class="hint-box"  id="hintBox"></div>
+  <div class="feedback"  id="fb"></div>
+
+  <div class="stats-row">
+    <div class="stat"><strong id="sA">0</strong>Attempts</div>
+    <div class="stat"><strong id="sC">0</strong>Correct</div>
+    <div class="stat"><strong id="sS">0</strong>Streak</div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ── state ─────────────────────────────────────────────── */
+let P={}, nAttempts=0, nCorrect=0, streak=0, done=false, topic='all';
+
+/* ── tiny helpers ──────────────────────────────────────── */
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const D2R=Math.PI/180;
+const NS='http://www.w3.org/2000/svg';
+
+/* ── SVG primitives ────────────────────────────────────── */
+function E(tag,attrs,txt){
+  const e=document.createElementNS(NS,tag);
+  for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);
+  if(txt!==undefined)e.textContent=txt;
+  return e;
+}
+const S=document.getElementById('angleSvg');
+
+function line(x1,y1,x2,y2,col='#1a0a08',w=2.5){
+  S.appendChild(E('line',{x1,y1,x2,y2,stroke:col,'stroke-width':w,'stroke-linecap':'round'}));
+}
+function poly(pts,fill='rgba(192,57,43,0.07)',stroke='#1a0a08'){
+  S.appendChild(E('polygon',{points:pts.map(p=>p.join(',')).join(' '),fill,stroke,'stroke-width':2.5,'stroke-linejoin':'round'}));
+}
+function txt(x,y,t,fill='#1a0a08',sz=14.5,anchor='middle',w='700'){
+  S.appendChild(E('text',{x,y,fill,'font-size':sz,'font-weight':w,'font-family':'DM Mono,monospace','text-anchor':anchor,'dominant-baseline':'middle'},t));
+}
+
+/* Draw an angle arc + filled sector.
+   cx,cy  = vertex
+   r      = arc radius
+   aDeg   = start angle in SVG-degrees (0=right, CW-positive because y-down)
+   bDeg   = end angle in SVG-degrees
+   The function ALWAYS sweeps the SHORTER way unless > 180 is intended.
+   unknown=true → red fill/stroke, else grey.
+*/
+function arc(cx,cy,r,aDeg,bDeg,unknown){
+  /* normalise so sweep is the interior angle (positive CW in SVG) */
+  let sweep=((bDeg-aDeg)%360+360)%360; // 0..360
+  if(sweep>180) sweep=sweep-360;       // -180..180; negative = CCW
+  const a1=aDeg*D2R, a2=(aDeg+sweep)*D2R;
+  const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+  const x2=cx+r*Math.cos(a2), y2=cy+r*Math.sin(a2);
+  const lg=Math.abs(sweep)>180?1:0;
+  const sw=sweep>=0?1:0; // 1=CW, 0=CCW in SVG
+  const sector=`M${cx},${cy}L${x1},${y1}A${r},${r},0,${lg},${sw},${x2},${y2}Z`;
+  const arcD  =`M${x1},${y1}A${r},${r},0,${lg},${sw},${x2},${y2}`;
+  S.appendChild(E('path',{d:sector,fill:unknown?'rgba(192,57,43,0.17)':'rgba(26,10,8,0.07)',stroke:'none'}));
+  S.appendChild(E('path',{d:arcD,fill:'none',stroke:unknown?'#c0392b':'#666','stroke-width':1.8}));
+  /* label at arc midpoint */
+  const mid=(aDeg+sweep/2)*D2R;
+  return {lx:cx+(r+19)*Math.cos(mid), ly:cy+(r+19)*Math.sin(mid)};
+}
+
+/* Right-angle square at vertex; fromDeg = direction of base ray */
+function raBox(cx,cy,fromDeg){
+  const s=10, a1=fromDeg*D2R, a2=(fromDeg+90)*D2R;
+  const p1x=cx+s*Math.cos(a1),p1y=cy+s*Math.sin(a1);
+  const p3x=cx+s*Math.cos(a2),p3y=cy+s*Math.sin(a2);
+  const p2x=p1x+s*Math.cos(a2),p2y=p1y+s*Math.sin(a2);
+  S.appendChild(E('polyline',{points:`${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`,fill:'none',stroke:'#666','stroke-width':1.5}));
+}
+
+/* Arrow marker for parallel lines — drawn as a small chevron > on the line */
+function arrows(mx,my,n=1){
+  // Draw n small rightward-pointing chevrons centred at (mx,my)
+  const hw=7, hh=5; // half-width (along line), half-height (perp)
+  const offsets = n===1 ? [0] : [-6, 6];
+  offsets.forEach(off=>{
+    const ox = off; // offset along the line (horizontal)
+    // Chevron: two lines meeting at a point
+    S.appendChild(E('polyline',{
+      points:`${mx+ox-hw},${my-hh} ${mx+ox+hw*0.4},${my} ${mx+ox-hw},${my+hh}`,
+      fill:'none', stroke:'#555', 'stroke-width':'2', 'stroke-linejoin':'round',
+      'stroke-linecap':'round'
+    }));
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COMPLEMENTARY  (sum = 90°)
+   ═══════════════════════════════════════════════════════════ */
+function mkComp(){
+  const a=rnd(13,76), b=90-a;
+  const askB=Math.random()<0.65;
+  const known=askB?a:b, unk=askB?b:a;
+  const kL=askB?'∠A':'∠B', uL=askB?'∠B':'∠A';
+  return{
+    badge:'Complementary ∠s', bcls:'badge-comp',
+    rule:'Complementary angles add up to 90°.',
+    given:[`${kL} = ${known}°`, `${kL} and ${uL} are complementary`],
+    findDesc:`Find ${uL}.`, findQ:`${uL} = ?°`,
+    ans:unk,
+    steps:[
+      ['Complementary angles sum to 90°','∠A + ∠B = 90°'],
+      ['Substitute',`${known}° + ${uL} = 90°`],
+      ['Solve',`${uL} = 90° − ${known}° = ${unk}°`],
+    ],
+    hint:`${uL} = 90° − ${known}° = ${unk}°.`,
+    draw(){
+      /* Vertex bottom-left. Horizontal ray →. Vertical ray ↑. Middle ray at `a`° above horizontal. */
+      const vx=155,vy=225;
+      /* rays */
+      line(vx,vy,vx+220,vy);                                       // horizontal
+      line(vx,vy,vx,vy-210);                                       // vertical
+      const mx=vx+190*Math.cos(-a*D2R), my=vy+190*Math.sin(-a*D2R);
+      line(vx,vy,mx,my);                                           // middle ray
+      raBox(vx,vy,0);                                              // right-angle in upper-right
+      /* arcs
+         SVG: y-down, 0°=right, CW=positive.
+         Horizontal right ray = 0°.
+         Vertical up ray      = 270° (= −90°).
+         Middle ray (a° above horizontal) = −a° = 360−a°.
+         ∠A sits between 0° and −a° (i.e. between right ray and middle ray), sweeping CW from −a to 0.
+             → aDeg=−a, bDeg=0  (sweep = +a)
+         ∠B sits between middle ray (−a°) and vertical (−90°), sweeping CW from −90 to −a.
+             → aDeg=−90, bDeg=−a (sweep = 90−a = b)
+      */
+      const LA=arc(vx,vy,34, -a,  0,   !askB);
+      const LB=arc(vx,vy,50, -90, -a,  askB);
+      txt(LA.lx,LA.ly, askB?`${a}°`:'?°', !askB?'#c0392b':'#1a0a08');
+      txt(LB.lx,LB.ly, askB?'?°':`${b}°`, askB?'#c0392b':'#1a0a08');
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SUPPLEMENTARY  (sum = 180°)
+   ═══════════════════════════════════════════════════════════ */
+function mkSupp(){
+  const a=rnd(22,157), b=180-a;
+  const askB=Math.random()<0.6;
+  const known=askB?a:b, unk=askB?b:a;
+  const kL=askB?'∠A':'∠B', uL=askB?'∠B':'∠A';
+  return{
+    badge:'Supplementary ∠s', bcls:'badge-supp',
+    rule:'Supplementary angles add up to 180° (straight line).',
+    given:[`${kL} = ${known}°`, `${kL} and ${uL} form a straight line`],
+    findDesc:`Find ${uL}.`, findQ:`${uL} = ?°`,
+    ans:unk,
+    steps:[
+      ['Angles on a straight line sum to 180°','∠A + ∠B = 180°'],
+      ['Substitute',`${known}° + ${uL} = 180°`],
+      ['Solve',`${uL} = 180° − ${known}° = ${unk}°`],
+    ],
+    hint:`${uL} = 180° − ${known}° = ${unk}°.`,
+    draw(){
+      const vx=230, vy=155;
+      line(35, vy, 425, vy);  // straight horizontal line
+
+      // Ray upward: angle `a` from the right horizontal (above line)
+      // SVG: upward = negative y = negative angle. Ray direction = -a°
+      const rx = vx + 170*Math.cos(-a*D2R);
+      const ry = vy + 170*Math.sin(-a*D2R);
+      line(vx, vy, rx, ry);
+
+      // ∠A (right of ray, above line): from -a° sweep +a to 0°
+      arc(vx, vy, 40, -a, 0,   !askB);
+      // ∠B (left of ray, above line): from -180° sweep +(180-a) to -a°
+      // i.e. from -180 to -a, sweeping rightward (CW in SVG = positive)
+      arc(vx, vy, 40, -180, -a,  askB);
+
+      // Labels: always place ABOVE the line (negative y offset from vertex)
+      // ∠A midpoint angle = -(a/2)  → above-right
+      const aMid = -(a/2)*D2R;
+      const aLR  = 62;
+      txt(vx + aLR*Math.cos(aMid), vy + aLR*Math.sin(aMid),
+          askB ? `${a}°` : '?°',  !askB ? '#c0392b' : '#1a0a08');
+
+      // ∠B midpoint angle = -(180 - b/2) = -(a + b/2) → above-left
+      const bMid = -(180 - b/2)*D2R;
+      const bLR  = 62;
+      txt(vx + bLR*Math.cos(bMid), vy + bLR*Math.sin(bMid),
+          askB ? '?°' : `${b}°`,  askB ? '#c0392b' : '#1a0a08');
+
+      txt(230, vy+32, 'straight line  (180°)', '#9a5a52', 12, 'middle', '400');
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PARALLEL LINES + TRANSVERSAL
+   Types: corresponding, alt_int, alt_ext, co_int, vert_opp
+   ═══════════════════════════════════════════════════════════ */
+function mkPara(){
+  const types=['corr','alt_int','alt_ext','co_int','vert_opp'];
+  const type=pick(types);
+  const a=rnd(32,148);
+  const b = type==='co_int' ? 180-a : a;
+
+  const info={
+    corr:    {badge:'Corresponding ∠s',   rule:'Corresponding angles are equal when lines are parallel.'},
+    alt_int: {badge:'Alternate Interior ∠s', rule:'Alternate interior angles are equal when lines are parallel.'},
+    alt_ext: {badge:'Alternate Exterior ∠s', rule:'Alternate exterior angles are equal when lines are parallel.'},
+    co_int:  {badge:'Co-interior ∠s',     rule:'Co-interior (same-side interior) angles sum to 180°.'},
+    vert_opp:{badge:'Vertically Opposite ∠s',rule:'Vertically opposite angles are equal.'},
+  }[type];
+
+  const steps=type==='co_int'
+    ?[['Co-interior angles sum to 180°','∠a + ∠b = 180°'],
+      ['Substitute',`${a}° + ∠b = 180°`],
+      ['Solve',`∠b = 180° − ${a}° = ${b}°`]]
+    :[['Apply the angle rule',info.rule],
+      ['Therefore',`∠b = ∠a = ${b}°`]];
+
+  return{
+    badge:info.badge, bcls:'badge-para',
+    rule:info.rule,
+    given:[`∠a = ${a}°`,'Lines are parallel (∥)'],
+    findDesc:'Find ∠b.', findQ:'∠b = ?°',
+    ans:b, steps,
+    hint:type==='co_int'
+      ?`∠a + ∠b = 180°, so ∠b = ${b}°.`
+      :`${info.rule} So ∠b = ${b}°.`,
+    draw(){ drawPara(a,b,type); }
+  };
+}
+
+function drawPara(a,b,type){
+  /* Two horizontal parallel lines. Transversal at angle `a` from horizontal. */
+  const L1=95, L2=210;
+  line(30,L1,430,L1);
+  line(30,L2,430,L2);
+  arrows(230,L1,1);
+  arrows(230,L2,2);
+  txt(17,L1,'ℓ₁','#7b1a10',13,'middle','400');
+  txt(17,L2,'ℓ₂','#7b1a10',13,'middle','400');
+
+  /* Transversal intersects L1 at V1, L2 at V2.
+     It makes angle `a` with the horizontal line (above the line, on the right).
+     SVG angle of the transversal going downward = +a° (CW from +x).
+     Going upward from V1 = 180+a? No.
+     The transversal direction going from upper-left to lower-right:
+       - If a is acute, it goes steeply; if obtuse, shallowly.
+       - Let θ = a (angle FROM THE RIGHT-SIDE HORIZONTAL measured upward CCW in standard math).
+       - In SVG (y-down), going to the right and DOWN at angle a below horizontal = +a in SVG.
+       - We want the transversal to go upward from the horizontal line at angle a.
+       - "Angle a on the right, above line" means the transversal goes up-right at angle a above horizontal.
+       - SVG direction going up-right = -a degrees (negative because upward = negative y).
+       So from V1, transversal goes in direction -a° (up-right), and in direction -a+180° = 180-a (down-left).
+       For the transversal to also hit L2 (which is BELOW L1), we need to go in the 180-a direction from V1.
+       180-a is downward when a < 180. For a < 90: 180-a > 90 → pointing down-left.
+       Let me just pick: transversal direction going DOWN from V1 = (90+a-90)... 
+
+       Simplest concrete approach:
+       V1 at (160, L1). Transversal has slope such that it makes angle a with the horizontal.
+       In SVG, "angle a above horizontal on the right" means:
+         going right means x increases, going up means y decreases.
+         The right-side angle above the line = a.
+         So the vector pointing UP-RIGHT along the transversal = (cos a, -sin a) in SVG.
+         Going DOWN-LEFT = (-cos a, sin a).
+         Going DOWN-RIGHT (other direction below horizontal) = (cos(180-a), -sin(180-a))... 
+
+       ACTUALLY let me just do it concretely:
+       V1=(160, L1). V2 = V1 + t*(direction going toward L2).
+       Direction going toward L2 (downward): we want the angle on the RIGHT side above L1 = a.
+       That means the transversal comes from upper-LEFT going to lower-RIGHT.
+       SVG direction going lower-right at angle (180-a) from +x axis:
+         dx = cos(180-a) = -cos(a)  ... negative x ... that's left. Hmm.
+
+       Let me just hardcode it cleanly:
+       V1=(V1x, L1), V2 must be to the RIGHT of V1 on L2 (visually nicer for most angles).
+       Transversal makes angle a with horizontal. 
+       The rise from L1 to L2 = L2-L1 = 115.
+       Run = rise / tan(a). But if a=90 that's infinite; if a<90 the run is positive (V2 to right).
+       SVG angle of the downward direction of transversal = a (going down-right when a<90, down when a=90).
+       dx = (L2-L1)/tan(a*D2R), dy = L2-L1.
+  */
+  const dy=L2-L1;
+  const dx= a===90 ? 0 : dy/Math.tan(a*D2R);
+  const V1x=160+Math.max(0,-dx*0.5); // shift so it stays in view
+  const V1y=L1;
+  const V2x=V1x+dx, V2y=L2;
+
+  /* Extend transversal beyond both intersections */
+  const len=90;
+  const dirX=V2x-V1x, dirY=V2y-V1y;
+  const mag=Math.sqrt(dirX*dirX+dirY*dirY);
+  const nx=dirX/mag, ny=dirY/mag;
+  line(V1x-len*nx, V1y-len*ny, V2x+len*nx, V2y+len*ny);
+
+  /* At each intersection the transversal creates 4 angle zones.
+     The transversal's DOWNWARD direction has SVG-angle:
+       θ_down = atan2(ny, nx) in degrees.
+     The transversal's UPWARD direction = θ_down + 180.
+
+     At V1 (intersection with L1, horizontal line going left/right):
+       Right ray = 0°,  Left ray = 180°.
+       Trans-down = θ_down,  Trans-up = θ_down+180.
+
+     The four angles at V1 (going CW from 0°):
+       Q1 = between Right (0°) and Trans-down (θ_down):  sweep = θ_down          = a°   if a<180
+       Q2 = between Trans-down (θ_down) and Left (180°): sweep = 180−θ_down      = 180-a°
+       Q3 = between Left (180°) and Trans-up (θ_down+180): sweep = θ_down        = a°
+       Q4 = between Trans-up and Right (360°=0°):          sweep = 180−θ_down    = 180-a°
+
+     For angle `a` to be the angle drawn, we mark it in the right quadrant.
+     Convention: ∠a = the angle on the right side, above line 1 (i.e. Q4 above L1).
+     Q4 at V1: from Trans-up going CW by (180-a) to 0°.
+        Trans-up direction = θ_down+180 (mod 360). θ_down ≈ a for small a.
+        Let θ=a (the SVG angle of the transversal going downward, = a for this setup).
+        Trans-up = a+180.
+        Q4: from (a+180) sweep (180-a) CW → arrives at a+180+(180-a) = 360 = 0°. ✓
+        Arc size = 180-a. But we labelled the angle as `a`. Inconsistency!
+
+     Hmm. Let me redefine. The angle we call `a` = the acute-ish angle between transversal and horizontal.
+     At V1, there are two distinct angle sizes: a and 180-a, in 4 positions.
+     I want to show angle `a` clearly. Let's say:
+       ∠a is marked in Q1 at V1: between Right (0°) and Trans-down.
+       Arc: from 0° sweep θ_down° CW (= a°). ✓  Label it `a°`.
+
+     Then for each type, ∠b:
+       corr:    Q1 at V2 (same position). Arc: from 0° sweep a°.
+       alt_int: Q3 at V1 is between Left and Trans-up = a°. ∠b → Q4 at V2? 
+                Interior at V1 = below L1 = Q1,Q2. Alt = Q4 at V2.
+                Actually interior of the parallel lines = between L1 and L2.
+                At V1: below L1 = Q1 (0→θ_down, = a) or Q2 (θ→180, = 180-a). 
+                At V2: above L2 = Q3 (180→θ+180, = a) or Q4 (θ+180→360, = 180-a).
+                Alternate interior: opposite sides of transversal.
+                  ∠a at V1-Q1 (right of transversal, below L1).
+                  ∠b at V2-Q4 (left of transversal, above L2)? Q4 = 180-a. No.
+                  Hmm, alternate interior = Z-shape: ∠a at V1 interior right, ∠b at V2 interior left = equal.
+                  V1 interior right = Q1 = a°. V2 interior left = Q3 at V2 = a°. ✓
+
+       Let me define it all as Q1 = a degrees, using θ_down = a:
+       Q1(V1) = a°,  Q2(V1) = 180-a°,  Q3(V1) = a°,  Q4(V1) = 180-a°
+       Q1(V2) = a°,  Q2(V2) = 180-a°,  Q3(V2) = a°,  Q4(V2) = 180-a°
+
+       corr:    ∠a=Q1(V1), ∠b=Q1(V2)  [same relative position]
+       alt_int: ∠a=Q1(V1), ∠b=Q3(V2)  [between lines, opposite sides → both = a°]
+       alt_ext: ∠a=Q3(V1), ∠b=Q1(V2)  [outside lines, opposite sides → both = a°]
+                But Q3(V1) is ABOVE L1 (exterior). Q1(V2) is BELOW L2 (exterior). ✓
+       co_int:  ∠a=Q1(V1), ∠b=Q1(V2)? No, that's corresponding. 
+                Co-interior = same side of transversal, between lines.
+                ∠a=Q1(V1) interior right, ∠b=Q2(V2) interior right. 
+                Q1=a, Q2=180-a. Sum=180. ✓  But Q2 at V2 is between Trans-down and Left... hmm above L2?
+                At V2: Q1 = between 0° and θ_down = below L2 on right. That's exterior below L2.
+                Interior at V2 (above L2) = Q3 and Q4. 
+                ∠b = same-side interior. ∠a is at V1, right of trans, below L1 = Q1(V1).
+                Same side at V2, above L2, right of trans = Q4(V2) = 180-a°.
+                a + (180-a) = 180. ✓
+       vert_opp: at SAME vertex V1. ∠a=Q1(V1), ∠b=Q3(V1). Both = a°.
+  */
+  const θ=Math.atan2(ny,nx)/D2R; // SVG angle of transversal going downward (toward V2)
+  const θU=θ+180; // transversal going upward
+
+  function qArc(vx,vy,q,val,isUnk){
+    /* q: 'Q1'=0→θ (size a), 'Q2'=θ→180 (size 180-a),
+           'Q3'=180→θ+180 (size a), 'Q4'=θ+180→360 (size 180-a) */
+    let from,sweep;
+    if(q==='Q1'){from=0;   sweep=θ;}
+    else if(q==='Q2'){from=θ;   sweep=180-θ;}
+    else if(q==='Q3'){from=180; sweep=θ;}
+    else             {from=θ+180; sweep=180-θ;}
+    const lab=arc(vx,vy,30,from,from+sweep,isUnk);
+    txt(lab.lx,lab.ly,isUnk?'?°':`${val}°`,isUnk?'#c0392b':'#1a0a08');
+  }
+
+  if(type==='corr'){
+    qArc(V1x,V1y,'Q1',a,false);
+    qArc(V2x,V2y,'Q1',b,true);
+  } else if(type==='alt_int'){
+    qArc(V1x,V1y,'Q1',a,false); // below L1, right of trans (interior)
+    qArc(V2x,V2y,'Q3',b,true);  // above L2, left of trans (interior) — wait Q3 is left? Let me check.
+    // Q3 at V2: from 180 sweep θ CW → angle between Left-ray and Trans-up. Size = θ = a°. ✓
+    // Position: left of transversal (coming from 180°), above L2 (since Trans-up goes upward). ✓ Interior.
+  } else if(type==='alt_ext'){
+    qArc(V1x,V1y,'Q3',a,false); // above L1, left of trans (exterior top-left)
+    qArc(V2x,V2y,'Q1',b,true);  // below L2, right of trans (exterior bottom-right)
+  } else if(type==='co_int'){
+    qArc(V1x,V1y,'Q1',a,false); // below L1, right of trans (interior)
+    qArc(V2x,V2y,'Q4',b,true);  // above L2, right of trans (interior) — Q4: from θ+180 sweep 180-θ=180-a=b. ✓
+  } else { // vert_opp
+    qArc(V1x,V1y,'Q1',a,false);
+    qArc(V1x,V1y,'Q3',b,true);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ASTT  — angle sum of triangle = 180°
+   ═══════════════════════════════════════════════════════════ */
+function mkASTT(){
+  let a,b,c;
+  do{a=rnd(22,98);b=rnd(22,98);c=180-a-b;}while(c<22||c>136);
+  const unk=pick(['a','b','c']);
+  const unkVal={a,b,c}[unk];
+  const uL={'a':'∠A','b':'∠B','c':'∠C'}[unk];
+  const sum=180-unkVal;
+  const given=[];
+  if(unk!=='a')given.push(`∠A = ${a}°`);
+  if(unk!=='b')given.push(`∠B = ${b}°`);
+  if(unk!=='c')given.push(`∠C = ${c}°`);
+  return{
+    badge:'ASTT  (△ Angle Sum)', bcls:'badge-astt',
+    rule:'The angles in a triangle always sum to 180° (ASTT).',
+    given:[...given,'Triangle'],
+    findDesc:`Find ${uL}.`, findQ:`${uL} = ?°`,
+    ans:unkVal,
+    steps:[
+      ['ASTT: angles in a triangle sum to 180°','∠A + ∠B + ∠C = 180°'],
+      ['Substitute known angles',`${sum}° + ${uL} = 180°`],
+      ['Solve',`${uL} = 180° − ${sum}° = ${unkVal}°`],
+    ],
+    hint:`${uL} = 180° − ${sum}° = ${unkVal}°.`,
+    draw(){ drawTriangle(a,b,c,unk); }
+  };
+}
+
+function drawTriangle(a,b,c,unk){
+  const Ax=82, Ay=248, Bx=372, By=248, Cx=198, Cy=42;
+  poly([[Ax,Ay],[Bx,By],[Cx,Cy]]);
+  // Centroid for interior direction reference
+  const gx=(Ax+Bx+Cx)/3, gy=(Ay+By+Cy)/3;
+
+  function tArc(vx,vy,n1x,n1y,n2x,n2y,ang,isUnk){
+    const d1=Math.atan2(n1y-vy,n1x-vx)/D2R;
+    const d2=Math.atan2(n2y-vy,n2x-vx)/D2R;
+    // Try both sweep directions; pick the one whose midpoint faces the centroid
+    let sw=((d2-d1)%360+360)%360;
+    if(sw>180) sw-=360;
+    // mid of this sweep
+    const tryMid=(d1+sw/2)*D2R;
+    const mx=vx+30*Math.cos(tryMid), my=vy+30*Math.sin(tryMid);
+    // If that midpoint is farther from centroid than the opposite sweep, flip
+    const dist1=(mx-gx)**2+(my-gy)**2;
+    const altMid=(d1-sw/2)*D2R;
+    const mx2=vx+30*Math.cos(altMid), my2=vy+30*Math.sin(altMid);
+    const dist2=(mx2-gx)**2+(my2-gy)**2;
+    if(dist2<dist1) sw=-sw;
+
+    const r=24;
+    arc(vx,vy,r,d1,d1+sw,isUnk);
+    // Label: place toward centroid from vertex, at fixed distance
+    const labMid=(d1+sw/2)*D2R;
+    const labR=44;
+    txt(vx+labR*Math.cos(labMid), vy+labR*Math.sin(labMid),
+        isUnk?'?°':`${ang}°`, isUnk?'#c0392b':'#1a0a08');
+  }
+
+  tArc(Ax,Ay, Bx,By, Cx,Cy, a, unk==='a');
+  tArc(Bx,By, Cx,Cy, Ax,Ay, b, unk==='b');
+  tArc(Cx,Cy, Ax,Ay, Bx,By, c, unk==='c');
+
+  txt(Ax-18,Ay+4,'A','#7b1a10',13,'middle','400');
+  txt(Bx+18,By+4,'B','#7b1a10',13,'middle','400');
+  txt(Cx,   Cy-18,'C','#7b1a10',13,'middle','400');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ASQT  — angle sum of quadrilateral = 360°
+   ═══════════════════════════════════════════════════════════ */
+function mkASQT(){
+  let a,b,c,d;
+  do{a=rnd(58,128);b=rnd(58,128);c=rnd(58,128);d=360-a-b-c;}while(d<58||d>128);
+  const unk=pick(['a','b','c','d']);
+  const unkVal={a,b,c,d}[unk];
+  const uL=unk.toUpperCase();
+  const sum=360-unkVal;
+  const given=[];
+  if(unk!=='a')given.push(`∠A = ${a}°`);
+  if(unk!=='b')given.push(`∠B = ${b}°`);
+  if(unk!=='c')given.push(`∠C = ${c}°`);
+  if(unk!=='d')given.push(`∠D = ${d}°`);
+  return{
+    badge:'ASQT  (Quad Angle Sum)', bcls:'badge-asqt',
+    rule:'The angles in a quadrilateral always sum to 360° (ASQT).',
+    given:[...given,'Quadrilateral'],
+    findDesc:`Find ∠${uL}.`, findQ:`∠${uL} = ?°`,
+    ans:unkVal,
+    steps:[
+      ['ASQT: angles in a quadrilateral sum to 360°','∠A + ∠B + ∠C + ∠D = 360°'],
+      ['Substitute known angles',`${sum}° + ∠${uL} = 360°`],
+      ['Solve',`∠${uL} = 360° − ${sum}° = ${unkVal}°`],
+    ],
+    hint:`∠${uL} = 360° − ${sum}° = ${unkVal}°.`,
+    draw(){ drawQuad(a,b,c,d,unk); }
+  };
+}
+
+function drawQuad(a,b,c,d,unk){
+  const Ax=75,  Ay=245;
+  const Bx=372, By=240;
+  const Cx=348, Cy=50;
+  const Dx=102, Dy=44;
+  poly([[Ax,Ay],[Bx,By],[Cx,Cy],[Dx,Dy]]);
+  // Centroid
+  const gx=(Ax+Bx+Cx+Dx)/4, gy=(Ay+By+Cy+Dy)/4;
+
+  const verts=[
+    {x:Ax,y:Ay, p:{x:Dx,y:Dy}, n:{x:Bx,y:By}, ang:a, lbl:'A', uk:unk==='a'},
+    {x:Bx,y:By, p:{x:Ax,y:Ay}, n:{x:Cx,y:Cy}, ang:b, lbl:'B', uk:unk==='b'},
+    {x:Cx,y:Cy, p:{x:Bx,y:By}, n:{x:Dx,y:Dy}, ang:c, lbl:'C', uk:unk==='c'},
+    {x:Dx,y:Dy, p:{x:Cx,y:Cy}, n:{x:Ax,y:Ay}, ang:d, lbl:'D', uk:unk==='d'},
+  ];
+  verts.forEach(({x,y,p,n,ang,lbl,uk})=>{
+    const d1=Math.atan2(p.y-y,p.x-x)/D2R;
+    const d2=Math.atan2(n.y-y,n.x-x)/D2R;
+    let sw=((d2-d1)%360+360)%360;
+    if(sw>180) sw-=360;
+    // Pick sweep whose midpoint is closest to centroid
+    const tryMid=(d1+sw/2)*D2R;
+    const mx=x+30*Math.cos(tryMid), my=y+30*Math.sin(tryMid);
+    const dist1=(mx-gx)**2+(my-gy)**2;
+    const altMid=(d1-sw/2)*D2R;
+    const mx2=x+30*Math.cos(altMid), my2=y+30*Math.sin(altMid);
+    const dist2=(mx2-gx)**2+(my2-gy)**2;
+    if(dist2<dist1) sw=-sw;
+
+    const r=20;
+    arc(x,y,r,d1,d1+sw,uk);
+    const labMid=(d1+sw/2)*D2R;
+    const labR=38;
+    txt(x+labR*Math.cos(labMid), y+labR*Math.sin(labMid),
+        uk?'?°':`${ang}°`, uk?'#c0392b':'#1a0a08');
+    // Vertex label: push outward (away from centroid)
+    const outR=26;
+    const outAng=Math.atan2(y-gy, x-gx);
+    txt(x+outR*Math.cos(outAng), y+outR*Math.sin(outAng), lbl,'#7b1a10',13,'middle','400');
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   OPPOSITE ANGLES  — two intersecting lines, 4 angles
+   Variants:
+     A) Give one angle, find the vertically opposite one (equal)
+     B) Give one angle, find an adjacent one (supplementary)
+     C) Give two adjacent angles as expressions — find the value
+        of x then the marked angle  [medium difficulty]
+   ═══════════════════════════════════════════════════════════ */
+function mkOpp(){
+  const variant=pick(['opp','opp','adj','adj']);
+  // Keep a well away from 0/180 (near-parallel) and 90 (perpendicular looks like one line visually)
+  // Allow 25-75 and 105-155 so lines are clearly distinct and angled
+  const aRanges=[[25,75],[105,155]];
+  const range=pick(aRanges);
+  const a=rnd(range[0],range[1]), b=180-a;
+
+  if(variant==='opp'){
+    /* Find the angle vertically opposite to the given one */
+    return{
+      badge:'Opposite ∠s', bcls:'badge-opp',
+      rule:'Vertically opposite angles are equal.',
+      given:[`∠a = ${a}°`,'Two straight lines intersect'],
+      findDesc:'Find ∠c, the angle vertically opposite to ∠a.',
+      findQ:'∠c = ?°',
+      ans:a,
+      steps:[
+        ['Vertically opposite angles are equal','∠c = ∠a'],
+        ['Therefore',`∠c = ${a}°`],
+      ],
+      hint:`Vertically opposite angles are equal, so ∠c = ${a}°.`,
+      draw(){ drawOpp(a,b,'opp'); }
+    };
+  } else if(variant==='adj'){
+    /* Find the angle adjacent (supplementary) to the given one */
+    return{
+      badge:'Opposite ∠s', bcls:'badge-opp',
+      rule:'Angles on a straight line sum to 180°.',
+      given:[`∠a = ${a}°`,'Two straight lines intersect'],
+      findDesc:'Find ∠b, the angle adjacent to ∠a (they form a straight line).',
+      findQ:'∠b = ?°',
+      ans:b,
+      steps:[
+        ['Adjacent angles on a straight line sum to 180°','∠a + ∠b = 180°'],
+        ['Substitute',`${a}° + ∠b = 180°`],
+        ['Solve',`∠b = 180° − ${a}° = ${b}°`],
+      ],
+      hint:`∠a + ∠b = 180°, so ∠b = 180° − ${a}° = ${b}°.`,
+      draw(){ drawOpp(a,b,'adj'); }
+    };
+  }
+}
+
+function drawOpp(a, b, variant){
+  const cx=230, cy=135, ext=175;
+
+  const UR = -a;       // Line 2 up-right direction (SVG degrees)
+  const DL = 180 - a;  // Line 2 down-left direction
+
+  // Line 1: horizontal
+  line(cx - ext, cy, cx + ext, cy);
+  // Line 2: angled
+  line(cx + ext*Math.cos(UR*D2R), cy + ext*Math.sin(UR*D2R),
+       cx + ext*Math.cos(DL*D2R), cy + ext*Math.sin(DL*D2R));
+
+  const isOpp = variant==='opp';
+  const r = 34;
+
+  // Four arcs:
+  const labA = arc(cx, cy, r, -a,    0,       false);  // right-above
+  const labB = arc(cx, cy, r, -a,   -a - b,   !isOpp); // left-above (unknown if adj)
+  const labC = arc(cx, cy, r,  180,  180 - a,  isOpp); // left-below (unknown if opp)
+  const labD = arc(cx, cy, r,  DL,   0.01,    false);  // right-below
+
+  function normSweep(from, to){
+    let sw = ((to - from) % 360 + 360) % 360;
+    if(sw > 180) sw -= 360;
+    return sw;
+  }
+  const swA = normSweep(-a, 0);
+  const swB = normSweep(-a, -a - b);
+  const swC = normSweep(180, 180 - a);
+  const swD = normSweep(DL, 0.01);
+  const lR = r + 20;
+
+  function relab(valTxt, col, nameTxt, fromDeg, sw){
+    const mid = (fromDeg + sw/2) * D2R;
+    const lx = cx + lR * Math.cos(mid);
+    const ly = cy + lR * Math.sin(mid);
+    txt(lx, ly, valTxt, col);
+    txt(lx, ly + 14, nameTxt, '#9a5a52', 10, 'middle', '400');
+  }
+
+  if(isOpp){
+    relab(`${a}°`, '#1a0a08', 'a', -a,  swA);
+    relab(`${b}°`, '#888',    'b', -a,  swB);
+    relab('?°',    '#c0392b', 'c', 180, swC);
+    relab(`${b}°`, '#888',    'd', DL,  swD);
+  } else {
+    relab(`${a}°`, '#1a0a08', 'a', -a,  swA);
+    relab('?°',    '#c0392b', 'b', -a,  swB);
+    relab(`${a}°`, '#888',    'c', 180, swC);
+    relab(`${b}°`, '#888',    'd', DL,  swD);
+  }
+
+  S.appendChild(E('circle', {cx, cy, r:3, fill:'#1a0a08'}));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DISPATCHER & UI
+   ═══════════════════════════════════════════════════════════ */
+const POOLS={
+  comp:[mkComp],
+  supp:[mkSupp],
+  para:[mkPara],
+  astt:[mkASTT],
+  asqt:[mkASQT],
+  opp: [mkOpp],
+  all: [mkComp,mkComp,mkSupp,mkSupp,mkPara,mkPara,mkPara,mkASTT,mkASTT,mkASQT,mkOpp,mkOpp],
+};
+
+function setTopic(t){
+  topic=t;
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('t-'+t).classList.add('on');
+  next();
+}
+
+function render(){
+  const badge=document.getElementById('badge');
+  badge.textContent=P.badge;
+  badge.className='type-badge '+P.bcls;
+  document.getElementById('givenList').innerHTML=
+    P.given.map(g=>`<div class="given-line">${g.replace(/(\d+°)/g,'<span class="v">$1</span>')}</div>`).join('');
+  document.getElementById('ruleText').textContent=P.rule;
+  document.getElementById('findDesc').textContent=P.findDesc;
+  document.getElementById('findQ').textContent=P.findQ;
+  S.innerHTML='';
+  try{ P.draw(); }catch(e){ console.error('draw error:',e); }
+}
+
+function next(){
+  P=pick(POOLS[topic])();
+  done=false;
+  document.getElementById('ans').value='';
+  document.getElementById('fb').className='feedback';
+  document.getElementById('fb').textContent='';
+  document.getElementById('hintBox').className='hint-box';
+  document.getElementById('hintBox').textContent='';
+  document.getElementById('stepsBox').className='steps-box';
+  document.getElementById('stepsBox').innerHTML='';
+  render();
+  document.getElementById('ans').focus();
+}
+
+function check(){
+  if(done) return;
+  const raw=document.getElementById('ans').value.trim().replace(/[°\s]/g,'');
+  if(!raw){ setFb('fb-near','Enter your answer first.'); return; }
+  const v=parseFloat(raw);
+  if(isNaN(v)){ setFb('fb-near','Please enter a number.'); return; }
+  nAttempts++;
+  document.getElementById('sA').textContent=nAttempts;
+  if(Math.abs(v-P.ans)<=0.5){
+    nCorrect++; streak++;
+    document.getElementById('sC').textContent=nCorrect;
+    document.getElementById('sS').textContent=streak;
+    setFb('fb-ok', streak>=3?`🔥 ${streak} in a row! Answer: ${P.ans}°`:`✓ Correct! ${P.ans}°`);
+    done=true;
+  } else {
+    streak=0;
+    document.getElementById('sS').textContent=0;
+    const off=Math.abs(v-P.ans);
+    setFb(off<=4?'fb-near':'fb-no',
+      off<=4?'Very close — check your arithmetic.':'Not quite. Try again or show the solution.');
+  }
+}
+
+function setFb(cls,msg){
+  const fb=document.getElementById('fb');
+  fb.className='feedback '+cls; fb.textContent=msg;
+}
+
+function showHint(){
+  const hb=document.getElementById('hintBox');
+  const sb=document.getElementById('stepsBox');
+  if(hb.classList.contains('show')){
+    hb.classList.remove('show'); sb.classList.remove('show'); return;
+  }
+  let html='<span class="step-lbl" style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;">Solution</span><br>';
+  P.steps.forEach(([lbl,expr],i)=>{
+    html+=`<span class="step-lbl">Step ${i+1}: ${lbl}</span><br>`;
+    if(expr) html+=`<span class="step-expr">&nbsp;&nbsp;${expr}</span><br>`;
+  });
+  sb.innerHTML=html; sb.classList.add('show');
+  hb.textContent=`Hint: ${P.hint}`; hb.classList.add('show');
+}
+
+next();
+</script>
+</body>
+</html>

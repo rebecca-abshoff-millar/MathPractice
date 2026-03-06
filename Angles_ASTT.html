@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triangle Angle Sum (ASTT)</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#fdf0ee;--paper:#fffaf9;--ink:#1a0a08;--muted:#9a5a52;--border:#e8b8b0;--accent:#c0392b;--accent2:#7b1a10;--green:#2e7d32;--red:#c0392b;--orange:#a05c00;--shadow:rgba(120,30,20,0.13);}
+  *{box-sizing:border-box;margin:0;padding:0;}html{overflow-y:auto;}
+  body{font-family:'Libre Baskerville',Georgia,serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:1.5rem 1rem;background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(192,57,43,0.07) 27px,rgba(192,57,43,0.07) 28px),repeating-linear-gradient(90deg,transparent,transparent 27px,rgba(192,57,43,0.04) 27px,rgba(192,57,43,0.04) 28px);}
+  header{text-align:center;margin-bottom:0.7rem;}
+  header h1{font-size:clamp(1.3rem,3vw,1.9rem);font-weight:700;color:var(--ink);letter-spacing:-0.5px;}
+  header p{color:var(--muted);font-size:0.82rem;font-style:italic;margin-top:0.15rem;}
+  .card{background:var(--paper);border:1px solid var(--border);border-radius:4px;box-shadow:4px 4px 0 var(--border),0 8px 30px var(--shadow);padding:1.4rem 1.8rem;width:100%;max-width:920px;display:flex;flex-direction:column;gap:1rem;}
+  .top-row{display:flex;gap:1.2rem;align-items:stretch;}
+  .diagram-panel{flex:1 1 0;min-width:0;display:flex;flex-direction:column;background:#fdf5f4;border:1px solid var(--border);border-radius:4px;min-height:280px;padding:0.8rem;align-items:center;justify-content:space-between;gap:0.5rem;}
+  .badge-row{width:100%;}
+  .type-badge{font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:white;border-radius:3px;padding:0.2rem 0.6rem;display:inline-block;}
+  #angleSvg{display:block;width:100%;height:220px;}
+  .steps-box{width:100%;background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.22);border-radius:4px;padding:0.7rem 0.9rem;font-size:0.82rem;color:var(--ink);line-height:1.85;font-style:italic;display:none;}
+  .steps-box.show{display:block;}
+  .step-lbl{color:var(--accent2);font-weight:700;font-style:normal;}
+  .step-expr{font-family:'DM Mono',monospace;font-style:normal;font-size:0.83rem;}
+  .info-panel{flex:0 0 244px;display:flex;flex-direction:column;gap:0.7rem;}
+  .box{border-radius:4px;padding:0.7rem 0.9rem;}.box h3{font-size:0.63rem;font-weight:700;text-transform:uppercase;letter-spacing:1.6px;margin-bottom:0.35rem;}
+  .box-given{background:rgba(192,57,43,0.07);border:1.5px solid rgba(192,57,43,0.3);}.box-given h3{color:var(--accent);}
+  .box-rule{background:rgba(123,26,16,0.05);border:1.5px solid rgba(123,26,16,0.22);}.box-rule h3{color:var(--accent2);}.box-rule p{font-size:0.83rem;color:var(--accent2);font-style:italic;line-height:1.5;}
+  .box-find{background:rgba(123,26,16,0.05);border:1.5px solid rgba(123,26,16,0.25);}.box-find h3{color:var(--accent2);}.box-find p{font-size:0.9rem;color:var(--ink);font-style:italic;}
+  .find-q{font-style:normal;font-size:0.9rem;color:var(--accent2);font-weight:700;margin-top:0.3rem;}
+  .given-line{font-size:0.88rem;color:var(--ink);line-height:1.75;}.given-line .v{font-family:'DM Mono',monospace;font-weight:600;color:var(--accent2);}
+  input[type="text"]{width:100%;background:white;border:1.5px solid var(--border);border-radius:4px;padding:0.6rem 0.9rem;font-size:1.1rem;font-family:'DM Mono',monospace;color:var(--ink);outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+  input[type="text"]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(192,57,43,0.14);}
+  .input-note{font-size:0.7rem;color:var(--muted);font-style:italic;margin-top:0.2rem;}
+  .btn-row{display:flex;gap:0.6rem;}
+  button{flex:1;border:none;border-radius:4px;padding:0.65rem 1rem;font-family:'Libre Baskerville',serif;font-size:0.88rem;font-weight:700;cursor:pointer;transition:transform 0.1s,filter 0.15s;}
+  button:active{transform:scale(0.97);}
+  .btn-check{background:var(--accent2);color:white;box-shadow:2px 2px 0 rgba(123,26,16,0.4);}.btn-check:hover{filter:brightness(1.2);}
+  .btn-new{background:var(--paper);color:var(--ink);border:1.5px solid var(--border);box-shadow:2px 2px 0 var(--border);}.btn-new:hover{background:var(--bg);}
+  .hint-btn{width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);font-size:0.78rem;padding:0.42rem;border-radius:4px;font-family:'Libre Baskerville',serif;font-style:italic;cursor:pointer;}
+  .hint-btn:hover{border-color:var(--accent);color:var(--ink);}
+  .hint-box{display:none;background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.22);border-radius:4px;padding:0.6rem 0.8rem;font-size:0.82rem;color:#5a0e06;line-height:1.7;font-style:italic;}
+  .hint-box.show{display:block;}
+  .feedback{border-radius:4px;padding:0.55rem 0.9rem;font-size:0.88rem;font-weight:700;text-align:center;min-height:2rem;display:flex;align-items:center;justify-content:center;}
+  .fb-ok{background:rgba(46,125,50,0.1);border:1.5px solid rgba(46,125,50,0.4);color:var(--green);}
+  .fb-no{background:rgba(192,57,43,0.08);border:1.5px solid rgba(192,57,43,0.3);color:var(--red);}
+  .fb-near{background:rgba(160,92,0,0.08);border:1.5px solid rgba(160,92,0,0.3);color:var(--orange);}
+  .stats-row{display:flex;gap:1rem;justify-content:center;border-top:1px solid var(--border);padding-top:0.7rem;}
+  .stat{text-align:center;font-size:0.75rem;color:var(--muted);}.stat strong{display:block;font-size:1.1rem;color:var(--ink);font-family:'DM Mono',monospace;}
+
+  .type-badge{background:#cb4335;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Triangle Angle Sum (ASTT)</h1>
+  <p>Angles in a triangle sum to 180°. Find the missing angle.</p>
+</header>
+<div class="card">
+  <div class="top-row">
+    <div class="diagram-panel">
+      <div class="badge-row"><span class="type-badge">ASTT — △ Angle Sum</span></div>
+      <svg id="angleSvg" viewBox="0 0 460 260" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+    <div class="info-panel">
+      <div class="box box-given"><h3>Given</h3><div id="givenList">—</div></div>
+      <div class="box box-rule"><h3>Rule</h3><p id="ruleText">—</p></div>
+      <div class="box box-find"><h3>Find</h3><p id="findDesc">—</p><div class="find-q" id="findQ">—</div></div>
+      <input type="text" id="ans" placeholder="e.g. 47" onkeydown="if(event.key==='Enter')check()" autocomplete="off">
+      <div class="input-note">Enter the angle in degrees °</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-check" onclick="check()">Check Answer</button>
+    <button class="btn-new" onclick="next()">New Problem</button>
+  </div>
+  <button class="hint-btn" onclick="showHint()">▸ Show solution steps</button>
+  <div class="hint-box" id="hintBox"></div>
+  <div class="feedback" id="fb"></div>
+  <div class="stats-row">
+    <div class="stat"><strong id="sA">0</strong>Attempts</div>
+    <div class="stat"><strong id="sC">0</strong>Correct</div>
+    <div class="stat"><strong id="sS">0</strong>Streak</div>
+  </div>
+</div>
+<script>
+
+'use strict';
+let P={},nAttempts=0,nCorrect=0,streak=0,done=false;
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const D2R=Math.PI/180;
+const NS='http://www.w3.org/2000/svg';
+const S=document.getElementById('angleSvg');
+function E(tag,attrs,t){const e=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);if(t!==undefined)e.textContent=t;return e;}
+function line(x1,y1,x2,y2,col='#1a0a08',w=2.5){S.appendChild(E('line',{x1,y1,x2,y2,stroke:col,'stroke-width':w,'stroke-linecap':'round'}));}
+function poly(pts,fill='rgba(192,57,43,0.07)',stroke='#1a0a08'){S.appendChild(E('polygon',{points:pts.map(p=>p.join(',')).join(' '),fill,stroke,'stroke-width':2.5,'stroke-linejoin':'round'}));}
+function txt(x,y,t,fill='#1a0a08',sz=14.5,anchor='middle',w='700'){S.appendChild(E('text',{x,y,fill,'font-size':sz,'font-weight':w,'font-family':'DM Mono,monospace','text-anchor':anchor,'dominant-baseline':'middle'},t));}
+function arc(cx,cy,r,aDeg,bDeg,unknown){
+  let sweep=((bDeg-aDeg)%360+360)%360;if(sweep>180)sweep-=360;
+  const a1=aDeg*D2R,a2=(aDeg+sweep)*D2R;
+  const x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1),x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+  const lg=Math.abs(sweep)>180?1:0,sw=sweep>=0?1:0;
+  S.appendChild(E('path',{d:`M${cx},${cy}L${x1},${y1}A${r},${r},0,${lg},${sw},${x2},${y2}Z`,fill:unknown?'rgba(192,57,43,0.17)':'rgba(26,10,8,0.07)',stroke:'none'}));
+  S.appendChild(E('path',{d:`M${x1},${y1}A${r},${r},0,${lg},${sw},${x2},${y2}`,fill:'none',stroke:unknown?'#c0392b':'#666','stroke-width':1.8}));
+  const mid=(aDeg+sweep/2)*D2R;return{lx:cx+(r+19)*Math.cos(mid),ly:cy+(r+19)*Math.sin(mid)};
+}
+function raBox(cx,cy,fromDeg){
+  const s=10,a1=fromDeg*D2R,a2=(fromDeg+90)*D2R;
+  const p1x=cx+s*Math.cos(a1),p1y=cy+s*Math.sin(a1),p3x=cx+s*Math.cos(a2),p3y=cy+s*Math.sin(a2);
+  S.appendChild(E('polyline',{points:`${p1x},${p1y} ${p1x+s*Math.cos(a2)},${p1y+s*Math.sin(a2)} ${p3x},${p3y}`,fill:'none',stroke:'#666','stroke-width':1.5}));
+}
+function arrows(mx,my,n=1){
+  const hw=7,hh=5,offsets=n===1?[0]:[-6,6];
+  offsets.forEach(off=>{S.appendChild(E('polyline',{points:`${mx+off-hw},${my-hh} ${mx+off+hw*0.4},${my} ${mx+off-hw},${my+hh}`,fill:'none',stroke:'#555','stroke-width':'2','stroke-linejoin':'round','stroke-linecap':'round'}));});
+}
+
+
+function drawTriangle(a,b,c,unk){
+  const Ax=82,Ay=248,Bx=372,By=248,Cx=198,Cy=42;
+  poly([[Ax,Ay],[Bx,By],[Cx,Cy]]);
+  const gx=(Ax+Bx+Cx)/3,gy=(Ay+By+Cy)/3;
+  function tArc(vx,vy,n1x,n1y,n2x,n2y,ang,isUnk){
+    const d1=Math.atan2(n1y-vy,n1x-vx)/D2R,d2=Math.atan2(n2y-vy,n2x-vx)/D2R;
+    let sw=((d2-d1)%360+360)%360;if(sw>180)sw-=360;
+    const tryMid=(d1+sw/2)*D2R,mx=vx+30*Math.cos(tryMid),my=vy+30*Math.sin(tryMid);
+    const dist1=(mx-gx)**2+(my-gy)**2,altMid=(d1-sw/2)*D2R,mx2=vx+30*Math.cos(altMid),my2=vy+30*Math.sin(altMid);
+    if((mx2-gx)**2+(my2-gy)**2<dist1)sw=-sw;
+    arc(vx,vy,24,d1,d1+sw,isUnk);
+    const labMid=(d1+sw/2)*D2R;
+    txt(vx+44*Math.cos(labMid),vy+44*Math.sin(labMid),isUnk?'?°':`${ang}°`,isUnk?'#c0392b':'#1a0a08');
+  }
+  tArc(Ax,Ay,Bx,By,Cx,Cy,a,unk==='a');tArc(Bx,By,Cx,Cy,Ax,Ay,b,unk==='b');tArc(Cx,Cy,Ax,Ay,Bx,By,c,unk==='c');
+  txt(Ax-18,Ay+4,'A','#7b1a10',13,'middle','400');txt(Bx+18,By+4,'B','#7b1a10',13,'middle','400');txt(Cx,Cy-18,'C','#7b1a10',13,'middle','400');
+}
+
+
+function mk(){
+  let a,b,c;do{a=rnd(22,98);b=rnd(22,98);c=180-a-b;}while(c<22||c>136);
+  const unk=pick(['a','b','c']),unkVal={a,b,c}[unk],uL={'a':'∠A','b':'∠B','c':'∠C'}[unk],sum=180-unkVal;
+  const given=[];if(unk!=='a')given.push(`∠A = ${a}°`);if(unk!=='b')given.push(`∠B = ${b}°`);if(unk!=='c')given.push(`∠C = ${c}°`);
+  return{rule:'The angles in a triangle always sum to 180° (ASTT).',
+    given:[...given,'Triangle'],findDesc:`Find ${uL}.`,findQ:`${uL} = ?°`,ans:unkVal,
+    steps:[['ASTT: angles in a triangle sum to 180°','∠A + ∠B + ∠C = 180°'],['Substitute known angles',`${sum}° + ${uL} = 180°`],['Solve',`${uL} = 180° − ${sum}° = ${unkVal}°`]],
+    hint:`${uL} = 180° − ${sum}° = ${unkVal}°.`,
+    draw(){drawTriangle(a,b,c,unk);}};
+}
+
+
+function render(){
+  document.getElementById('givenList').innerHTML=P.given.map(g=>`<div class="given-line">${g.replace(/(\d+°)/g,'<span class="v">$1</span>')}</div>`).join('');
+  document.getElementById('ruleText').textContent=P.rule;
+  document.getElementById('findDesc').textContent=P.findDesc;
+  document.getElementById('findQ').textContent=P.findQ;
+  S.innerHTML='';try{P.draw();}catch(e){console.error(e);}
+}
+function next(){
+  P=mk();done=false;
+  document.getElementById('ans').value='';
+  ['fb','hintBox','stepsBox'].forEach(id=>{const el=document.getElementById(id);el.className=el.className.replace(/\s*(feedback|hint-box|steps-box).*$/,'');el.className=id==='fb'?'feedback':id==='hintBox'?'hint-box':'steps-box';el.textContent='';el.innerHTML='';});
+  render();document.getElementById('ans').focus();
+}
+function check(){
+  if(done)return;
+  const raw=document.getElementById('ans').value.trim().replace(/[°\s]/g,'');
+  if(!raw){setFb('fb-near','Enter your answer first.');return;}
+  const v=parseFloat(raw);if(isNaN(v)){setFb('fb-near','Please enter a number.');return;}
+  nAttempts++;document.getElementById('sA').textContent=nAttempts;
+  if(Math.abs(v-P.ans)<=0.5){
+    nCorrect++;streak++;document.getElementById('sC').textContent=nCorrect;document.getElementById('sS').textContent=streak;
+    setFb('fb-ok',streak>=3?`🔥 ${streak} in a row! Answer: ${P.ans}°`:`✓ Correct! ${P.ans}°`);done=true;
+  }else{
+    streak=0;document.getElementById('sS').textContent=0;
+    const off=Math.abs(v-P.ans);setFb(off<=4?'fb-near':'fb-no',off<=4?'Very close — check your arithmetic.':'Not quite. Try again or show the solution.');
+  }
+}
+function setFb(cls,msg){const fb=document.getElementById('fb');fb.className='feedback '+cls;fb.textContent=msg;}
+function showHint(){
+  const hb=document.getElementById('hintBox'),sb=document.getElementById('stepsBox');
+  if(hb.classList.contains('show')){hb.classList.remove('show');sb.classList.remove('show');return;}
+  let html='<span class="step-lbl" style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;">Solution</span><br>';
+  P.steps.forEach(([lbl,expr],i)=>{html+=`<span class="step-lbl">Step ${i+1}: ${lbl}</span><br>`;if(expr)html+=`<span class="step-expr">&nbsp;&nbsp;${expr}</span><br>`;});
+  sb.innerHTML=html;sb.classList.add('show');hb.textContent=`Hint: ${P.hint}`;hb.classList.add('show');
+}
+next();
+
+</script>
+</body>
+</html>
