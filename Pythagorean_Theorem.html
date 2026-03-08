@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pythagorean Theorem</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#eef3fd;--paper:#f7faff;--ink:#080e1a;--muted:#4a5a8a;--border:#b0c4e8;--accent:#1a4ab0;--accent2:#0d2d7b;--green:#2e7d32;--red:#c0392b;--orange:#a05c00;--shadow:rgba(20,40,120,0.13);}
+  *{box-sizing:border-box;margin:0;padding:0;}html{overflow-y:auto;}
+  body{font-family:'Libre Baskerville',Georgia,serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2rem 1.5rem;background-image:repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(26,74,176,0.07) 27px,rgba(26,74,176,0.07) 28px),repeating-linear-gradient(90deg,transparent,transparent 27px,rgba(26,74,176,0.04) 27px,rgba(26,74,176,0.04) 28px);}
+  header{text-align:center;margin-bottom:1rem;}
+  header h1{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:700;color:var(--ink);letter-spacing:-0.5px;}
+  header p{color:var(--muted);font-size:1rem;font-style:italic;margin-top:0.25rem;}
+  .card{background:var(--paper);border:1px solid var(--border);border-radius:4px;box-shadow:4px 4px 0 var(--border),0 8px 30px var(--shadow);padding:2rem 2.4rem;width:100%;max-width:1200px;display:flex;flex-direction:column;gap:1.4rem;}
+  .top-row{display:flex;gap:1.6rem;align-items:stretch;}
+  .diagram-panel{flex:1 1 0;min-width:0;display:flex;flex-direction:column;background:#f4f7fd;border:1px solid var(--border);border-radius:4px;min-height:400px;padding:1.2rem;align-items:center;justify-content:space-between;gap:0.8rem;}
+  .badge-row{width:100%;}
+  .type-badge{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:white;border-radius:3px;padding:0.3rem 0.8rem;display:inline-block;background:#1a4ab0;}
+  #shapeSvg{display:block;width:100%;}
+  .steps-box{width:100%;background:rgba(26,74,176,0.06);border:1px solid rgba(26,74,176,0.22);border-radius:4px;padding:1rem 1.2rem;font-size:0.95rem;color:var(--ink);line-height:1.9;font-style:italic;display:none;}
+  .steps-box.show{display:block;}
+  .step-lbl{color:var(--accent2);font-weight:700;font-style:normal;}
+  .step-expr{font-family:'DM Mono',monospace;font-style:normal;font-size:0.95rem;}
+  .info-panel{flex:0 0 300px;display:flex;flex-direction:column;gap:1rem;}
+  .box{border-radius:4px;padding:1rem 1.2rem;}.box h3{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.6px;margin-bottom:0.5rem;}
+  .box-given{background:rgba(26,74,176,0.07);border:1.5px solid rgba(26,74,176,0.3);}.box-given h3{color:var(--accent);}
+  .box-rule{background:rgba(13,45,123,0.05);border:1.5px solid rgba(13,45,123,0.22);}.box-rule h3{color:var(--accent2);}.box-rule p{font-size:0.95rem;color:var(--accent2);font-style:italic;line-height:1.6;}
+  .box-find{background:rgba(13,45,123,0.05);border:1.5px solid rgba(13,45,123,0.25);}.box-find h3{color:var(--accent2);}.box-find p{font-size:1rem;color:var(--ink);font-style:italic;}
+  .find-q{font-style:normal;font-size:1.05rem;color:var(--accent2);font-weight:700;margin-top:0.4rem;}
+  .given-line{font-size:1rem;color:var(--ink);line-height:1.9;}.given-line .v{font-family:'DM Mono',monospace;font-weight:600;color:var(--accent2);}
+  input[type="text"]{width:100%;background:white;border:1.5px solid var(--border);border-radius:4px;padding:0.8rem 1rem;font-size:1.3rem;font-family:'DM Mono',monospace;color:var(--ink);outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+  input[type="text"]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,74,176,0.14);}
+  .input-note{font-size:0.82rem;color:var(--muted);font-style:italic;margin-top:0.3rem;}
+  .btn-row{display:flex;gap:0.8rem;}
+  button{flex:1;border:none;border-radius:4px;padding:0.85rem 1.2rem;font-family:'Libre Baskerville',serif;font-size:1rem;font-weight:700;cursor:pointer;transition:transform 0.1s,filter 0.15s;}
+  button:active{transform:scale(0.97);}
+  .btn-check{background:var(--accent2);color:white;box-shadow:2px 2px 0 rgba(13,45,123,0.4);}.btn-check:hover{filter:brightness(1.2);}
+  .btn-new{background:var(--paper);color:var(--ink);border:1.5px solid var(--border);box-shadow:2px 2px 0 var(--border);}.btn-new:hover{background:var(--bg);}
+  .hint-btn{width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);font-size:0.9rem;padding:0.55rem;border-radius:4px;font-family:'Libre Baskerville',serif;font-style:italic;cursor:pointer;}
+  .hint-btn:hover{border-color:var(--accent);color:var(--ink);}
+  .hint-box{display:none;background:rgba(26,74,176,0.06);border:1px solid rgba(26,74,176,0.22);border-radius:4px;padding:0.8rem 1rem;font-size:0.95rem;color:#0d2d7b;line-height:1.8;font-style:italic;}
+  .hint-box.show{display:block;}
+  .feedback{border-radius:4px;padding:0.7rem 1rem;font-size:1rem;font-weight:700;text-align:center;min-height:2.4rem;display:flex;align-items:center;justify-content:center;}
+  .fb-ok{background:rgba(46,125,50,0.1);border:1.5px solid rgba(46,125,50,0.4);color:var(--green);}
+  .fb-no{background:rgba(192,57,43,0.08);border:1.5px solid rgba(192,57,43,0.3);color:var(--red);}
+  .fb-near{background:rgba(160,92,0,0.08);border:1.5px solid rgba(160,92,0,0.3);color:var(--orange);}
+  .stats-row{display:flex;gap:1.5rem;justify-content:center;border-top:1px solid var(--border);padding-top:1rem;}
+  .stat{text-align:center;font-size:0.88rem;color:var(--muted);}.stat strong{display:block;font-size:1.4rem;color:var(--ink);font-family:'DM Mono',monospace;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Pythagorean Theorem</h1>
+  <p>In a right triangle: a² + b² = c². Find the missing side.</p>
+</header>
+<div class="card">
+  <div class="top-row">
+    <div class="diagram-panel">
+      <div class="badge-row"><span class="type-badge">Pythagorean Theorem — a² + b² = c²</span></div>
+      <svg id="shapeSvg" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="steps-box" id="stepsBox"></div>
+    </div>
+    <div class="info-panel">
+      <div class="box box-given"><h3>Given</h3><div id="givenList">—</div></div>
+      <div class="box box-find"><h3>Find</h3><p id="findDesc">—</p><div class="find-q" id="findQ">—</div></div>
+      <input type="text" id="ans" placeholder="e.g. 5" onkeydown="if(event.key==='Enter')check()" autocomplete="off">
+      <div class="input-note" id="inputNote">Round to 2 decimal places if needed</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-check" onclick="check()">Check Answer</button>
+    <button class="btn-new" onclick="next()">New Problem</button>
+  </div>
+  <button class="hint-btn" onclick="showHint()">▸ Show solution steps</button>
+  <div class="hint-box" id="hintBox"></div>
+  <div class="feedback" id="fb"></div>
+  <div class="stats-row">
+    <div class="stat"><strong id="sA">0</strong>Attempts</div>
+    <div class="stat"><strong id="sC">0</strong>Correct</div>
+    <div class="stat"><strong id="sS">0</strong>Streak</div>
+  </div>
+</div>
+<script>
+'use strict';
+let P={},nAttempts=0,nCorrect=0,streak=0,done=false;
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const NS='http://www.w3.org/2000/svg';
+const S=document.getElementById('shapeSvg');
+
+// Pythagorean triples (a, b, c) and some non-perfect ones
+const TRIPLES=[
+  [3,4,5],[5,12,13],[8,15,17],[7,24,25],[9,40,41],[6,8,10],
+  [9,12,15],[12,16,20],[15,20,25],[20,21,29],[8,6,10],[10,24,26]
+];
+
+function E(tag,attrs,t){
+  const e=document.createElementNS(NS,tag);
+  for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);
+  if(t!==undefined)e.textContent=t;
+  return e;
+}
+function line(x1,y1,x2,y2,col='#080e1a',w=2.5){
+  S.appendChild(E('line',{x1,y1,x2,y2,stroke:col,'stroke-width':w,'stroke-linecap':'round'}));
+}
+function txt(x,y,t,fill='#080e1a',sz=14.5,anchor='middle',fw='700'){
+  S.appendChild(E('text',{x,y,fill,'font-size':sz,'font-weight':fw,'font-family':'DM Mono,monospace','text-anchor':anchor,'dominant-baseline':'middle'},t));
+}
+
+function drawRightTriangle(a,b,c,unk){
+  // Layout: right angle at bottom-left
+  // Scale so triangle fits nicely in 460x260
+  const maxDim=Math.max(a,b);
+  const scale=Math.min(760/maxDim, 14);
+  const pw=b*scale, ph=a*scale;
+  const pad=80;
+  const vw=pw+pad*2, vh=ph+pad*2;
+  const ox=pad, oy=pad;
+  S.setAttribute('viewBox',`0 0 ${vw} ${vh}`);
+  S.style.height=Math.round(vh*0.55)+'px';
+  const Ax=ox,     Ay=oy+ph; // right angle
+  const Bx=ox+pw,  By=oy+ph; // base end
+  const Cx=ox,     Cy=oy;    // top
+
+  // Fill
+  S.appendChild(E('polygon',{
+    points:`${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}`,
+    fill:'rgba(26,74,176,0.07)',stroke:'#080e1a','stroke-width':2.5,'stroke-linejoin':'round'
+  }));
+
+  // Right-angle box
+  const sq=10;
+  S.appendChild(E('polyline',{
+    points:`${Ax+sq},${Ay} ${Ax+sq},${Ay-sq} ${Ax},${Ay-sq}`,
+    fill:'none',stroke:'#555','stroke-width':1.5
+  }));
+
+  // Side labels
+  const aLabel = unk==='a' ? '?' : `${a}`;
+  const bLabel = unk==='b' ? '?' : `${b}`;
+  const cLabel = unk==='c' ? '?' : `${c}`;
+
+  const aCol = unk==='a'?'#c0392b':'#080e1a';
+  const bCol = unk==='b'?'#c0392b':'#080e1a';
+  const cCol = unk==='c'?'#c0392b':'#080e1a';
+
+  // side a (vertical, left side: Ax,Ay to Cx,Cy)
+  txt(Ax-30,(Ay+Cy)/2,`a=${aLabel}`,aCol,17,'middle','700');
+  // side b (horizontal, bottom: Ax,Ay to Bx,By)
+  txt((Ax+Bx)/2,Ay+26,`b=${bLabel}`,bCol,17,'middle','700');
+  // hypotenuse c (Bx,By to Cx,Cy) — label on the OUTSIDE (away from right-angle vertex)
+  const hx=(Bx+Cx)/2, hy=(By+Cy)/2;
+  const angle=Math.atan2(Cy-By,Cx-Bx);
+  // Perpendicular pointing away from interior (flip sign to go right of B→C direction)
+  const offx=-Math.sin(angle)*30, offy=Math.cos(angle)*30;
+  txt(hx+offx,hy+offy,`c=${cLabel}`,cCol,17,'middle','700');
+
+  // Vertex labels
+  txt(Ax-16,Ay+16,'A','#0d2d7b',15,'middle','400');
+  txt(Bx+16,By+16,'B','#0d2d7b',15,'middle','400');
+  txt(Cx-16,Cy-16,'C','#0d2d7b',15,'middle','400');
+}
+
+function fmt(n){
+  return Number.isInteger(n)?String(n):n.toFixed(2);
+}
+
+function mk(){
+  // Decide problem type: find a, find b, or find c
+  // Mix of perfect triples and some irrational results
+  const useTriple=Math.random()<0.6;
+  let a,b,c;
+  if(useTriple){
+    const t=pick(TRIPLES);
+    [a,b,c]=[t[0],t[1],t[2]];
+  } else {
+    // Generate legs that don't form a perfect triple
+    a=rnd(3,14);
+    b=rnd(3,14);
+    c=parseFloat(Math.sqrt(a*a+b*b).toFixed(2));
+  }
+  const unk=pick(['a','b','c']);
+  let unkVal, findDesc, findQ, steps, hint;
+  const aS=`${a}`, bS=`${b}`, cS=fmt(c);
+
+  if(unk==='c'){
+    unkVal=parseFloat(fmt(c));
+    findDesc='Find the hypotenuse c.';
+    findQ='c = ?';
+    steps=[
+      ['Write the theorem','a² + b² = c²'],
+      ['Substitute known values',`${a}² + ${b}² = c²`],
+      ['Simplify',`${a*a} + ${b*b} = c²`],
+      ['Take the square root',`c = √${a*a+b*b} = ${fmt(c)}`]
+    ];
+    hint=`c = √(${a}² + ${b}²) = √${a*a+b*b} = ${fmt(c)}`;
+  } else if(unk==='a'){
+    unkVal=parseFloat(fmt(a));
+    findDesc='Find leg a.';
+    findQ='a = ?';
+    steps=[
+      ['Write the theorem','a² + b² = c²'],
+      ['Rearrange for a²','a² = c² − b²'],
+      ['Substitute known values',`a² = ${cS}² − ${b}²`],
+      ['Simplify',`a² = ${parseFloat((c*c).toFixed(2))} − ${b*b} = ${parseFloat((c*c-b*b).toFixed(2))}`],
+      ['Take the square root',`a = √${parseFloat((c*c-b*b).toFixed(2))} = ${fmt(a)}`]
+    ];
+    hint=`a = √(${cS}² − ${b}²) = √${parseFloat((c*c-b*b).toFixed(2))} = ${fmt(a)}`;
+  } else {
+    unkVal=parseFloat(fmt(b));
+    findDesc='Find leg b.';
+    findQ='b = ?';
+    steps=[
+      ['Write the theorem','a² + b² = c²'],
+      ['Rearrange for b²','b² = c² − a²'],
+      ['Substitute known values',`b² = ${cS}² − ${a}²`],
+      ['Simplify',`b² = ${parseFloat((c*c).toFixed(2))} − ${a*a} = ${parseFloat((c*c-a*a).toFixed(2))}`],
+      ['Take the square root',`b = √${parseFloat((c*c-a*a).toFixed(2))} = ${fmt(b)}`]
+    ];
+    hint=`b = √(${cS}² − ${a}²) = √${parseFloat((c*c-a*a).toFixed(2))} = ${fmt(b)}`;
+  }
+
+  const given=[];
+  if(unk!=='a') given.push(`a = ${aS}`);
+  if(unk!=='b') given.push(`b = ${bS}`);
+  if(unk!=='c') given.push(`c = ${cS}`);
+  given.push('Right triangle (∠A = 90°)');
+
+  return{
+    rule:'In a right triangle, a² + b² = c², where c is the hypotenuse.',
+    given, findDesc, findQ,
+    ans:unkVal, steps, hint,
+    isInt:Number.isInteger(unkVal),
+    draw(){drawRightTriangle(a,b,c,unk);}
+  };
+}
+
+function render(){
+  document.getElementById('givenList').innerHTML=P.given.map(g=>
+    `<div class="given-line">${g.replace(/(\d+\.?\d*)/g,'<span class="v">$1</span>')}</div>`
+  ).join('');
+  document.getElementById('findDesc').textContent=P.findDesc;
+  document.getElementById('findQ').textContent=P.findQ;
+  document.getElementById('inputNote').textContent=P.isInt?'Enter a whole number':'Round to 2 decimal places if needed';
+  S.innerHTML='';
+  try{P.draw();}catch(e){console.error(e);}
+}
+
+function next(){
+  P=mk();done=false;
+  document.getElementById('ans').value='';
+  ['fb','hintBox','stepsBox'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.className=id==='fb'?'feedback':id==='hintBox'?'hint-box':'steps-box';
+    el.textContent='';el.innerHTML='';
+  });
+  render();
+  document.getElementById('ans').focus();
+}
+
+function check(){
+  if(done)return;
+  const raw=document.getElementById('ans').value.trim().replace(/\s/g,'');
+  if(!raw){setFb('fb-near','Enter your answer first.');return;}
+  const v=parseFloat(raw);
+  if(isNaN(v)){setFb('fb-near','Please enter a number.');return;}
+  nAttempts++;document.getElementById('sA').textContent=nAttempts;
+  const tol=P.isInt?0.01:0.05;
+  if(Math.abs(v-P.ans)<=tol){
+    nCorrect++;streak++;
+    document.getElementById('sC').textContent=nCorrect;
+    document.getElementById('sS').textContent=streak;
+    setFb('fb-ok',streak>=3?`🔥 ${streak} in a row! Answer: ${P.ans}`:`✓ Correct! ${P.ans}`);
+    done=true;
+  } else {
+    streak=0;document.getElementById('sS').textContent=0;
+    const off=Math.abs(v-P.ans);
+    setFb(off<=0.5?'fb-near':'fb-no',off<=0.5?'Very close — check your rounding.':'Not quite. Try again or show the solution.');
+  }
+}
+
+function setFb(cls,msg){
+  const fb=document.getElementById('fb');fb.className='feedback '+cls;fb.textContent=msg;
+}
+
+function showHint(){
+  const hb=document.getElementById('hintBox'),sb=document.getElementById('stepsBox');
+  if(hb.classList.contains('show')){hb.classList.remove('show');sb.classList.remove('show');return;}
+  let html='<span class="step-lbl" style="font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;">Solution</span><br>';
+  P.steps.forEach(([lbl,expr],i)=>{
+    html+=`<span class="step-lbl">Step ${i+1}: ${lbl}</span><br>`;
+    if(expr)html+=`<span class="step-expr">&nbsp;&nbsp;${expr}</span><br>`;
+  });
+  sb.innerHTML=html;sb.classList.add('show');
+  hb.textContent=`Hint: ${P.hint}`;hb.classList.add('show');
+}
+
+next();
+</script>
+</body>
+</html>
