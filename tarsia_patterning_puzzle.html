@@ -1,0 +1,313 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --tan-bg: #f5f0e8;
+    --tan-border: #c8b99a;
+    --ink: #2a2318;
+    --ink-soft: #5c4f3a;
+    --accent: #c0392b;
+    --accent2: #1a5276;
+    --correct: #1e8449;
+    --unplaced: #e8e0d0;
+    --hover: #d4c9b2;
+    --placed: #d6eaf8;
+    --placed-b: #2980b9;
+    --match: #d5f5e3;
+    --match-b: #1e8449;
+    --wrong: #fde8e8;
+    --wrong-b: #c0392b;
+    --shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+  body { font-family: 'DM Mono', monospace; background: transparent; color: var(--ink); }
+  .wrap { padding: 0.75rem 0.75rem 1.25rem; max-width: 680px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 0.75rem; }
+  .header h1 { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700; color: var(--ink); }
+  .header p { font-size: 10px; color: var(--ink-soft); margin-top: 3px; }
+  .score-bar { display: flex; justify-content: center; gap: 28px; margin-bottom: 0.65rem; }
+  .score-num { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: var(--accent2); line-height: 1; text-align: center; }
+  .score-label { font-size: 9px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+  .win-banner { display: none; background: var(--match); border: 1.5px solid var(--match-b); border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 8px; }
+  .win-banner.show { display: block; }
+  .win-banner h2 { font-family: 'Fraunces', serif; font-size: 15px; color: var(--correct); }
+  .win-banner p { font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+  .instructions { font-size: 10px; color: var(--ink-soft); text-align: center; line-height: 1.5; margin-bottom: 8px; padding: 6px 10px; background: rgba(255,255,255,0.5); border-radius: 7px; border: 1px solid var(--tan-border); }
+  .game-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; align-items: start; }
+  .panel { background: var(--tan-bg); border: 1px solid var(--tan-border); border-radius: 10px; padding: 8px; }
+  .panel-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--ink-soft); margin-bottom: 7px; font-weight: 500; text-align: center; }
+  .board-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .slot {
+    aspect-ratio: 1; border: 1.5px dashed var(--tan-border); border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; background: rgba(255,255,255,0.4);
+    padding: 6px 4px 4px; transition: background 0.12s, border-color 0.12s; min-height: 72px;
+  }
+  .slot:hover { background: rgba(255,255,255,0.75); border-color: var(--accent2); }
+  .slot.correct { background: var(--match); border-color: var(--match-b); border-style: solid; }
+  .slot.incorrect { background: var(--wrong); border-color: var(--wrong-b); border-style: solid; }
+  .slot-num { position: absolute; top: 3px; left: 5px; font-size: 7.5px; color: var(--ink-soft); opacity: 0.45; }
+  .slot-seq { font-size: 13px; color: var(--accent2); font-weight: 500; line-height: 1.3; text-align: center; padding: 0 2px; word-break: break-word; }
+  .placed-card {
+    position: absolute; inset: 0; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--placed); border: 1.5px solid var(--placed-b);
+    cursor: pointer; padding: 5px; transition: filter 0.12s;
+  }
+  .placed-card:hover { filter: brightness(0.94); }
+  .placed-card .general { font-size: 13px; color: var(--accent2); font-weight: 500; text-align: center; line-height: 1.3; }
+  .bank-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .bank-card {
+    aspect-ratio: 1; border-radius: 8px; border: 1.5px solid var(--tan-border);
+    background: var(--unplaced); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 6px; min-height: 72px; text-align: center;
+    transition: background 0.12s, border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+  }
+  .bank-card:hover { background: var(--hover); border-color: var(--ink-soft); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .bank-card.selected { background: #fef9e7; border-color: #d4ac0d; border-width: 2px; transform: translateY(-2px); box-shadow: var(--shadow); }
+  .bank-card.placed { opacity: 0.2; pointer-events: none; }
+  .bank-card .general { font-size: 13px; color: var(--accent); font-weight: 500; line-height: 1.3; }
+  .legend-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 9.5px; color: var(--ink-soft); }
+  .legend-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+  .btn-row { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; }
+  button { font-family: 'DM Mono', monospace; font-size: 10.5px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--tan-border); background: white; color: var(--ink); cursor: pointer; transition: background 0.12s, border-color 0.12s; }
+  button:hover { background: var(--tan-bg); border-color: var(--ink-soft); }
+  button.primary { background: var(--accent2); color: white; border-color: var(--accent2); }
+  button.primary:hover { background: #154360; }
+</style>
+
+<div class="wrap">
+  <div class="header">
+    <h1>Patterning — Tarsia Match</h1>
+    <p>Match each sequence with its correct general term</p>
+  </div>
+  <div class="score-bar">
+    <div><div class="score-num" id="placed-count">0</div><div class="score-label">Placed</div></div>
+    <div><div class="score-num" id="correct-count" style="color:var(--correct)">—</div><div class="score-label">Correct</div></div>
+    <div><div class="score-num" id="remaining-count">12</div><div class="score-label">Remaining</div></div>
+  </div>
+  <div class="win-banner" id="win-banner">
+    <h2>Excellent work!</h2>
+    <p>All 12 pairs matched correctly. Hit "New game" for a fresh set!</p>
+  </div>
+  <div class="instructions">
+    Select a term from the bank → click a sequence on the board to place it. Click a placed card to return it.
+  </div>
+  <div class="game-row">
+    <div class="panel">
+      <div class="panel-label">Sequences</div>
+      <div class="board-grid" id="board"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-label">General terms</div>
+      <div class="bank-grid" id="bank"></div>
+    </div>
+  </div>
+  <div class="legend-row">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--match);border:1px solid var(--match-b)"></div>Correct</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--wrong);border:1px solid var(--wrong-b)"></div>Incorrect</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fef9e7;border:1.5px solid #d4ac0d"></div>Selected</div>
+  </div>
+  <div class="btn-row">
+    <button onclick="checkAnswers()">Check answers</button>
+    <button class="primary" onclick="newGame()">New game</button>
+    <button onclick="revealAll()">Reveal all</button>
+  </div>
+</div>
+
+<script>
+function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function fmtN(n) {
+  if (n === 0) return "0";
+  return n < 0 ? `−${Math.abs(n)}` : `${n}`;
+}
+
+function seqTerms(a1, d, count) {
+  return Array.from({length: count}, (_, i) => fmtN(a1 + d * i)).join(", ") + ", …";
+}
+
+function generalTerm(a1, d) {
+  // t = d·n + (a1 - d)
+  const b = a1 - d;
+  if (d === 0) return `t = ${fmtN(a1)}`;
+  const dPart = d === 1 ? "n" : d === -1 ? "−n" : `${fmtN(d)}n`;
+  if (b === 0) return `t = ${dPart}`;
+  if (b > 0) return `t = ${dPart} + ${b}`;
+  return `t = ${dPart} − ${Math.abs(b)}`;
+}
+
+function makePairs() {
+  const pairs = [];
+  const usedKeys = new Set();
+
+  const TEMPLATES = [
+    // (d range, a1 range, filter)
+    { d: () => rnd(2, 6),   a1: (d) => rnd(1, d - 1) },          // increasing, a1 < d (b negative)
+    { d: () => rnd(2, 6),   a1: (d) => rnd(d + 1, d + 8) },       // increasing, b positive
+    { d: () => rnd(2, 6),   a1: (d) => d },                        // increasing, b = 0
+    { d: () => -rnd(2, 5),  a1: (d) => rnd(10, 25) },              // decreasing positive
+    { d: () => -rnd(2, 5),  a1: (d) => rnd(-1, 5) },               // decreasing from small/negative
+    { d: () => rnd(3, 7),   a1: (d) => -rnd(2, 10) },              // increasing from negative
+    { d: () => -rnd(3, 8),  a1: (d) => rnd(15, 35) },              // fast decreasing
+    { d: () => rnd(2, 4),   a1: (d) => rnd(d * 2, d * 4) },       // increasing mid range
+    { d: () => 0,           a1: () => rnd(2, 15) },                 // constant
+    { d: () => rnd(5, 10),  a1: (d) => rnd(1, d - 1) },            // large step
+    { d: () => -rnd(5, 10), a1: (d) => rnd(20, 50) },              // large negative step
+    { d: () => rnd(2, 3),   a1: (d) => -rnd(5, 15) },              // increasing from deep negative
+  ];
+
+  for (let i = 0; i < 12; i++) {
+    let attempt = 0;
+    while (attempt < 200) {
+      attempt++;
+      const tmpl = TEMPLATES[i % TEMPLATES.length];
+      const d = tmpl.d();
+      const a1 = tmpl.a1(d);
+      const key = `${a1},${d}`;
+      const gen = generalTerm(a1, d);
+      if (usedKeys.has(key) || usedKeys.has(gen)) continue;
+      usedKeys.add(key);
+      usedKeys.add(gen);
+      pairs.push({ seq: seqTerms(a1, d, 4), general: gen });
+      break;
+    }
+  }
+  return pairs;
+}
+
+let PAIRS = [];
+let boardState = new Array(12).fill(null);
+let selectedBank = null;
+let checked = false;
+let boardOrder, bankOrder;
+
+function init() {
+  PAIRS = makePairs();
+  boardState = new Array(12).fill(null);
+  selectedBank = null;
+  checked = false;
+  boardOrder = shuffle([...Array(12).keys()]);
+  bankOrder  = shuffle([...Array(12).keys()]);
+}
+
+function renderBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  boardOrder.forEach((pairIdx, slotIdx) => {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    const num = document.createElement('span');
+    num.className = 'slot-num';
+    num.textContent = slotIdx + 1;
+    slot.appendChild(num);
+    const seq = document.createElement('div');
+    seq.className = 'slot-seq';
+    seq.textContent = PAIRS[pairIdx].seq;
+    slot.appendChild(seq);
+    if (boardState[slotIdx] !== null) {
+      const placedPairIdx = boardState[slotIdx];
+      const card = document.createElement('div');
+      card.className = 'placed-card';
+      card.innerHTML = `<div class="general">${PAIRS[placedPairIdx].general}</div>`;
+      card.onclick = (e) => { e.stopPropagation(); removeFromSlot(slotIdx); };
+      slot.appendChild(card);
+      if (checked) slot.classList.add(placedPairIdx === pairIdx ? 'correct' : 'incorrect');
+    }
+    slot.addEventListener('click', () => placeOnSlot(slotIdx));
+    board.appendChild(slot);
+  });
+}
+
+function renderBank() {
+  const bank = document.getElementById('bank');
+  bank.innerHTML = '';
+  bankOrder.forEach((pairIdx, bankIdx) => {
+    const card = document.createElement('div');
+    card.className = 'bank-card';
+    if (boardState.includes(pairIdx)) card.classList.add('placed');
+    if (selectedBank === bankIdx) card.classList.add('selected');
+    card.innerHTML = `<div class="general">${PAIRS[pairIdx].general}</div>`;
+    card.onclick = () => selectBank(bankIdx);
+    bank.appendChild(card);
+  });
+}
+
+function selectBank(bankIdx) {
+  selectedBank = (selectedBank === bankIdx) ? null : bankIdx;
+  renderBank();
+}
+
+function placeOnSlot(slotIdx) {
+  if (selectedBank === null) return;
+  const pairIdx = bankOrder[selectedBank];
+  const prevSlot = boardState.indexOf(pairIdx);
+  if (prevSlot !== -1) boardState[prevSlot] = null;
+  boardState[slotIdx] = pairIdx;
+  selectedBank = null;
+  checked = false;
+  updateScores();
+  renderBoard();
+  renderBank();
+}
+
+function removeFromSlot(slotIdx) {
+  boardState[slotIdx] = null;
+  checked = false;
+  document.getElementById('win-banner').classList.remove('show');
+  updateScores();
+  renderBoard();
+  renderBank();
+}
+
+function updateScores() {
+  const placed = boardState.filter(x => x !== null).length;
+  const correct = boardState.filter((v, i) => v !== null && v === boardOrder[i]).length;
+  document.getElementById('placed-count').textContent = placed;
+  document.getElementById('correct-count').textContent = checked ? correct : '—';
+  document.getElementById('remaining-count').textContent = 12 - placed;
+}
+
+function checkAnswers() {
+  if (boardState.filter(x => x !== null).length === 0) return;
+  checked = true;
+  const correct = boardState.filter((v, i) => v !== null && v === boardOrder[i]).length;
+  document.getElementById('correct-count').textContent = correct;
+  if (correct === 12 && boardState.filter(x => x !== null).length === 12) {
+    document.getElementById('win-banner').classList.add('show');
+  }
+  updateScores();
+  renderBoard();
+}
+
+function newGame() {
+  document.getElementById('win-banner').classList.remove('show');
+  init();
+  updateScores();
+  renderBoard();
+  renderBank();
+}
+
+function revealAll() {
+  boardOrder.forEach((pairIdx, slotIdx) => { boardState[slotIdx] = pairIdx; });
+  checked = true;
+  document.getElementById('win-banner').classList.add('show');
+  updateScores();
+  renderBoard();
+  renderBank();
+}
+
+init();
+updateScores();
+renderBoard();
+renderBank();
+</script>
