@@ -191,7 +191,7 @@
 <div class="card">
   <div class="top-row">
     <div class="shape-panel">
-      <svg id="shapeSvg" viewBox="0 0 480 420" width="480" height="420" style="max-width:100%;display:block;"></svg>
+      <svg id="shapeSvg" viewBox="0 0 480 420" style="max-width:100%;width:100%;display:block;height:auto;"></svg>
     </div>
     <div class="info-panel">
       <div class="given-box">
@@ -690,7 +690,18 @@ function drawShape() {
   const s = document.getElementById('shapeSvg');
   s.innerHTML = '';
   prob.draw(s);
-  // (no watermark — students identify the shapes themselves)
+  // Auto-fit viewBox to actual content bounding box with padding
+  try {
+    const pad = 18;
+    const bb = s.getBBox();
+    if (bb && bb.width > 0 && bb.height > 0) {
+      const vx = Math.floor(bb.x - pad);
+      const vy = Math.floor(bb.y - pad);
+      const vw = Math.ceil(bb.width  + pad * 2);
+      const vh = Math.ceil(bb.height + pad * 2);
+      s.setAttribute('viewBox', `${vx} ${vy} ${vw} ${vh}`);
+    }
+  } catch(e) { /* fallback: keep default viewBox */ }
 }
 
 // ── Info panel ─────────────────────────────────────────────────
