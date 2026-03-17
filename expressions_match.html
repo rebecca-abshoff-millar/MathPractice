@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equivalent Expressions — Sort &amp; Match</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f4f3ef;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  header p  { font-size: 13px; color: #666; }
+
+  .round-badge {
+    display: inline-block;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-bottom: 10px;
+  }
+
+  /* ── Target groups ── */
+  .targets {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+
+  .target-wrap { text-align: center; }
+
+  .target-label {
+    font-size: 11px; color: #888;
+    margin-bottom: 6px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .target-box {
+    width: 160px;
+    min-height: 64px;
+    border-radius: 10px;
+    border: 2px dashed #aaa;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 600;
+    text-align: center; padding: 12px 14px;
+    transition: border-color .2s, background .2s;
+  }
+  .target-box.drag-over  { border-color: #333; background: #f0eeea; }
+  .target-box.correct    { border-color: #2d8a4e; background: #edf7f1; }
+  .target-box.incorrect  { border-color: #c0392b; background: #fdf0ef; }
+
+  .matched-strips {
+    margin-top: 8px;
+    display: flex; flex-direction: column; gap: 5px;
+    align-items: center;
+  }
+  .matched-strip {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    text-align: center;
+    max-width: 180px;
+    cursor: pointer;
+  }
+  .matched-strip.correct-strip   { border-color: #2d8a4e; color: #1a5c33; background: #edf7f1; cursor: default; }
+  .matched-strip.incorrect-strip { border-color: #c0392b; color: #7a1a12; background: #fdf0ef; }
+
+  /* ── Expression strips ── */
+  .strips-section h2 {
+    font-size: 13px; font-weight: 500; color: #555;
+    text-align: center; margin-bottom: 14px;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+
+  .strips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 9px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .strip {
+    background: #fff;
+    border: 1.5px dashed #bbb;
+    border-radius: 8px;
+    padding: 11px 10px;
+    font-size: 13px;
+    text-align: center;
+    cursor: grab;
+    transition: opacity .15s, transform .15s;
+    user-select: none;
+    line-height: 1.5;
+  }
+  .strip:active   { cursor: grabbing; }
+  .strip.dragging { opacity: .4; transform: scale(.97); }
+  .strip.placed   { opacity: .3; pointer-events: none; border-style: solid; }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex; justify-content: center; gap: 12px;
+    flex-wrap: wrap;
+    margin: 28px auto 0;
+    max-width: 500px;
+  }
+
+  button {
+    font-size: 13px; font-weight: 500;
+    padding: 9px 20px; border-radius: 8px;
+    border: none; cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-check          { background: #1a1a1a; color: #fff; }
+  .btn-check:hover    { background: #333; }
+  .btn-check:disabled { background: #bbb; cursor: default; }
+  .btn-new, .btn-reset            { background: #e8e6e1; color: #333; }
+  .btn-new:hover, .btn-reset:hover { background: #d8d5cf; }
+
+  /* ── Score banner ── */
+  .score-banner {
+    display: none;
+    text-align: center;
+    margin: 20px auto 0;
+    max-width: 420px;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 15px; font-weight: 500;
+  }
+  .score-banner.show    { display: block; }
+  .score-banner.perfect { background: #edf7f1; color: #1a5c33; border: 1px solid #2d8a4e; }
+  .score-banner.partial { background: #fffbe6; color: #7a5c00; border: 1px solid #c9a200; }
+
+  sup { font-size: .7em; vertical-align: super; line-height: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="round-badge" id="roundBadge">Round 1</div>
+  <h1>Equivalent Expressions — Sort &amp; Match</h1>
+  <p>Drag each expression strip to the group it simplifies to. Click a placed strip to remove it.</p>
+</header>
+
+<div class="targets" id="targetsRow"></div>
+
+<div class="strips-section">
+  <h2>Expression Strips</h2>
+  <div class="strips-grid" id="stripsGrid"></div>
+</div>
+
+<div class="controls">
+  <button class="btn-check" id="btnCheck" onclick="checkAnswers()">Check answers</button>
+  <button class="btn-reset" onclick="resetRound()">Reset round</button>
+  <button class="btn-new"   onclick="newRound()">New round</button>
+</div>
+
+<div class="score-banner" id="scoreBanner"></div>
+
+<script>
+const ROUNDS = [
+  {
+    groups: [
+      { id:"A", display:"2x + 3y + 1" },
+      { id:"B", display:"5x \u2212 2y + 4" },
+      { id:"C", display:"3x + y \u2212 2" },
+    ],
+    strips: [
+      // Group A
+      { expr:"5x + 2y \u2212 3x + y + 1",      group:"A" },
+      { expr:"2(x + y) + y + 1",                group:"A" },
+      { expr:"4x + 4y \u2212 2x \u2212 y + 1", group:"A" },
+      { expr:"3(x + y) \u2212 x + 1",           group:"A" },
+      { expr:"x + 2y + x + y + 1",              group:"A" },
+      { expr:"6x + 3y \u2212 4x + 1",           group:"A" },
+      { expr:"2(x + 2y) \u2212 y + 1",          group:"A" },
+      { expr:"2x + 5y \u2212 2y + 1",           group:"A" },
+      // Group B
+      { expr:"8x \u2212 3x \u2212 2y + 4",             group:"B" },
+      { expr:"3(x \u2212 y) + 2x + y + 4",            group:"B" },
+      { expr:"7x \u2212 2x \u2212 4y + 2y + 4",       group:"B" },
+      { expr:"5x \u2212 3y + y + 4",                  group:"B" },
+      { expr:"2(2x \u2212 y) + x + 4",                group:"B" },
+      { expr:"6x + y \u2212 x \u2212 3y + 4",         group:"B" },
+      { expr:"5(x + 1) \u2212 2y \u2212 1",           group:"B" },
+      { expr:"4x \u2212 2(y \u2212 2) + x",           group:"B" },
+      // Group C
+      { expr:"5x + 3y \u2212 2x \u2212 2y \u2212 2",  group:"C" },
+      { expr:"2(x + y) + x \u2212 y \u2212 2",        group:"C" },
+      { expr:"4x + y \u2212 x \u2212 2",              group:"C" },
+      { expr:"3(x + 1) + y \u2212 5",                 group:"C" },
+      { expr:"6x + 2y \u2212 3x \u2212 y \u2212 2",   group:"C" },
+      { expr:"3x + 4y \u2212 3y \u2212 2",            group:"C" },
+      { expr:"2(x \u2212 1) + x + y",                 group:"C" },
+      { expr:"x + y + 2x \u2212 2",                   group:"C" },
+    ]
+  },
+  {
+    groups: [
+      { id:"A", display:"4x \u2212 y + 3" },
+      { id:"B", display:"2x + 4y \u2212 1" },
+      { id:"C", display:"x + 3y + 5" },
+    ],
+    strips: [
+      // Group A
+      { expr:"6x \u2212 2x \u2212 y + 3",             group:"A" },
+      { expr:"5x \u2212 x + 2y \u2212 3y + 3",       group:"A" },
+      { expr:"2(2x + 1) \u2212 y + 1",               group:"A" },
+      { expr:"4x \u2212 3y + 2y + 3",                group:"A" },
+      { expr:"3(x + 1) + x \u2212 y",                group:"A" },
+      { expr:"7x \u2212 3x \u2212 y + 3",            group:"A" },
+      { expr:"4x + y \u2212 2y + 3",                 group:"A" },
+      { expr:"2x + 2x \u2212 y + 3",                 group:"A" },
+      // Group B
+      { expr:"5x + 4y \u2212 3x \u2212 1",           group:"B" },
+      { expr:"2(x + 2y) \u2212 1",                   group:"B" },
+      { expr:"4x + 6y \u2212 2x \u2212 2y \u2212 1", group:"B" },
+      { expr:"2x + 5y \u2212 y \u2212 1",            group:"B" },
+      { expr:"3x + 4y \u2212 x \u2212 1",            group:"B" },
+      { expr:"2(x + 1) + 4y \u2212 3",              group:"B" },
+      { expr:"x + 4y + x \u2212 1",                  group:"B" },
+      { expr:"6x + 4y \u2212 4x \u2212 1",           group:"B" },
+      // Group C
+      { expr:"3x + 3y \u2212 2x + 5",                group:"C" },
+      { expr:"2(y + 2) + x + y + 1",                 group:"C" },
+      { expr:"4x + 3y \u2212 3x + 5",                group:"C" },
+      { expr:"x + 5y \u2212 2y + 5",                 group:"C" },
+      { expr:"3(y + 1) + x + 2",                     group:"C" },
+      { expr:"x + 2y + y + 5",                       group:"C" },
+      { expr:"2x + 3y \u2212 x + 5",                 group:"C" },
+      { expr:"x + 3y + 3 + 2",                       group:"C" },
+    ]
+  },
+  {
+    groups: [
+      { id:"A", display:"3x + 2y" },
+      { id:"B", display:"5x \u2212 3y + 2" },
+      { id:"C", display:"2x + y \u2212 4" },
+    ],
+    strips: [
+      // Group A
+      { expr:"5x + 2y \u2212 2x",                    group:"A" },
+      { expr:"x + 2y + 2x",                          group:"A" },
+      { expr:"4x + 3y \u2212 x \u2212 y",            group:"A" },
+      { expr:"2(x + y) + x",                         group:"A" },
+      { expr:"6x + 2y \u2212 3x",                    group:"A" },
+      { expr:"3(x + y) \u2212 y",                    group:"A" },
+      { expr:"3x + 4y \u2212 2y",                    group:"A" },
+      { expr:"7x + 2y \u2212 4x",                    group:"A" },
+      // Group B
+      { expr:"8x \u2212 3x \u2212 3y + 2",           group:"B" },
+      { expr:"5x \u2212 5y + 2y + 2",                group:"B" },
+      { expr:"3(x \u2212 y) + 2x + 2",              group:"B" },
+      { expr:"5x \u2212 3(y \u2212 1) \u2212 1",     group:"B" },
+      { expr:"4x + x \u2212 3y + 2",                 group:"B" },
+      { expr:"7x \u2212 3y \u2212 2x + 2",           group:"B" },
+      { expr:"2(x + 1) + 3x \u2212 3y",              group:"B" },
+      { expr:"5x \u2212 3y + 4 \u2212 2",            group:"B" },
+      // Group C
+      { expr:"5x + y \u2212 3x \u2212 4",            group:"C" },
+      { expr:"2(x \u2212 2) + y",                    group:"C" },
+      { expr:"4x + y \u2212 2x \u2212 4",            group:"C" },
+      { expr:"2x + 3y \u2212 2y \u2212 4",           group:"C" },
+      { expr:"3x + y \u2212 x \u2212 4",             group:"C" },
+      { expr:"2x + y \u2212 2 \u2212 2",             group:"C" },
+      { expr:"2(x + 1) + y \u2212 6",                group:"C" },
+      { expr:"6x + y \u2212 4x \u2212 4",            group:"C" },
+    ]
+  },
+];
+
+// ─── State ───────────────────────────────────
+let roundIndex = 0;
+let currentRound = null;
+let activeStripIds = [];
+let placements = {};       // stripIdx → groupId
+let dragStripIdx = null;
+let checked = false;
+
+// ─── Init ────────────────────────────────────
+function pickStrips(round) {
+  const byGroup = {};
+  round.groups.forEach(g => byGroup[g.id] = []);
+  round.strips.forEach((s, i) => byGroup[s.group].push(i));
+  let chosen = [];
+  round.groups.forEach(g => {
+    const pool = byGroup[g.id].slice();
+    shuffle(pool);
+    chosen = chosen.concat(pool.slice(0, 8));
+  });
+  shuffle(chosen);
+  return chosen;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function startRound() {
+  checked = false;
+  placements = {};
+  currentRound = ROUNDS[roundIndex % ROUNDS.length];
+  activeStripIds = pickStrips(currentRound);
+  document.getElementById('roundBadge').textContent = `Round ${roundIndex + 1}`;
+  document.getElementById('scoreBanner').className = 'score-banner';
+  document.getElementById('btnCheck').disabled = false;
+  renderTargets();
+  renderStrips();
+}
+
+// ─── Render ──────────────────────────────────
+function renderTargets() {
+  const row = document.getElementById('targetsRow');
+  row.innerHTML = '';
+  currentRound.groups.forEach(g => {
+    const wrap = document.createElement('div');
+    wrap.className = 'target-wrap';
+    wrap.innerHTML = `
+      <div class="target-label">Group ${g.id}</div>
+      <div class="target-box" id="target-${g.id}">${g.display}</div>
+      <div class="matched-strips" id="matched-${g.id}"></div>`;
+    row.appendChild(wrap);
+
+    const box = wrap.querySelector('.target-box');
+    box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('drag-over'); });
+    box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
+    box.addEventListener('drop', e => {
+      e.preventDefault();
+      box.classList.remove('drag-over');
+      if (dragStripIdx !== null) dropOnGroup(g.id, dragStripIdx);
+    });
+  });
+}
+
+function renderStrips() {
+  const grid = document.getElementById('stripsGrid');
+  grid.innerHTML = '';
+  activeStripIds.forEach(idx => {
+    const s = currentRound.strips[idx];
+    const el = document.createElement('div');
+    el.className = 'strip';
+    el.draggable = true;
+    el.id = `strip-${idx}`;
+    el.innerHTML = s.expr;
+
+    el.addEventListener('dragstart', () => {
+      dragStripIdx = idx;
+      setTimeout(() => el.classList.add('dragging'), 0);
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      dragStripIdx = null;
+    });
+    grid.appendChild(el);
+  });
+}
+
+// ─── Drop ────────────────────────────────────
+function dropOnGroup(groupId, idx) {
+  if (checked) return;
+  if (placements[idx] !== undefined) removeFromMatched(placements[idx], idx);
+  placements[idx] = groupId;
+  document.getElementById(`strip-${idx}`)?.classList.add('placed');
+
+  const container = document.getElementById(`matched-${groupId}`);
+  const tag = document.createElement('div');
+  tag.className = 'matched-strip';
+  tag.id = `tag-${idx}`;
+  tag.innerHTML = currentRound.strips[idx].expr;
+  tag.addEventListener('click', () => {
+    if (checked) return;
+    removeFromMatched(groupId, idx);
+    delete placements[idx];
+    document.getElementById(`strip-${idx}`)?.classList.remove('placed');
+  });
+  container.appendChild(tag);
+}
+
+function removeFromMatched(groupId, idx) {
+  document.getElementById(`tag-${idx}`)?.remove();
+}
+
+// ─── Check ───────────────────────────────────
+function checkAnswers() {
+  if (checked) return;
+  checked = true;
+
+  let correct = 0;
+  const total = activeStripIds.length;
+
+  activeStripIds.forEach(idx => {
+    const s = currentRound.strips[idx];
+    const placed = placements[idx];
+    const tag = document.getElementById(`tag-${idx}`);
+    if (!placed || !tag) return;
+    if (placed === s.group) {
+      tag.classList.add('correct-strip');
+      correct++;
+    } else {
+      tag.classList.add('incorrect-strip');
+    }
+  });
+
+  currentRound.groups.forEach(g => {
+    const box = document.getElementById(`target-${g.id}`);
+    const groupStrips = activeStripIds.filter(i => currentRound.strips[i].group === g.id);
+    const allCorrect = groupStrips.every(i => placements[i] === g.id);
+    box.classList.add(allCorrect ? 'correct' : 'incorrect');
+  });
+
+  const banner = document.getElementById('scoreBanner');
+  const placed = Object.keys(placements).length;
+  if (correct === total) {
+    banner.textContent = `All ${total} expressions matched correctly.`;
+    banner.className = 'score-banner show perfect';
+  } else {
+    banner.textContent = `${correct} of ${placed} placed expressions are correct. Click incorrect strips to remove and try again.`;
+    banner.className = 'score-banner show partial';
+    checked = false;
+    document.getElementById('btnCheck').disabled = false;
+  }
+}
+
+function resetRound() { startRound(); }
+function newRound()   { roundIndex++; startRound(); }
+
+startRound();
+</script>
+</body>
+</html>
