@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equivalent Expressions — Spider Match</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f4f3ef;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  header p  { font-size: 13px; color: #666; }
+
+  /* ── Round badge ── */
+  .round-badge {
+    display: inline-block;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-bottom: 10px;
+  }
+
+  /* ── Spider bodies ── */
+  .bodies {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+
+  .body-wrap { text-align: center; }
+  .body-label { font-size: 11px; color: #888; margin-bottom: 6px; letter-spacing: .04em; text-transform: uppercase; }
+
+  .body-circle {
+    width: 136px; height: 136px; border-radius: 50%;
+    border: 2px dashed #aaa;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 600;
+    text-align: center; padding: 14px;
+    transition: border-color .2s, background .2s;
+    position: relative;
+  }
+  .body-circle.drag-over {
+    border-color: #333;
+    background: #f0eeea;
+  }
+  .body-circle.correct   { border-color: #2d8a4e; background: #edf7f1; }
+  .body-circle.incorrect { border-color: #c0392b; background: #fdf0ef; }
+
+  /* stacked attached legs */
+  .attached-legs {
+    margin-top: 8px;
+    display: flex; flex-direction: column; gap: 5px;
+    align-items: center;
+  }
+  .attached-leg {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    text-align: center;
+    max-width: 160px;
+  }
+  .attached-leg.correct-leg   { border-color: #2d8a4e; color: #1a5c33; background: #edf7f1; }
+  .attached-leg.incorrect-leg { border-color: #c0392b; color: #7a1a12; background: #fdf0ef; }
+
+  /* ── Leg strips ── */
+  .legs-section h2 {
+    font-size: 13px; font-weight: 500; color: #555;
+    text-align: center; margin-bottom: 14px;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+
+  .legs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 9px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .leg {
+    background: #fff;
+    border: 1.5px dashed #bbb;
+    border-radius: 8px;
+    padding: 11px 10px;
+    font-size: 13px;
+    text-align: center;
+    cursor: grab;
+    transition: opacity .15s, transform .15s, border-color .15s;
+    user-select: none;
+    line-height: 1.5;
+  }
+  .leg:active { cursor: grabbing; }
+  .leg.dragging { opacity: .4; transform: scale(.97); }
+  .leg.placed   { opacity: .3; pointer-events: none; border-style: solid; }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex; justify-content: center; gap: 12px;
+    flex-wrap: wrap;
+    margin: 28px auto 0;
+    max-width: 500px;
+  }
+
+  button {
+    font-size: 13px; font-weight: 500;
+    padding: 9px 20px; border-radius: 8px;
+    border: none; cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-check {
+    background: #1a1a1a; color: #fff;
+  }
+  .btn-check:hover  { background: #333; }
+  .btn-check:disabled { background: #bbb; cursor: default; }
+
+  .btn-new   { background: #e8e6e1; color: #333; }
+  .btn-new:hover { background: #d8d5cf; }
+
+  .btn-reset { background: #e8e6e1; color: #333; }
+  .btn-reset:hover { background: #d8d5cf; }
+
+  /* ── Score banner ── */
+  .score-banner {
+    display: none;
+    text-align: center;
+    margin: 20px auto 0;
+    max-width: 400px;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 15px; font-weight: 500;
+  }
+  .score-banner.show { display: block; }
+  .score-banner.perfect { background: #edf7f1; color: #1a5c33; border: 1px solid #2d8a4e; }
+  .score-banner.partial { background: #fffbe6; color: #7a5c00; border: 1px solid #c9a200; }
+
+  sup { font-size: .7em; vertical-align: super; line-height: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="round-badge" id="roundBadge">Round 1</div>
+  <h1>Equivalent Expressions — Spider Match</h1>
+  <p>Drag each expression strip onto the spider body it simplifies to.</p>
+</header>
+
+<div class="bodies" id="bodiesRow"></div>
+
+<div class="legs-section">
+  <h2>Expression Strips</h2>
+  <div class="legs-grid" id="legsGrid"></div>
+</div>
+
+<div class="controls">
+  <button class="btn-check" id="btnCheck" onclick="checkAnswers()">Check answers</button>
+  <button class="btn-reset" onclick="resetRound()">Reset round</button>
+  <button class="btn-new"   onclick="newRound()">New round</button>
+</div>
+
+<div class="score-banner" id="scoreBanner"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  Expression bank
+//  Each entry: { body: "display string", legs: [ {expr, simplified} ] }
+//  legs lists ≥8 items; we pick 8 per round.
+//  "simplified" is the canonical simplified form matching body.
+// ─────────────────────────────────────────────
+const ROUNDS = [
+  {
+    bodies: [
+      { id:"A", display:"2x + 3y + 1" },
+      { id:"B", display:"5x \u2212 2y + 4" },
+      { id:"C", display:"3x + y \u2212 2" },
+    ],
+    legs: [
+      // Body A
+      { expr:"5x + 2y \u2212 3x + y + 1",      body:"A" },
+      { expr:"2(x + y) + y + 1",                body:"A" },
+      { expr:"4x + 4y \u2212 2x \u2212 y + 1", body:"A" },
+      { expr:"3(x + y) \u2212 x + 1",           body:"A" },
+      { expr:"x + 2y + x + y + 1",              body:"A" },
+      { expr:"6x + 3y \u2212 4x + 1",           body:"A" },
+      { expr:"2(x + 2y) \u2212 y + 1",          body:"A" },
+      { expr:"2x + 5y \u2212 2y + 1",           body:"A" },
+      // Body B
+      { expr:"8x \u2212 3x \u2212 2y + 4",              body:"B" },
+      { expr:"3(x \u2212 y) + 2x + y + 4",             body:"B" },
+      { expr:"7x \u2212 2x \u2212 4y + 2y + 4",        body:"B" },
+      { expr:"5x \u2212 3y + y + 4",                   body:"B" },
+      { expr:"2(2x \u2212 y) + x + 4",                 body:"B" },
+      { expr:"6x + y \u2212 x \u2212 3y + 4",          body:"B" },
+      { expr:"5(x + 1) \u2212 2y \u2212 1",            body:"B" },
+      { expr:"4x \u2212 2(y \u2212 2) + x",            body:"B" },
+      // Body C
+      { expr:"5x + 3y \u2212 2x \u2212 2y \u2212 2",   body:"C" },
+      { expr:"2(x + y) + x \u2212 y \u2212 2",         body:"C" },
+      { expr:"4x + y \u2212 x \u2212 2",               body:"C" },
+      { expr:"3(x + 1) + y \u2212 5",                  body:"C" },
+      { expr:"6x + 2y \u2212 3x \u2212 y \u2212 2",    body:"C" },
+      { expr:"3x + 4y \u2212 3y \u2212 2",             body:"C" },
+      { expr:"2(x \u2212 1) + x + y",                  body:"C" },
+      { expr:"x + y + 2x \u2212 2",                    body:"C" },
+    ]
+  },
+  {
+    bodies: [
+      { id:"A", display:"4x \u2212 y + 3" },
+      { id:"B", display:"2x + 4y \u2212 1" },
+      { id:"C", display:"x + 3y + 5" },
+    ],
+    legs: [
+      // Body A: 4x − y + 3
+      { expr:"6x \u2212 2x \u2212 y + 3",              body:"A" },
+      { expr:"5x \u2212 x + 2y \u2212 3y + 3",        body:"A" },
+      { expr:"2(2x + 1) \u2212 y + 1",                body:"A" },
+      { expr:"4x \u2212 3y + 2y + 3",                 body:"A" },
+      { expr:"3(x + 1) + x \u2212 y",                 body:"A" },
+      { expr:"7x \u2212 3x \u2212 y + 3",             body:"A" },
+      { expr:"4x + y \u2212 2y + 3",                  body:"A" },
+      { expr:"2x + 2x \u2212 y + 3",                  body:"A" },
+      // Body B: 2x + 4y − 1
+      { expr:"5x + 4y \u2212 3x \u2212 1",            body:"B" },
+      { expr:"2(x + 2y) \u2212 1",                    body:"B" },
+      { expr:"4x + 6y \u2212 2x \u2212 2y \u2212 1",  body:"B" },
+      { expr:"2x + 5y \u2212 y \u2212 1",             body:"B" },
+      { expr:"3x + 4y \u2212 x \u2212 1",             body:"B" },
+      { expr:"2(x + 1) + 4y \u2212 3",               body:"B" },
+      { expr:"x + 4y + x \u2212 1",                   body:"B" },
+      { expr:"6x + 4y \u2212 4x \u2212 1",            body:"B" },
+      // Body C: x + 3y + 5
+      { expr:"3x + 3y \u2212 2x + 5",                 body:"C" },
+      { expr:"2(y + 2) + x + y + 1",                  body:"C" },
+      { expr:"4x + 3y \u2212 3x + 5",                 body:"C" },
+      { expr:"x + 5y \u2212 2y + 5",                  body:"C" },
+      { expr:"3(y + 1) + x + 2",                      body:"C" },
+      { expr:"x + 2y + y + 5",                        body:"C" },
+      { expr:"2x + 3y \u2212 x + 5",                  body:"C" },
+      { expr:"x + 3y + 3 + 2",                        body:"C" },
+    ]
+  },
+  {
+    bodies: [
+      { id:"A", display:"3x + 2y" },
+      { id:"B", display:"5x \u2212 3y + 2" },
+      { id:"C", display:"2x + y \u2212 4" },
+    ],
+    legs: [
+      // Body A: 3x + 2y
+      { expr:"5x + 2y \u2212 2x",                     body:"A" },
+      { expr:"x + 2y + 2x",                           body:"A" },
+      { expr:"4x + 3y \u2212 x \u2212 y",             body:"A" },
+      { expr:"2(x + y) + x",                          body:"A" },
+      { expr:"6x + 2y \u2212 3x",                     body:"A" },
+      { expr:"3(x + y) \u2212 y",                     body:"A" },
+      { expr:"3x + 4y \u2212 2y",                     body:"A" },
+      { expr:"7x + 2y \u2212 4x",                     body:"A" },
+      // Body B: 5x − 3y + 2
+      { expr:"8x \u2212 3x \u2212 3y + 2",            body:"B" },
+      { expr:"5x \u2212 5y + 2y + 2",                 body:"B" },
+      { expr:"3(x \u2212 y) + 2x + 2",               body:"B" },
+      { expr:"5x \u2212 3(y \u2212 1) \u2212 1",      body:"B" },
+      { expr:"4x + x \u2212 3y + 2",                  body:"B" },
+      { expr:"7x \u2212 3y \u2212 2x + 2",            body:"B" },
+      { expr:"2(x + 1) + 3x \u2212 3y",               body:"B" },
+      { expr:"5x \u2212 3y + 4 \u2212 2",             body:"B" },
+      // Body C: 2x + y − 4
+      { expr:"5x + y \u2212 3x \u2212 4",             body:"C" },
+      { expr:"2(x \u2212 2) + y",                     body:"C" },
+      { expr:"4x + y \u2212 2x \u2212 4",             body:"C" },
+      { expr:"2x + 3y \u2212 2y \u2212 4",            body:"C" },
+      { expr:"3x + y \u2212 x \u2212 4",              body:"C" },
+      { expr:"2x + y \u2212 2 \u2212 2",              body:"C" },
+      { expr:"2(x + 1) + y \u2212 6",                 body:"C" },
+      { expr:"6x + y \u2212 4x \u2212 4",             body:"C" },
+    ]
+  },
+];
+
+// ─── State ───────────────────────────────────
+let roundIndex = 0;
+let currentRound = null;
+let activeLegIds = [];       // subset of 8 per body = 24 legs per round
+let placements = {};         // legId → bodyId
+let dragLegId = null;
+let checked = false;
+
+// ─── Init ────────────────────────────────────
+function pickLegs(round) {
+  // pick 8 per body, shuffle each group
+  const byBody = {};
+  round.bodies.forEach(b => byBody[b.id] = []);
+  round.legs.forEach((leg, i) => byBody[leg.body].push(i));
+
+  let chosen = [];
+  round.bodies.forEach(b => {
+    const pool = byBody[b.id].slice();
+    shuffle(pool);
+    chosen = chosen.concat(pool.slice(0, 8));
+  });
+  shuffle(chosen);
+  return chosen; // array of indices into round.legs
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function startRound() {
+  checked = false;
+  placements = {};
+  currentRound = ROUNDS[roundIndex % ROUNDS.length];
+  activeLegIds = pickLegs(currentRound);
+  document.getElementById('roundBadge').textContent = `Round ${roundIndex + 1}`;
+  document.getElementById('scoreBanner').className = 'score-banner';
+  document.getElementById('btnCheck').disabled = false;
+  renderBodies();
+  renderLegs();
+}
+
+// ─── Render ──────────────────────────────────
+function renderBodies() {
+  const row = document.getElementById('bodiesRow');
+  row.innerHTML = '';
+  currentRound.bodies.forEach(b => {
+    const wrap = document.createElement('div');
+    wrap.className = 'body-wrap';
+    wrap.innerHTML = `
+      <div class="body-label">Body ${b.id}</div>
+      <div class="body-circle" id="body-${b.id}"
+           data-bodyid="${b.id}">${b.display}</div>
+      <div class="attached-legs" id="attached-${b.id}"></div>`;
+    row.appendChild(wrap);
+
+    const circle = wrap.querySelector('.body-circle');
+    circle.addEventListener('dragover', e => { e.preventDefault(); circle.classList.add('drag-over'); });
+    circle.addEventListener('dragleave', () => circle.classList.remove('drag-over'));
+    circle.addEventListener('drop', e => {
+      e.preventDefault();
+      circle.classList.remove('drag-over');
+      if (dragLegId !== null) dropOnBody(b.id, dragLegId);
+    });
+  });
+}
+
+function renderLegs() {
+  const grid = document.getElementById('legsGrid');
+  grid.innerHTML = '';
+  activeLegIds.forEach(legIdx => {
+    const leg = currentRound.legs[legIdx];
+    const el = document.createElement('div');
+    el.className = 'leg';
+    el.draggable = true;
+    el.id = `leg-${legIdx}`;
+    el.dataset.legidx = legIdx;
+    el.innerHTML = leg.expr;
+
+    el.addEventListener('dragstart', e => {
+      dragLegId = legIdx;
+      setTimeout(() => el.classList.add('dragging'), 0);
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      dragLegId = null;
+    });
+
+    grid.appendChild(el);
+  });
+}
+
+// ─── Drop logic ──────────────────────────────
+function dropOnBody(bodyId, legIdx) {
+  if (checked) return;
+  // If already placed somewhere else, un-place first
+  if (placements[legIdx] !== undefined) {
+    const prevBody = placements[legIdx];
+    removeFromAttached(prevBody, legIdx);
+  }
+  placements[legIdx] = bodyId;
+  const legEl = document.getElementById(`leg-${legIdx}`);
+  if (legEl) legEl.classList.add('placed');
+
+  // Add to attached display
+  const container = document.getElementById(`attached-${bodyId}`);
+  const tag = document.createElement('div');
+  tag.className = 'attached-leg';
+  tag.id = `attached-tag-${legIdx}`;
+  tag.dataset.legidx = legIdx;
+  tag.innerHTML = currentRound.legs[legIdx].expr;
+  // Click to remove
+  tag.addEventListener('click', () => {
+    if (checked) return;
+    removeFromAttached(bodyId, legIdx);
+    delete placements[legIdx];
+    const legEl2 = document.getElementById(`leg-${legIdx}`);
+    if (legEl2) legEl2.classList.remove('placed');
+  });
+  container.appendChild(tag);
+}
+
+function removeFromAttached(bodyId, legIdx) {
+  const tag = document.getElementById(`attached-tag-${legIdx}`);
+  if (tag) tag.remove();
+}
+
+// ─── Check ───────────────────────────────────
+function checkAnswers() {
+  if (checked) return;
+  checked = true;
+
+  let correct = 0;
+  const total = activeLegIds.length;
+
+  activeLegIds.forEach(legIdx => {
+    const leg = currentRound.legs[legIdx];
+    const placed = placements[legIdx];
+    const tag = document.getElementById(`attached-tag-${legIdx}`);
+    if (!placed || !tag) return; // not placed — no mark
+    if (placed === leg.body) {
+      tag.classList.add('correct-leg');
+      correct++;
+    } else {
+      tag.classList.add('incorrect-leg');
+    }
+  });
+
+  // Mark body circles
+  currentRound.bodies.forEach(b => {
+    const circle = document.getElementById(`body-${b.id}`);
+    const legsForBody = activeLegIds.filter(i => currentRound.legs[i].body === b.id);
+    const allCorrect = legsForBody.every(i => placements[i] === b.id);
+    circle.classList.add(allCorrect ? 'correct' : 'incorrect');
+  });
+
+  const banner = document.getElementById('scoreBanner');
+  const placed = Object.keys(placements).length;
+  if (correct === total) {
+    banner.textContent = `🎉 Perfect! All ${total} expressions matched correctly.`;
+    banner.className = 'score-banner show perfect';
+  } else {
+    banner.textContent = `${correct} of ${placed} placed expressions are correct. Click incorrect strips to remove and try again.`;
+    banner.className = 'score-banner show partial';
+    checked = false; // allow re-tries
+    document.getElementById('btnCheck').disabled = false;
+  }
+}
+
+function resetRound() {
+  startRound();
+}
+
+function newRound() {
+  roundIndex++;
+  startRound();
+}
+
+// ─── Go ──────────────────────────────────────
+startRound();
+</script>
+</body>
+</html>
