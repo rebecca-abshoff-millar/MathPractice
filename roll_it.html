@@ -385,47 +385,57 @@ const DOT_PATTERNS = {
 };
 
 // ── Expression definitions ───────────────────────────────────────────────────
-// fn(a,b,c) → number; template(a,b,c) → substituted string for display
+// fn(a,b,c)        → correct numeric answer
+// firstStep(a,b,c) → substituted form only (step 1 — student does the rest)
+// fullWorking(a,b,c) → all steps, shown only after a correct answer
 const EXPRESSIONS = [
   {
     label: "4a + (−2b) + 1 + (−c)",
     fn: (a,b,c) => 4*a + (-2*b) + 1 + (-c),
-    template: (a,b,c) => `4(${a}) + (−2(${b})) + 1 + (−${c})\n= ${4*a} + (${-2*b}) + 1 + (${-c})\n= ${4*a + (-2*b) + 1 + (-c)}`,
+    firstStep:  (a,b,c) => `4(${a}) + (−2(${b})) + 1 + (−${c})`,
+    fullWorking:(a,b,c) => `4(${a}) + (−2(${b})) + 1 + (−${c})\n= ${4*a} + (${-2*b}) + 1 + (${-c})\n= ${4*a + (-2*b) + 1 + (-c)}`,
   },
   {
     label: "2a + (−b) + 3 + (−2c)",
     fn: (a,b,c) => 2*a + (-b) + 3 + (-2*c),
-    template: (a,b,c) => `2(${a}) + (−${b}) + 3 + (−2(${c}))\n= ${2*a} + (${-b}) + 3 + (${-2*c})\n= ${2*a + (-b) + 3 + (-2*c)}`,
+    firstStep:  (a,b,c) => `2(${a}) + (−${b}) + 3 + (−2(${c}))`,
+    fullWorking:(a,b,c) => `2(${a}) + (−${b}) + 3 + (−2(${c}))\n= ${2*a} + (${-b}) + 3 + (${-2*c})\n= ${2*a + (-b) + 3 + (-2*c)}`,
   },
   {
     label: "(−3a) + 2b − 7 + 4c",
     fn: (a,b,c) => -3*a + 2*b - 7 + 4*c,
-    template: (a,b,c) => `(−3(${a})) + 2(${b}) − 7 + 4(${c})\n= ${-3*a} + ${2*b} − 7 + ${4*c}\n= ${-3*a + 2*b - 7 + 4*c}`,
+    firstStep:  (a,b,c) => `(−3(${a})) + 2(${b}) − 7 + 4(${c})`,
+    fullWorking:(a,b,c) => `(−3(${a})) + 2(${b}) − 7 + 4(${c})\n= ${-3*a} + ${2*b} − 7 + ${4*c}\n= ${-3*a + 2*b - 7 + 4*c}`,
   },
   {
     label: "(−6a) − b + 16 + 3c",
     fn: (a,b,c) => -6*a - b + 16 + 3*c,
-    template: (a,b,c) => `(−6(${a})) − ${b} + 16 + 3(${c})\n= ${-6*a} − ${b} + 16 + ${3*c}\n= ${-6*a - b + 16 + 3*c}`,
+    firstStep:  (a,b,c) => `(−6(${a})) − ${b} + 16 + 3(${c})`,
+    fullWorking:(a,b,c) => `(−6(${a})) − ${b} + 16 + 3(${c})\n= ${-6*a} − ${b} + 16 + ${3*c}\n= ${-6*a - b + 16 + 3*c}`,
   },
   {
     label: "(−a) − 4b + 10 + 3c",
     fn: (a,b,c) => -a - 4*b + 10 + 3*c,
-    template: (a,b,c) => `(−${a}) − 4(${b}) + 10 + 3(${c})\n= ${-a} − ${4*b} + 10 + ${3*c}\n= ${-a - 4*b + 10 + 3*c}`,
+    firstStep:  (a,b,c) => `(−${a}) − 4(${b}) + 10 + 3(${c})`,
+    fullWorking:(a,b,c) => `(−${a}) − 4(${b}) + 10 + 3(${c})\n= ${-a} − ${4*b} + 10 + ${3*c}\n= ${-a - 4*b + 10 + 3*c}`,
   },
   {
     label: "7a + (−5b) − 4c",
     fn: (a,b,c) => 7*a + (-5*b) - 4*c,
-    template: (a,b,c) => `7(${a}) + (−5(${b})) − 4(${c})\n= ${7*a} + (${-5*b}) − ${4*c}\n= ${7*a + (-5*b) - 4*c}`,
+    firstStep:  (a,b,c) => `7(${a}) + (−5(${b})) − 4(${c})`,
+    fullWorking:(a,b,c) => `7(${a}) + (−5(${b})) − 4(${c})\n= ${7*a} + (${-5*b}) − ${4*c}\n= ${7*a + (-5*b) - 4*c}`,
   },
   {
     label: "(−3a) × 2b − 7c",
     fn: (a,b,c) => (-3*a) * (2*b) - 7*c,
-    template: (a,b,c) => `(−3(${a})) × 2(${b}) − 7(${c})\n= (${-3*a}) × ${2*b} − ${7*c}\n= ${(-3*a)*(2*b)} − ${7*c}\n= ${(-3*a)*(2*b) - 7*c}`,
+    firstStep:  (a,b,c) => `(−3(${a})) × 2(${b}) − 7(${c})`,
+    fullWorking:(a,b,c) => `(−3(${a})) × 2(${b}) − 7(${c})\n= (${-3*a}) × ${2*b} − ${7*c}\n= ${(-3*a)*(2*b)} − ${7*c}\n= ${(-3*a)*(2*b) - 7*c}`,
   },
   {
     label: "6a × 4b − (−2) × 3c",
     fn: (a,b,c) => (6*a) * (4*b) - (-2) * (3*c),
-    template: (a,b,c) => `6(${a}) × 4(${b}) − (−2) × 3(${c})\n= ${6*a} × ${4*b} − (−2) × ${3*c}\n= ${(6*a)*(4*b)} − ${(-2)*(3*c)}\n= ${(6*a)*(4*b) - (-2)*(3*c)}`,
+    firstStep:  (a,b,c) => `6(${a}) × 4(${b}) − (−2) × 3(${c})`,
+    fullWorking:(a,b,c) => `6(${a}) × 4(${b}) − (−2) × 3(${c})\n= ${6*a} × ${4*b} − (−2) × ${3*c}\n= ${(6*a)*(4*b)} − ${(-2)*(3*c)}\n= ${(6*a)*(4*b) - (-2)*(3*c)}`,
   },
 ];
 
@@ -500,13 +510,12 @@ function updateCard(i) {
   const sub = document.getElementById(`sub-${i}`);
   if (!sub) return;
 
-  // Render substituted steps with highlighted values
-  const lines = exp.template(a, b, c).split('\n');
-  sub.innerHTML = lines.map((ln, li) =>
-    li === 0
-      ? ln.replace(new RegExp(`\\b(${a}|${b}|${c})\\b`, 'g'), m => `<span class="sub-val">${m}</span>`)
-      : `<span style="color:var(--muted)">${ln}</span>`
-  ).join('<br>');
+  // Show substituted form only — student works out the rest themselves
+  const step1 = exp.firstStep(a, b, c);
+  sub.innerHTML = '= ' + step1.replace(
+    new RegExp(`\\b(${a}|${b}|${c})\\b`, 'g'),
+    m => `<span class="sub-val">${m}</span>`
+  );
 }
 
 function updateAllCards() {
@@ -551,6 +560,16 @@ function checkOne(i) {
     card.classList.add('correct');
     card.classList.remove('wrong');
     st.textContent = '✓';
+    // Reveal full working now that they've got it
+    const sub = document.getElementById(`sub-${i}`);
+    if (sub) {
+      const lines = EXPRESSIONS[i].fullWorking(a, b, c).split('\n');
+      sub.innerHTML = lines.map((ln, li) =>
+        li === 0
+          ? '= ' + ln.replace(new RegExp(`\\b(${a}|${b}|${c})\\b`, 'g'), m => `<span class="sub-val">${m}</span>`)
+          : `<span style="color:var(--muted)">${ln}</span>`
+      ).join('<br>');
+    }
     if (!correct[i]) { correct[i] = true; score++; updateScore(); }
   } else {
     input.classList.add('wrong-input');
