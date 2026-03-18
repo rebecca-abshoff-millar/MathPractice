@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roll It! — Evaluating Expressions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0f0f13;
+    --surface:  #1a1a22;
+    --surface2: #22222e;
+    --border:   #2e2e3e;
+    --accent:   #f0c040;
+    --accent2:  #60c8f0;
+    --green:    #44c98a;
+    --red:      #f05060;
+    --text:     #e8e8f0;
+    --muted:    #7070a0;
+    --radius:   12px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .header-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .header-title span { color: var(--text); }
+  .score-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .score-pill b { color: var(--accent); font-weight: 500; }
+
+  /* ── Dice section ── */
+  .dice-section {
+    max-width: 720px;
+    margin: 32px auto 0;
+    padding: 0 20px;
+  }
+  .dice-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .dice-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .dice-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .var-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .die {
+    width: 64px; height: 64px;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    cursor: pointer;
+    transition: transform .1s, border-color .2s;
+    position: relative;
+    user-select: none;
+  }
+  .die:hover { border-color: var(--accent); transform: scale(1.06); }
+  .die.rolling {
+    animation: dieRoll 0.5s ease;
+    border-color: var(--accent);
+  }
+  @keyframes dieRoll {
+    0%   { transform: rotate(0deg)   scale(1);    }
+    20%  { transform: rotate(-15deg) scale(1.15); }
+    40%  { transform: rotate(12deg)  scale(1.1);  }
+    60%  { transform: rotate(-8deg)  scale(1.05); }
+    80%  { transform: rotate(4deg)   scale(1.02); }
+    100% { transform: rotate(0deg)   scale(1);    }
+  }
+
+  .die-dot-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 8px);
+    grid-template-rows: repeat(3, 8px);
+    gap: 3px;
+    pointer-events: none;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .dot.off { background: transparent; }
+
+  .roll-all-btn {
+    background: var(--accent);
+    color: #0f0f13;
+    border: none;
+    border-radius: 10px;
+    padding: 0 24px;
+    height: 64px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: .01em;
+    transition: transform .1s, background .15s;
+    white-space: nowrap;
+  }
+  .roll-all-btn:hover  { background: #f8d060; transform: scale(1.04); }
+  .roll-all-btn:active { transform: scale(.97); }
+
+  /* ── Expression cards ── */
+  .cards-section {
+    max-width: 720px;
+    margin: 28px auto 0;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .card.correct  { border-color: var(--green); }
+  .card.wrong    { border-color: var(--red); }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: .08em;
+    min-width: 20px;
+  }
+  .expr-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent2);
+    flex: 1;
+  }
+  .card-status {
+    font-size: 18px;
+    transition: opacity .2s;
+    opacity: 0;
+    min-width: 24px;
+    text-align: center;
+  }
+  .card.correct .card-status  { opacity: 1; }
+  .card.wrong   .card-status  { opacity: 1; }
+
+  .card-body {
+    padding: 14px 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .substituted-expr {
+    flex: 1;
+    min-width: 180px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+    min-height: 60px;
+  }
+  .substituted-expr .sub-val { color: var(--accent); }
+
+  .answer-area {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 160px;
+  }
+  .answer-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  .answer-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .answer-input {
+    width: 90px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .answer-input:focus { border-color: var(--accent2); }
+  .answer-input.correct-input { border-color: var(--green); color: var(--green); }
+  .answer-input.wrong-input   { border-color: var(--red);   color: var(--red);   }
+
+  .check-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    white-space: nowrap;
+  }
+  .check-btn:hover { border-color: var(--accent2); background: var(--border); }
+
+  .answer-feedback {
+    font-size: 12px;
+    min-height: 16px;
+    color: var(--muted);
+  }
+  .answer-feedback.ok  { color: var(--green); }
+  .answer-feedback.err { color: var(--red);   }
+
+  /* ── Reset bar ── */
+  .reset-bar {
+    max-width: 720px;
+    margin: 24px auto 0;
+    padding: 0 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .reset-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--green);
+    color: #0f0f13;
+    padding: 12px 24px;
+    border-radius: 99px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    opacity: 0;
+    transition: opacity .3s, transform .3s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 100;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">Roll It! <span>— Evaluating Expressions</span></div>
+  <div class="score-pill">Score: <b id="scoreDisplay">0 / 8</b></div>
+</div>
+
+<div class="dice-section">
+  <div class="dice-label">Roll the dice to set your variables</div>
+  <div class="dice-row">
+    <div class="dice-group">
+      <div class="var-tag">a =</div>
+      <div class="die" id="die-a" onclick="rollOne('a')" title="Click to roll">
+        <div class="die-dot-grid" id="dots-a"></div>
+      </div>
+    </div>
+    <div class="dice-group">
+      <div class="var-tag">b =</div>
+      <div class="die" id="die-b" onclick="rollOne('b')" title="Click to roll">
+        <div class="die-dot-grid" id="dots-b"></div>
+      </div>
+    </div>
+    <div class="dice-group">
+      <div class="var-tag">c =</div>
+      <div class="die" id="die-c" onclick="rollOne('c')" title="Click to roll">
+        <div class="die-dot-grid" id="dots-c"></div>
+      </div>
+    </div>
+    <button class="roll-all-btn" onclick="rollAll()">🎲 Roll all</button>
+  </div>
+</div>
+
+<div class="cards-section" id="cardsSection"></div>
+
+<div class="reset-bar">
+  <button class="reset-btn" onclick="resetAll()">Reset answers</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Dice dot patterns for faces 1–6 ─────────────────────────────────────────
+// Grid positions 0–8 (3×3), row-major
+const DOT_PATTERNS = {
+  1: [false,false,false, false,true,false,  false,false,false],
+  2: [true, false,false, false,false,false, false,false,true ],
+  3: [true, false,false, false,true,false,  false,false,true ],
+  4: [true, false,true,  false,false,false, true, false,true ],
+  5: [true, false,true,  false,true,false,  true, false,true ],
+  6: [true, false,true,  true, false,true,  true, false,true ],
+};
+
+// ── Expression definitions ───────────────────────────────────────────────────
+// fn(a,b,c) → number; template(a,b,c) → substituted string for display
+const EXPRESSIONS = [
+  {
+    label: "4a + (−2b) + 1 + (−c)",
+    fn: (a,b,c) => 4*a + (-2*b) + 1 + (-c),
+    template: (a,b,c) => `4(${a}) + (−2(${b})) + 1 + (−${c})\n= ${4*a} + (${-2*b}) + 1 + (${-c})\n= ${4*a + (-2*b) + 1 + (-c)}`,
+  },
+  {
+    label: "2a + (−b) + 3 + (−2c)",
+    fn: (a,b,c) => 2*a + (-b) + 3 + (-2*c),
+    template: (a,b,c) => `2(${a}) + (−${b}) + 3 + (−2(${c}))\n= ${2*a} + (${-b}) + 3 + (${-2*c})\n= ${2*a + (-b) + 3 + (-2*c)}`,
+  },
+  {
+    label: "(−3a) + 2b − 7 + 4c",
+    fn: (a,b,c) => -3*a + 2*b - 7 + 4*c,
+    template: (a,b,c) => `(−3(${a})) + 2(${b}) − 7 + 4(${c})\n= ${-3*a} + ${2*b} − 7 + ${4*c}\n= ${-3*a + 2*b - 7 + 4*c}`,
+  },
+  {
+    label: "(−6a) − b + 16 + 3c",
+    fn: (a,b,c) => -6*a - b + 16 + 3*c,
+    template: (a,b,c) => `(−6(${a})) − ${b} + 16 + 3(${c})\n= ${-6*a} − ${b} + 16 + ${3*c}\n= ${-6*a - b + 16 + 3*c}`,
+  },
+  {
+    label: "(−a) − 4b + 10 + 3c",
+    fn: (a,b,c) => -a - 4*b + 10 + 3*c,
+    template: (a,b,c) => `(−${a}) − 4(${b}) + 10 + 3(${c})\n= ${-a} − ${4*b} + 10 + ${3*c}\n= ${-a - 4*b + 10 + 3*c}`,
+  },
+  {
+    label: "7a + (−5b) − 4c",
+    fn: (a,b,c) => 7*a + (-5*b) - 4*c,
+    template: (a,b,c) => `7(${a}) + (−5(${b})) − 4(${c})\n= ${7*a} + (${-5*b}) − ${4*c}\n= ${7*a + (-5*b) - 4*c}`,
+  },
+  {
+    label: "(−3a) × 2b − 7c",
+    fn: (a,b,c) => (-3*a) * (2*b) - 7*c,
+    template: (a,b,c) => `(−3(${a})) × 2(${b}) − 7(${c})\n= (${-3*a}) × ${2*b} − ${7*c}\n= ${(-3*a)*(2*b)} − ${7*c}\n= ${(-3*a)*(2*b) - 7*c}`,
+  },
+  {
+    label: "6a × 4b − (−2) × 3c",
+    fn: (a,b,c) => (6*a) * (4*b) - (-2) * (3*c),
+    template: (a,b,c) => `6(${a}) × 4(${b}) − (−2) × 3(${c})\n= ${6*a} × ${4*b} − (−2) × ${3*c}\n= ${(6*a)*(4*b)} − ${(-2)*(3*c)}\n= ${(6*a)*(4*b) - (-2)*(3*c)}`,
+  },
+];
+
+// ── State ────────────────────────────────────────────────────────────────────
+let vals = { a: 1, b: 1, c: 1 };
+let correct = new Array(EXPRESSIONS.length).fill(false);
+let score = 0;
+
+// ── Dice ─────────────────────────────────────────────────────────────────────
+function renderDots(v, id) {
+  const grid = document.getElementById(`dots-${id}`);
+  grid.innerHTML = '';
+  DOT_PATTERNS[v].forEach(on => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (on ? '' : ' off');
+    grid.appendChild(d);
+  });
+}
+
+function rollOne(v) {
+  const n = Math.floor(Math.random() * 6) + 1;
+  vals[v] = n;
+  const die = document.getElementById(`die-${v}`);
+  die.classList.remove('rolling');
+  void die.offsetWidth;
+  die.classList.add('rolling');
+  setTimeout(() => die.classList.remove('rolling'), 500);
+  renderDots(n, v);
+  updateAllCards();
+}
+
+function rollAll() {
+  ['a','b','c'].forEach(v => rollOne(v));
+}
+
+// ── Cards ─────────────────────────────────────────────────────────────────────
+function buildCards() {
+  const section = document.getElementById('cardsSection');
+  section.innerHTML = '';
+  EXPRESSIONS.forEach((exp, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = `card-${i}`;
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="expr-display">${exp.label}</div>
+        <div class="card-status" id="status-${i}"></div>
+      </div>
+      <div class="card-body">
+        <div class="substituted-expr" id="sub-${i}"></div>
+        <div class="answer-area">
+          <div class="answer-label">Answer</div>
+          <div class="answer-row">
+            <input class="answer-input" type="number" id="ans-${i}"
+              placeholder="?" autocomplete="off"
+              onkeydown="if(event.key==='Enter') checkOne(${i})">
+            <button class="check-btn" onclick="checkOne(${i})">Check</button>
+          </div>
+          <div class="answer-feedback" id="fb-${i}"></div>
+        </div>
+      </div>`;
+    section.appendChild(card);
+    updateCard(i);
+  });
+}
+
+function updateCard(i) {
+  const exp = EXPRESSIONS[i];
+  const {a, b, c} = vals;
+  const sub = document.getElementById(`sub-${i}`);
+  if (!sub) return;
+
+  // Render substituted steps with highlighted values
+  const lines = exp.template(a, b, c).split('\n');
+  sub.innerHTML = lines.map((ln, li) =>
+    li === 0
+      ? ln.replace(new RegExp(`\\b(${a}|${b}|${c})\\b`, 'g'), m => `<span class="sub-val">${m}</span>`)
+      : `<span style="color:var(--muted)">${ln}</span>`
+  ).join('<br>');
+}
+
+function updateAllCards() {
+  // Recompute substituted previews; reset correctness
+  EXPRESSIONS.forEach((_, i) => {
+    updateCard(i);
+    // clear any previous check state if vars changed
+    const input = document.getElementById(`ans-${i}`);
+    const card = document.getElementById(`card-${i}`);
+    if (input) {
+      input.classList.remove('correct-input','wrong-input');
+      input.removeAttribute('readonly');
+    }
+    if (card) card.classList.remove('correct','wrong');
+    const fb = document.getElementById(`fb-${i}`);
+    const st = document.getElementById(`status-${i}`);
+    if (fb) { fb.textContent = ''; fb.className = 'answer-feedback'; }
+    if (st) st.textContent = '';
+  });
+  correct.fill(false);
+  score = 0;
+  updateScore();
+}
+
+function checkOne(i) {
+  const input = document.getElementById(`ans-${i}`);
+  const fb    = document.getElementById(`fb-${i}`);
+  const card  = document.getElementById(`card-${i}`);
+  const st    = document.getElementById(`status-${i}`);
+  if (!input || input.value === '') return;
+
+  const {a, b, c} = vals;
+  const expected = EXPRESSIONS[i].fn(a, b, c);
+  const given    = parseFloat(input.value);
+
+  if (given === expected) {
+    input.classList.add('correct-input');
+    input.classList.remove('wrong-input');
+    input.setAttribute('readonly', true);
+    fb.textContent = '✓ Correct!';
+    fb.className = 'answer-feedback ok';
+    card.classList.add('correct');
+    card.classList.remove('wrong');
+    st.textContent = '✓';
+    if (!correct[i]) { correct[i] = true; score++; updateScore(); }
+  } else {
+    input.classList.add('wrong-input');
+    input.classList.remove('correct-input');
+    fb.textContent = `✗ Try again (expected ${expected})`;
+    fb.className = 'answer-feedback err';
+    card.classList.add('wrong');
+    card.classList.remove('correct');
+    st.textContent = '✗';
+    // shake input
+    input.animate([
+      {transform:'translateX(-4px)'},{transform:'translateX(4px)'},
+      {transform:'translateX(-4px)'},{transform:'translateX(0)'}
+    ], {duration:250});
+    setTimeout(() => {
+      fb.textContent = 'Try again!';
+      card.classList.remove('wrong');
+      st.textContent = '';
+    }, 1800);
+  }
+}
+
+function updateScore() {
+  document.getElementById('scoreDisplay').textContent = `${score} / ${EXPRESSIONS.length}`;
+  if (score === EXPRESSIONS.length) showToast('🎉 All correct!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function resetAll() {
+  EXPRESSIONS.forEach((_, i) => {
+    const input = document.getElementById(`ans-${i}`);
+    const fb    = document.getElementById(`fb-${i}`);
+    const card  = document.getElementById(`card-${i}`);
+    const st    = document.getElementById(`status-${i}`);
+    if (input) { input.value = ''; input.classList.remove('correct-input','wrong-input'); input.removeAttribute('readonly'); }
+    if (fb)   { fb.textContent = ''; fb.className = 'answer-feedback'; }
+    if (card) card.classList.remove('correct','wrong');
+    if (st)   st.textContent = '';
+  });
+  correct.fill(false);
+  score = 0;
+  updateScore();
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+rollAll();
+buildCards();
+</script>
+</body>
+</html>
