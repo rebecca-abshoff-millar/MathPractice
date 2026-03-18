@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Equivalent Expressions — Sort &amp; Match</title>
+<title>Distributive Property — Sort &amp; Match</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -14,6 +14,7 @@
     color: #1a1a1a;
   }
 
+  /* ── Page shell: header + two-col body fills viewport ── */
   .shell {
     display: flex;
     flex-direction: column;
@@ -44,8 +45,9 @@
     margin-bottom: 4px;
   }
 
-  .topbar-controls { display: flex; gap: 8px; flex-shrink: 0; }
-
+  .topbar-controls {
+    display: flex; gap: 8px; flex-shrink: 0;
+  }
   button {
     font-size: 12px; font-weight: 500;
     padding: 7px 14px; border-radius: 7px;
@@ -63,7 +65,7 @@
     flex: 1;
     display: flex;
     gap: 16px;
-    overflow: hidden;
+    overflow: hidden;   /* children scroll independently */
     padding: 14px 0;
   }
 
@@ -99,7 +101,7 @@
   .strip.dragging { opacity: .35; transform: scale(.96); }
   .strip.placed   { opacity: .25; pointer-events: none; border-style: solid; border-color: #ccc; }
 
-  /* RIGHT: group targets */
+  /* RIGHT: sticky group columns */
   .group-panel {
     width: 300px;
     flex-shrink: 0;
@@ -139,6 +141,7 @@
     font-size: 15px; font-weight: 700; color: #1a1a1a;
   }
 
+  /* drop zone below the header */
   .drop-zone {
     min-height: 48px;
     border: 2px dashed #ddd;
@@ -183,11 +186,12 @@
 
 <div class="shell">
 
+  <!-- Header bar -->
   <div class="topbar">
     <div class="topbar-left">
       <div class="round-badge" id="roundBadge">Round 1</div>
-      <h1>Equivalent Expressions — Sort &amp; Match</h1>
-      <p>Simplify each strip, then drag it onto the group it equals.</p>
+      <h1>Distributive Property — Sort &amp; Match</h1>
+      <p>Expand each strip, then drag it onto the matching group.</p>
     </div>
     <div class="topbar-controls">
       <button class="btn-check"     id="btnCheck" onclick="checkAnswers()">Check</button>
@@ -196,120 +200,126 @@
     </div>
   </div>
 
+  <!-- Score banner sits between header and work area -->
   <div class="score-banner" id="scoreBanner"></div>
 
+  <!-- Two-column work area -->
   <div class="work-area">
+
+    <!-- LEFT: strips -->
     <div class="strip-panel">
       <div class="strip-panel-label">Expression strips</div>
       <div class="strips-grid" id="stripsGrid"></div>
     </div>
+
+    <!-- RIGHT: drop targets -->
     <div class="group-panel">
       <div class="group-panel-label">Groups</div>
       <div id="targetsCol"></div>
     </div>
-  </div>
 
+  </div>
 </div>
 
 <script>
 const ROUNDS = [
   {
     groups: [
-      { id:"A", display:"2x + 3y + 1" },
-      { id:"B", display:"5x \u2212 2y + 4" },
-      { id:"C", display:"3x + y \u2212 2" },
+      { id:"A", display:"2x + 8" },
+      { id:"B", display:"3x + 6" },
+      { id:"C", display:"4x + 10" },
     ],
     strips: [
-      { expr:"5x + 2y \u2212 3x + y + 1",      group:"A" },
-      { expr:"2(x + y) + y + 1",                group:"A" },
-      { expr:"4x + 4y \u2212 2x \u2212 y + 1",  group:"A" },
-      { expr:"3(x + y) \u2212 x + 1",           group:"A" },
-      { expr:"x + 2y + x + y + 1",              group:"A" },
-      { expr:"6x + 3y \u2212 4x + 1",           group:"A" },
-      { expr:"2(x + 2y) \u2212 y + 1",          group:"A" },
-      { expr:"2x + 5y \u2212 2y + 1",           group:"A" },
-      { expr:"8x \u2212 3x \u2212 2y + 4",      group:"B" },
-      { expr:"3(x \u2212 y) + 2x + y + 4",      group:"B" },
-      { expr:"7x \u2212 2x \u2212 4y + 2y + 4", group:"B" },
-      { expr:"5x \u2212 3y + y + 4",            group:"B" },
-      { expr:"2(2x \u2212 y) + x + 4",          group:"B" },
-      { expr:"6x + y \u2212 x \u2212 3y + 4",   group:"B" },
-      { expr:"5(x + 1) \u2212 2y \u2212 1",     group:"B" },
-      { expr:"4x \u2212 2(y \u2212 2) + x",     group:"B" },
-      { expr:"5x + 3y \u2212 2x \u2212 2y \u2212 2", group:"C" },
-      { expr:"2(x + y) + x \u2212 y \u2212 2",  group:"C" },
-      { expr:"4x + y \u2212 x \u2212 2",        group:"C" },
-      { expr:"3(x + 1) + y \u2212 5",           group:"C" },
-      { expr:"6x + 2y \u2212 3x \u2212 y \u2212 2", group:"C" },
-      { expr:"3x + 4y \u2212 3y \u2212 2",      group:"C" },
-      { expr:"2(x \u2212 1) + x + y",           group:"C" },
-      { expr:"x + y + 2x \u2212 2",             group:"C" },
+      { expr:"2(x + 4)",                    group:"A" },
+      { expr:"3(x + 4) \u2212 x \u2212 4",  group:"A" },
+      { expr:"4(x + 2) \u2212 2x",          group:"A" },
+      { expr:"2(x + 3) + 2",                group:"A" },
+      { expr:"5(x + 2) \u2212 3x \u2212 2", group:"A" },
+      { expr:"3(x + 1) \u2212 x + 5",       group:"A" },
+      { expr:"2(2x + 4) \u2212 2x",         group:"A" },
+      { expr:"4(x + 4) \u2212 2x \u2212 8", group:"A" },
+      { expr:"3(x + 2)",                    group:"B" },
+      { expr:"5(x + 2) \u2212 2x \u2212 4", group:"B" },
+      { expr:"2(x + 3) + x",                group:"B" },
+      { expr:"4(x + 2) \u2212 x \u2212 2",  group:"B" },
+      { expr:"6(x + 1) \u2212 3x",          group:"B" },
+      { expr:"3(x + 4) \u2212 6",           group:"B" },
+      { expr:"2(2x + 3) \u2212 x",          group:"B" },
+      { expr:"3(2x + 3) \u2212 3x \u2212 3",group:"B" },
+      { expr:"2(2x + 5)",                   group:"C" },
+      { expr:"5(x + 2) \u2212 x",           group:"C" },
+      { expr:"3(x + 4) + x \u2212 2",       group:"C" },
+      { expr:"2(3x + 5) \u2212 2x",         group:"C" },
+      { expr:"4(x + 3) \u2212 2",           group:"C" },
+      { expr:"6(x + 2) \u2212 2x \u2212 2", group:"C" },
+      { expr:"2(x + 5) + 2x",               group:"C" },
+      { expr:"5(2x + 2) \u2212 6x",         group:"C" },
     ]
   },
   {
     groups: [
-      { id:"A", display:"4x \u2212 y + 3" },
-      { id:"B", display:"2x + 4y \u2212 1" },
-      { id:"C", display:"x + 3y + 5" },
+      { id:"A", display:"3x + 12" },
+      { id:"B", display:"5x \u2212 10" },
+      { id:"C", display:"2x + 2" },
     ],
     strips: [
-      { expr:"6x \u2212 2x \u2212 y + 3",              group:"A" },
-      { expr:"5x \u2212 x + 2y \u2212 3y + 3",        group:"A" },
-      { expr:"2(2x + 1) \u2212 y + 1",                group:"A" },
-      { expr:"4x \u2212 3y + 2y + 3",                 group:"A" },
-      { expr:"3(x + 1) + x \u2212 y",                 group:"A" },
-      { expr:"7x \u2212 3x \u2212 y + 3",             group:"A" },
-      { expr:"4x + y \u2212 2y + 3",                  group:"A" },
-      { expr:"2x + 2x \u2212 y + 3",                  group:"A" },
-      { expr:"5x + 4y \u2212 3x \u2212 1",            group:"B" },
-      { expr:"2(x + 2y) \u2212 1",                    group:"B" },
-      { expr:"4x + 6y \u2212 2x \u2212 2y \u2212 1",  group:"B" },
-      { expr:"2x + 5y \u2212 y \u2212 1",             group:"B" },
-      { expr:"3x + 4y \u2212 x \u2212 1",             group:"B" },
-      { expr:"2(x + 1) + 4y \u2212 3",               group:"B" },
-      { expr:"x + 4y + x \u2212 1",                   group:"B" },
-      { expr:"6x + 4y \u2212 4x \u2212 1",            group:"B" },
-      { expr:"3x + 3y \u2212 2x + 5",                 group:"C" },
-      { expr:"2(y + 2) + x + y + 1",                  group:"C" },
-      { expr:"4x + 3y \u2212 3x + 5",                 group:"C" },
-      { expr:"x + 5y \u2212 2y + 5",                  group:"C" },
-      { expr:"3(y + 1) + x + 2",                      group:"C" },
-      { expr:"x + 2y + y + 5",                        group:"C" },
-      { expr:"2x + 3y \u2212 x + 5",                  group:"C" },
-      { expr:"x + 3y + 3 + 2",                        group:"C" },
+      { expr:"3(x + 4)",                     group:"A" },
+      { expr:"5(x + 4) \u2212 2x \u2212 8",  group:"A" },
+      { expr:"4(x + 3) \u2212 x",            group:"A" },
+      { expr:"2(x + 6) + x",                 group:"A" },
+      { expr:"6(x + 2) \u2212 3x",           group:"A" },
+      { expr:"3(x + 5) \u2212 3",            group:"A" },
+      { expr:"2(2x + 6) \u2212 x",           group:"A" },
+      { expr:"5(x + 3) \u2212 2x \u2212 3",  group:"A" },
+      { expr:"5(x \u2212 2)",                group:"B" },
+      { expr:"6(x \u2212 2) \u2212 x + 2",   group:"B" },
+      { expr:"3(x \u2212 4) + 2x + 2",       group:"B" },
+      { expr:"4(x \u2212 3) + x + 2",        group:"B" },
+      { expr:"2(2x \u2212 5) + x",           group:"B" },
+      { expr:"5(2x \u2212 2) \u2212 5x",     group:"B" },
+      { expr:"3(x \u2212 2) + 2(x \u2212 2)",group:"B" },
+      { expr:"7(x \u2212 2) \u2212 2x + 4",  group:"B" },
+      { expr:"2(x + 1)",                     group:"C" },
+      { expr:"4(x + 2) \u2212 2x \u2212 6",  group:"C" },
+      { expr:"3(x + 2) \u2212 x \u2212 4",   group:"C" },
+      { expr:"5(x + 1) \u2212 3x \u2212 3",  group:"C" },
+      { expr:"2(3x + 1) \u2212 4x",          group:"C" },
+      { expr:"3(x + 1) \u2212 x \u2212 1",   group:"C" },
+      { expr:"2(x + 4) \u2212 6",            group:"C" },
+      { expr:"4(x + 1) \u2212 2x \u2212 2",  group:"C" },
     ]
   },
   {
     groups: [
-      { id:"A", display:"3x + 2y" },
-      { id:"B", display:"5x \u2212 3y + 2" },
-      { id:"C", display:"2x + y \u2212 4" },
+      { id:"A", display:"4x \u2212 4" },
+      { id:"B", display:"6x + 3" },
+      { id:"C", display:"x + 10" },
     ],
     strips: [
-      { expr:"5x + 2y \u2212 2x",                     group:"A" },
-      { expr:"x + 2y + 2x",                           group:"A" },
-      { expr:"4x + 3y \u2212 x \u2212 y",             group:"A" },
-      { expr:"2(x + y) + x",                          group:"A" },
-      { expr:"6x + 2y \u2212 3x",                     group:"A" },
-      { expr:"3(x + y) \u2212 y",                     group:"A" },
-      { expr:"3x + 4y \u2212 2y",                     group:"A" },
-      { expr:"7x + 2y \u2212 4x",                     group:"A" },
-      { expr:"8x \u2212 3x \u2212 3y + 2",            group:"B" },
-      { expr:"5x \u2212 5y + 2y + 2",                 group:"B" },
-      { expr:"3(x \u2212 y) + 2x + 2",               group:"B" },
-      { expr:"5x \u2212 3(y \u2212 1) \u2212 1",      group:"B" },
-      { expr:"4x + x \u2212 3y + 2",                  group:"B" },
-      { expr:"7x \u2212 3y \u2212 2x + 2",            group:"B" },
-      { expr:"2(x + 1) + 3x \u2212 3y",               group:"B" },
-      { expr:"5x \u2212 3y + 4 \u2212 2",             group:"B" },
-      { expr:"5x + y \u2212 3x \u2212 4",             group:"C" },
-      { expr:"2(x \u2212 2) + y",                     group:"C" },
-      { expr:"4x + y \u2212 2x \u2212 4",             group:"C" },
-      { expr:"2x + 3y \u2212 2y \u2212 4",            group:"C" },
-      { expr:"3x + y \u2212 x \u2212 4",              group:"C" },
-      { expr:"2x + y \u2212 2 \u2212 2",              group:"C" },
-      { expr:"2(x + 1) + y \u2212 6",                 group:"C" },
-      { expr:"6x + y \u2212 4x \u2212 4",             group:"C" },
+      { expr:"4(x \u2212 1)",                group:"A" },
+      { expr:"2(2x \u2212 2)",               group:"A" },
+      { expr:"5(x \u2212 1) \u2212 x + 1",   group:"A" },
+      { expr:"3(x \u2212 2) + x + 2",        group:"A" },
+      { expr:"6(x \u2212 1) \u2212 2x + 2",  group:"A" },
+      { expr:"2(3x \u2212 2) \u2212 2x",     group:"A" },
+      { expr:"4(2x \u2212 1) \u2212 4x",     group:"A" },
+      { expr:"2(x \u2212 2) + 2x",           group:"A" },
+      { expr:"3(2x + 1)",                    group:"B" },
+      { expr:"2(3x + 2) \u2212 1",           group:"B" },
+      { expr:"4(x + 1) + 2x \u2212 1",       group:"B" },
+      { expr:"5(x + 1) + x \u2212 2",        group:"B" },
+      { expr:"3(2x + 3) \u2212 6",           group:"B" },
+      { expr:"2(2x + 1) + 2x + 1",          group:"B" },
+      { expr:"6(x + 1) \u2212 3",            group:"B" },
+      { expr:"3(3x + 2) \u2212 3x \u2212 3", group:"B" },
+      { expr:"2(x + 5) \u2212 x",            group:"C" },
+      { expr:"3(x + 4) \u2212 2x \u2212 2",  group:"C" },
+      { expr:"4(x + 3) \u2212 3x \u2212 2",  group:"C" },
+      { expr:"5(x + 2) \u2212 4x",           group:"C" },
+      { expr:"4(2 + x) \u2212 3x + 2",       group:"C" },
+      { expr:"6(x + 2) \u2212 5x \u2212 2",  group:"C" },
+      { expr:"3(x + 5) \u2212 2x \u2212 5",  group:"C" },
+      { expr:"2(x + 6) \u2212 x \u2212 2",   group:"C" },
     ]
   },
 ];
@@ -369,6 +379,7 @@ function renderTargets() {
     zone.className = 'drop-zone';
     zone.id = `zone-${g.id}`;
 
+    // Both the header and the drop zone accept drops
     [header, zone].forEach(el => {
       el.addEventListener('dragover', e => {
         e.preventDefault();
@@ -376,6 +387,7 @@ function renderTargets() {
         zone.classList.add('drag-over');
       });
       el.addEventListener('dragleave', e => {
+        // only remove if leaving the whole target-wrap
         if (!wrap.contains(e.relatedTarget)) {
           header.classList.remove('drag-over');
           zone.classList.remove('drag-over');
@@ -407,6 +419,7 @@ function renderStrips() {
     el.innerHTML = s.expr;
     el.addEventListener('dragstart', e => {
       dragStripIdx = idx;
+      // pass expr as drag data so it's accessible on drop
       e.dataTransfer.setData('text/plain', idx);
       setTimeout(() => el.classList.add('dragging'), 0);
     });
@@ -420,6 +433,7 @@ function renderStrips() {
 
 function dropOnGroup(groupId, idx) {
   if (checked) return;
+  // If already placed elsewhere, remove first
   if (placements[idx] !== undefined) removeFromZone(placements[idx], idx);
   placements[idx] = groupId;
   document.getElementById(`strip-${idx}`)?.classList.add('placed');
