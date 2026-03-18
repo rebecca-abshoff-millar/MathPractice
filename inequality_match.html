@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inequality Matching</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #f7f6f2;
+    --surface: #ffffff;
+    --surface2:#f0efe9;
+    --border:  #dddbd2;
+    --border2: #c8c6bc;
+    --text:    #1a1a1a;
+    --muted:   #7a7870;
+    --green:   #1e7d4a;
+    --green-bg:#e8f6ee;
+    --red:     #c0392b;
+    --red-bg:  #fdecea;
+    --sol:     #1a4fa0;
+    --word:    #6b2d8a;
+    --graph:   #0d7a6e;
+    --navy:    #1c2b3a;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+  .shell { display: flex; flex-direction: column; height: 100vh; max-width: 1060px; margin: 0 auto; padding: 0 16px; }
+
+  /* ── Topbar ── */
+  .topbar {
+    flex-shrink: 0; padding: 14px 0 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    border-bottom: 2px solid var(--navy);
+  }
+  .topbar-left h1 { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
+  .topbar-left p  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .score-chip { background: var(--navy); color: #fff; font-family: 'DM Mono', monospace; font-size: 12px; padding: 4px 12px; border-radius: 99px; }
+  .score-chip b { color: #f0c040; }
+  .topbar-controls { display: flex; gap: 8px; }
+  button { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; padding: 7px 15px; border-radius: 7px; border: 1.5px solid var(--border2); background: var(--surface); color: var(--text); cursor: pointer; transition: background .15s, border-color .15s; white-space: nowrap; }
+  button:hover { background: var(--surface2); border-color: var(--text); }
+  button.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  button.primary:hover { background: #2e3f52; }
+  button.primary:disabled { background: var(--border2); border-color: var(--border2); cursor: default; }
+
+  /* ── Score banner ── */
+  .score-banner { flex-shrink: 0; display: none; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-top: 10px; }
+  .score-banner.show    { display: block; }
+  .score-banner.perfect { background: var(--green-bg); color: var(--green); border: 1px solid #a8dfc0; }
+  .score-banner.partial { background: #fffbe6; color: #7a5c00; border: 1px solid #e0c84a; }
+
+  /* ── Work area ── */
+  .work-area { flex: 1; display: flex; gap: 18px; overflow: hidden; padding: 14px 0; }
+  .problems-panel { flex: 1; overflow-y: auto; padding-right: 6px; }
+  .panel-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+
+  /* ── Problem cards ── */
+  .problem-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; transition: border-color .2s; }
+  .problem-card.correct { border-color: var(--green); }
+  .problem-card.wrong   { border-color: var(--red); }
+  .problem-top { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  .problem-num  { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); min-width: 22px; }
+  .problem-expr { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; flex: 1; }
+  .problem-tick { font-size: 14px; min-width: 18px; text-align: right; }
+  .problem-slots { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+  .slot { min-height: 58px; border-right: 1px solid var(--border); padding: 5px 7px; display: flex; flex-direction: column; gap: 3px; transition: background .15s; }
+  .slot:last-child { border-right: none; }
+  .slot.drag-over { background: #f0efe4; }
+  .slot-label { font-size: 9px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+  .slot-label.sol  { color: var(--sol); }
+  .slot-label.word { color: var(--word); }
+  .slot-label.graph{ color: var(--graph); }
+  .slot-content { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+
+  /* ── Placed chips ── */
+  .placed-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 7px; font-size: 11px; cursor: pointer; line-height: 1.3; transition: border-color .15s; }
+  .placed-card:hover { border-color: var(--border2); }
+  .placed-card.correct-card { background: var(--green-bg); border-color: #a8dfc0; color: var(--green); cursor: default; }
+  .placed-card.wrong-card   { background: var(--red-bg);   border-color: #f0a8a0; color: var(--red); }
+
+  /* ── Bank panel ── */
+  .bank-panel { width: 300px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 0; }
+  .bank-section { margin-bottom: 14px; }
+  .bank-section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+  .bank-section-label.sol  { color: var(--sol); }
+  .bank-section-label.word { color: var(--word); }
+  .bank-section-label.graph{ color: var(--graph); }
+  .bank-grid { display: flex; flex-direction: column; gap: 5px; }
+
+  .bank-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 11px; font-size: 12px; cursor: grab; transition: opacity .15s, border-color .15s, box-shadow .12s; user-select: none; line-height: 1.4; }
+  .bank-card:hover  { border-color: var(--border2); box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+  .bank-card:active { cursor: grabbing; }
+  .bank-card.dragging { opacity: .35; }
+  .bank-card.placed   { opacity: .22; pointer-events: none; border-style: dashed; }
+
+  /* ── Round badge ── */
+  .round-badge { display: inline-block; background: var(--navy); color: #fff; font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 99px; margin-right: 6px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1><span class="round-badge" id="roundBadge">Round 1</span>Inequality Matching</h1>
+      <p>Solve each inequality, then drag the matching solution, word phrase, and graph into each row.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="score-chip">Score: <b id="scoreDisplay">0 / 30</b></div>
+      <div class="topbar-controls">
+        <button class="primary" id="btnCheck" onclick="checkAll()">Check answers</button>
+        <button onclick="resetRound()">Reset</button>
+        <button onclick="newRound()">New round</button>
+      </div>
+    </div>
+  </div>
+  <div class="score-banner" id="scoreBanner"></div>
+  <div class="work-area">
+    <div class="problems-panel">
+      <div class="panel-label">Problems</div>
+      <div id="problemsList"></div>
+    </div>
+    <div class="bank-panel">
+      <div class="bank-section">
+        <div class="bank-section-label sol">Solutions</div>
+        <div class="bank-grid" id="bankSolutions"></div>
+      </div>
+      <div class="bank-section">
+        <div class="bank-section-label word">Word Phrases</div>
+        <div class="bank-grid" id="bankWords"></div>
+      </div>
+      <div class="bank-section">
+        <div class="bank-section-label graph">Graphs</div>
+        <div class="bank-grid" id="bankGraphs"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Full question bank (30 problems) ────────────────────────────────────────
+// Each problem: expr, sol (simplified), solLabel (A/B/C...),
+//               word, wordLabel (1/2/3...),
+//               graph: { value, open, dir, ticks }
+// All solutions verified.
+const ALL_PROBLEMS = [
+  // ── One-step, negative coefficient ──
+  { expr:"-3x > 12",          sol:"x < -4",  word:"A temperature drops below -4°C",             graph:{value:-4, open:true,  dir:"L", ticks:[-6,-5,-4,-3,-2]} },
+  { expr:"-2x \u2265 8",       sol:"x \u2264 -4", word:"The depth is at most -4 metres",            graph:{value:-4, open:false, dir:"L", ticks:[-6,-5,-4,-3,-2]} },
+  { expr:"-5x < 15",          sol:"x > -3",  word:"A golf score is more than -3",                graph:{value:-3, open:true,  dir:"R", ticks:[-5,-4,-3,-2,-1]} },
+  { expr:"-4x \u2264 -20",      sol:"x \u2265 5",  word:"You need at least 5 points to pass",         graph:{value: 5, open:false, dir:"R", ticks:[ 3, 4, 5, 6, 7]} },
+  { expr:"-6x > -18",         sol:"x < 3",   word:"The reading stays under 3 units",             graph:{value: 3, open:true,  dir:"L", ticks:[ 1, 2, 3, 4, 5]} },
+  { expr:"-x \u2265 4",         sol:"x \u2264 -4", word:"The balance is no more than -4 dollars",     graph:{value:-4, open:false, dir:"L", ticks:[-6,-5,-4,-3,-2]} },
+
+  // ── Two-step ──
+  { expr:"2x + 5 \u2264 -1",   sol:"x \u2264 -3", word:"A submarine descends no deeper than -3 km",  graph:{value:-3, open:false, dir:"L", ticks:[-5,-4,-3,-2,-1]} },
+  { expr:"-4x - 2 \u2265 6",   sol:"x \u2264 -2", word:"The balance must be at most -2 dollars",      graph:{value:-2, open:false, dir:"L", ticks:[-4,-3,-2,-1, 0]} },
+  { expr:"3x - 7 > 2",        sol:"x > 3",   word:"A score must be more than 3 points",           graph:{value: 3, open:true,  dir:"R", ticks:[ 1, 2, 3, 4, 5]} },
+  { expr:"-2x + 1 \u2265 -5",  sol:"x \u2264 3",  word:"The elevation is no higher than 3 metres",    graph:{value: 3, open:false, dir:"L", ticks:[ 1, 2, 3, 4, 5]} },
+  { expr:"5x + 3 < -7",       sol:"x < -2",  word:"The wind chill is less than -2 degrees",       graph:{value:-2, open:true,  dir:"L", ticks:[-4,-3,-2,-1, 0]} },
+  { expr:"4 - 2x > -4",       sol:"x < 4",   word:"A reading must stay under 4 units",            graph:{value: 4, open:true,  dir:"L", ticks:[ 2, 3, 4, 5, 6]} },
+  { expr:"3x + 8 < 2",        sol:"x < -2",  word:"The temperature is below -2°C",                graph:{value:-2, open:true,  dir:"L", ticks:[-4,-3,-2,-1, 0]} },
+  { expr:"-3x + 6 \u2265 15",  sol:"x \u2264 -3", word:"The altitude is no more than -3 metres",      graph:{value:-3, open:false, dir:"L", ticks:[-5,-4,-3,-2,-1]} },
+  { expr:"7 - 4x \u2264 -1",   sol:"x \u2265 2",  word:"You must be at least 2 years old",            graph:{value: 2, open:false, dir:"R", ticks:[ 0, 1, 2, 3, 4]} },
+  { expr:"-2x - 9 > -1",      sol:"x < -4",  word:"The score is less than -4",                    graph:{value:-4, open:true,  dir:"L", ticks:[-6,-5,-4,-3,-2]} },
+  { expr:"6 + 3x \u2264 0",    sol:"x \u2264 -2", word:"The depth is at most -2 metres",              graph:{value:-2, open:false, dir:"L", ticks:[-4,-3,-2,-1, 0]} },
+  { expr:"-5x + 2 > 12",      sol:"x < -2",  word:"The pressure stays below -2 bar",              graph:{value:-2, open:true,  dir:"L", ticks:[-4,-3,-2,-1, 0]} },
+
+  // ── Distribution ──
+  { expr:"-(x + 4) \u2264 2",  sol:"x \u2265 -6", word:"The altitude is at least -6 metres",          graph:{value:-6, open:false, dir:"R", ticks:[-8,-7,-6,-5,-4]} },
+  { expr:"3(x - 1) \u2265 -9", sol:"x \u2265 -2", word:"The depth is at least -2 metres",             graph:{value:-2, open:false, dir:"R", ticks:[-4,-3,-2,-1, 0]} },
+  { expr:"-5x - 4 < 11",      sol:"x > -3",  word:"A golf score is greater than -3",              graph:{value:-3, open:true,  dir:"R", ticks:[-5,-4,-3,-2,-1]} },
+  { expr:"2(x + 3) > -4",     sol:"x > -5",  word:"The elevation is more than -5 metres",         graph:{value:-5, open:true,  dir:"R", ticks:[-7,-6,-5,-4,-3]} },
+  { expr:"-3(x - 2) \u2264 9", sol:"x \u2265 -1", word:"The temperature is at least -1°C",            graph:{value:-1, open:false, dir:"R", ticks:[-3,-2,-1, 0, 1]} },
+  { expr:"4(x + 1) < -8",     sol:"x < -3",  word:"The speed is under -3 (descending)",           graph:{value:-3, open:true,  dir:"L", ticks:[-5,-4,-3,-2,-1]} },
+  { expr:"-2(x + 5) > -6",    sol:"x < -2",  word:"The charge drops below -2 volts",              graph:{value:-2, open:true,  dir:"L", ticks:[-4,-3,-2,-1, 0]} },
+  { expr:"5(x - 2) \u2265 -15",sol:"x \u2265 -1", word:"A player scores at least -1",                 graph:{value:-1, open:false, dir:"R", ticks:[-3,-2,-1, 0, 1]} },
+
+  // ── Multi-step with negatives ──
+  { expr:"2x - (x + 4) > 1",  sol:"x > 5",   word:"A height must exceed 5 metres",               graph:{value: 5, open:true,  dir:"R", ticks:[ 3, 4, 5, 6, 7]} },
+  { expr:"-3x + 2x < 6",      sol:"x > -6",  word:"The level is more than -6 units",             graph:{value:-6, open:true,  dir:"R", ticks:[-8,-7,-6,-5,-4]} },
+  { expr:"4x - 6x \u2265 -4", sol:"x \u2264 2",  word:"The elevation is at most 2 metres",           graph:{value: 2, open:false, dir:"L", ticks:[ 0, 1, 2, 3, 4]} },
+  { expr:"-x + 3x > -8",      sol:"x > -4",  word:"The score is greater than -4",                graph:{value:-4, open:true,  dir:"R", ticks:[-6,-5,-4,-3,-2]} },
+  { expr:"5x - 8x \u2264 9",  sol:"x \u2265 -3", word:"The temperature is at least -3°C",            graph:{value:-3, open:false, dir:"R", ticks:[-5,-4,-3,-2,-1]} },
+];
+
+// ── Unique IDs ────────────────────────────────────────────────────────────────
+// Assign stable IDs used as card identifiers this round
+let roundProblems = []; // subset of 10, each with assigned solId, wordId, graphId
+let roundIndex = 0;
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const slots = {};   // problemIndex → { sol, word, graph }
+let dragInfo = null;
+let checked = false;
+let score = 0;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRound() {
+  const picked = shuffle(ALL_PROBLEMS).slice(0, 10);
+  // Assign letter/number/greek labels
+  const solLabels   = shuffle(['A','B','C','D','E','F','G','H','I','J']);
+  const wordLabels  = shuffle(['1','2','3','4','5','6','7','8','9','10']);
+  const graphLabels = shuffle(['α','β','γ','δ','ε','ζ','η','θ','ι','κ']);
+  return picked.map((p, i) => ({
+    ...p,
+    pIdx: i,
+    solId:   `s_${i}`,
+    wordId:  `w_${i}`,
+    graphId: `g_${i}`,
+    solLabel:   solLabels[i],
+    wordLabel:  wordLabels[i],
+    graphLabel: graphLabels[i],
+  }));
+}
+
+// ── Number line SVG ────────────────────────────────────────────────────────────
+function makeNLsvg(g, w=260, h=42) {
+  const ticks = g.ticks;
+  const n = ticks.length;
+  const padL = 22, padR = 22;
+  const usable = w - padL - padR;
+  const step = usable / (n - 1);
+  const cy = h * 0.46;
+  const valIdx = ticks.indexOf(g.value);
+  const vx = padL + valIdx * step;
+  const r = 5.5;
+
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">`;
+  s += `<line x1="5" y1="${cy}" x2="${w-5}" y2="${cy}" stroke="#1a1a1a" stroke-width="1.5"/>`;
+  s += `<polygon points="5,${cy} 11,${cy-4} 11,${cy+4}" fill="#1a1a1a"/>`;
+  s += `<polygon points="${w-5},${cy} ${w-11},${cy-4} ${w-11},${cy+4}" fill="#1a1a1a"/>`;
+  ticks.forEach((val, i) => {
+    const tx = padL + i * step;
+    s += `<line x1="${tx}" y1="${cy-4}" x2="${tx}" y2="${cy+4}" stroke="#1a1a1a" stroke-width="1.2"/>`;
+    s += `<text x="${tx}" y="${cy+15}" text-anchor="middle" font-family="monospace" font-size="9" fill="#555">${val}</text>`;
+  });
+  if (g.dir === "L") s += `<line x1="${vx}" y1="${cy}" x2="5" y2="${cy}" stroke="#1a1a1a" stroke-width="2.5"/>`;
+  else               s += `<line x1="${vx}" y1="${cy}" x2="${w-5}" y2="${cy}" stroke="#1a1a1a" stroke-width="2.5"/>`;
+  if (g.open) s += `<circle cx="${vx}" cy="${cy}" r="${r}" fill="white" stroke="#1a1a1a" stroke-width="2"/>`;
+  else        s += `<circle cx="${vx}" cy="${cy}" r="${r}" fill="#1a1a1a"/>`;
+  s += `</svg>`;
+  return s;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function buildProblems() {
+  const list = document.getElementById('problemsList');
+  list.innerHTML = '';
+  roundProblems.forEach((p, i) => {
+    slots[i] = { sol: null, word: null, graph: null };
+    const card = document.createElement('div');
+    card.className = 'problem-card';
+    card.id = `prob-${i}`;
+    card.innerHTML = `
+      <div class="problem-top">
+        <div class="problem-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="problem-expr">${p.expr}</div>
+        <div class="problem-tick" id="tick-${i}"></div>
+      </div>
+      <div class="problem-slots">
+        <div class="slot" id="slot-${i}-sol"  data-pid="${i}" data-type="sol">
+          <div class="slot-label sol">Solution</div>
+          <div class="slot-content" id="sc-${i}-sol"></div>
+        </div>
+        <div class="slot" id="slot-${i}-word" data-pid="${i}" data-type="word">
+          <div class="slot-label word">Word phrase</div>
+          <div class="slot-content" id="sc-${i}-word"></div>
+        </div>
+        <div class="slot" id="slot-${i}-graph" data-pid="${i}" data-type="graph">
+          <div class="slot-label graph">Graph</div>
+          <div class="slot-content" id="sc-${i}-graph"></div>
+        </div>
+      </div>`;
+    list.appendChild(card);
+
+    ['sol','word','graph'].forEach(type => {
+      const slot = card.querySelector(`#slot-${i}-${type}`);
+      slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
+      slot.addEventListener('dragleave', e => { if (!slot.contains(e.relatedTarget)) slot.classList.remove('drag-over'); });
+      slot.addEventListener('drop', e => {
+        e.preventDefault(); slot.classList.remove('drag-over');
+        if (dragInfo && dragInfo.type === type) dropCard(i, type, dragInfo.cardId);
+      });
+    });
+  });
+}
+
+function buildBank() {
+  // Build shuffled arrays of cards
+  const solCards   = shuffle(roundProblems.map(p => ({ id: p.solId,   label: p.solLabel,   content: `<span style="font-family:'DM Mono',monospace;font-weight:500">${p.sol}</span>` })));
+  const wordCards  = shuffle(roundProblems.map(p => ({ id: p.wordId,  label: p.wordLabel,  content: p.word })));
+  const graphCards = shuffle(roundProblems.map(p => ({ id: p.graphId, label: p.graphLabel, content: makeNLsvg(p.graph) })));
+
+  buildBankSection('bankSolutions', solCards,   'sol');
+  buildBankSection('bankWords',     wordCards,  'word');
+  buildBankSection('bankGraphs',    graphCards, 'graph');
+}
+
+function buildBankSection(containerId, cards, type) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  cards.forEach(card => {
+    const el = document.createElement('div');
+    el.className = 'bank-card';
+    el.draggable = true;
+    el.id = `bank-${card.id}`;
+    el.innerHTML = `<span style="font-size:9px;font-weight:600;color:var(--${type});text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:3px">${card.label}</span>${card.content}`;
+    el.addEventListener('dragstart', e => {
+      dragInfo = { cardId: card.id, type };
+      e.dataTransfer.setData('text/plain', card.id);
+      setTimeout(() => el.classList.add('dragging'), 0);
+    });
+    el.addEventListener('dragend', () => { el.classList.remove('dragging'); dragInfo = null; });
+    container.appendChild(el);
+  });
+}
+
+// ── Drop ──────────────────────────────────────────────────────────────────────
+function dropCard(pid, type, cardId) {
+  if (checked) return;
+  roundProblems.forEach((_, i) => {
+    if (slots[i][type] === cardId && i !== pid) { slots[i][type] = null; renderSlot(i, type); }
+  });
+  if (slots[pid][type] && slots[pid][type] !== cardId) markBankCard(slots[pid][type], false);
+  slots[pid][type] = cardId;
+  markBankCard(cardId, true);
+  renderSlot(pid, type);
+}
+
+function renderSlot(pid, type) {
+  const sc = document.getElementById(`sc-${pid}-${type}`);
+  sc.innerHTML = '';
+  const cardId = slots[pid][type];
+  if (!cardId) return;
+  const p = roundProblems[pid];
+  const el = document.createElement('div');
+  el.className = 'placed-card';
+  el.id = `placed-${pid}-${type}`;
+  if (type === 'sol')   el.innerHTML = `<span style="font-family:'DM Mono',monospace;font-weight:500">${p.sol}</span>`;
+  else if (type==='word') el.innerHTML = p.word;
+  else                  el.innerHTML = makeNLsvg(p.graph, 210, 36);
+  el.title = 'Click to remove';
+  el.addEventListener('click', () => {
+    if (checked) return;
+    slots[pid][type] = null; markBankCard(cardId, false); renderSlot(pid, type);
+  });
+  sc.appendChild(el);
+}
+
+function markBankCard(cardId, placed) {
+  document.getElementById(`bank-${cardId}`)?.classList.toggle('placed', placed);
+}
+
+// ── Check ─────────────────────────────────────────────────────────────────────
+function checkAll() {
+  if (checked) return;
+  checked = true; score = 0;
+  const total = roundProblems.length * 3;
+
+  roundProblems.forEach((p, i) => {
+    let rowOk = 0;
+    [['sol', p.solId], ['word', p.wordId], ['graph', p.graphId]].forEach(([type, correctId]) => {
+      const tag = document.getElementById(`placed-${i}-${type}`);
+      if (!tag) return;
+      if (slots[i][type] === correctId) { tag.classList.add('correct-card'); score++; rowOk++; }
+      else tag.classList.add('wrong-card');
+    });
+    const card = document.getElementById(`prob-${i}`);
+    const tick = document.getElementById(`tick-${i}`);
+    if (rowOk === 3) { card.classList.add('correct'); tick.textContent='✓'; tick.style.color='var(--green)'; }
+    else             { card.classList.add('wrong');   tick.textContent='✗'; tick.style.color='var(--red)'; }
+  });
+
+  document.getElementById('scoreDisplay').innerHTML = `<b style="color:#f0c040">${score}</b> / ${total}`;
+  const banner = document.getElementById('scoreBanner');
+  if (score === total) {
+    banner.textContent = `All ${total} matches correct — great work!`;
+    banner.className = 'score-banner show perfect';
+  } else {
+    banner.textContent = `${score} of ${total} correct. Incorrect items highlighted — click them to remove and try again.`;
+    banner.className = 'score-banner show partial';
+    checked = false;
+  }
+}
+
+function resetRound() {
+  roundProblems.forEach((_, i) => {
+    slots[i] = { sol: null, word: null, graph: null };
+    ['sol','word','graph'].forEach(type => renderSlot(i, type));
+    document.getElementById(`prob-${i}`)?.classList.remove('correct','wrong');
+    const tick = document.getElementById(`tick-${i}`);
+    if (tick) tick.textContent = '';
+  });
+  document.querySelectorAll('.bank-card').forEach(el => el.classList.remove('placed'));
+  document.getElementById('scoreBanner').className = 'score-banner';
+  document.getElementById('scoreDisplay').innerHTML = '0 / 30';
+  checked = false; score = 0;
+}
+
+function newRound() {
+  roundIndex++;
+  document.getElementById('roundBadge').textContent = `Round ${roundIndex + 1}`;
+  roundProblems = pickRound();
+  buildProblems();
+  buildBank();
+  document.getElementById('scoreBanner').className = 'score-banner';
+  document.getElementById('scoreDisplay').innerHTML = '0 / 30';
+  checked = false; score = 0;
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+roundProblems = pickRound();
+buildProblems();
+buildBank();
+</script>
+</body>
+</html>
