@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All About Angles – Matching Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf6ee;
+    --ink: #1a1208;
+    --muted: #8a7560;
+    --border: #d4c4a8;
+    --term-bg: #fff8f0;
+    --term-border: #e8c87a;
+    --term-accent: #c47a1a;
+    --def-bg: #f0f7ff;
+    --def-border: #7ab8e8;
+    --def-accent: #1a6ab8;
+    --vis-bg: #f0fff4;
+    --vis-border: #7ad4a0;
+    --vis-accent: #1a8a50;
+    --selected: #ffe082;
+    --selected-border: #f9a825;
+    --matched-term: #c8f7d8;
+    --matched-border: #2e7d32;
+    --wrong: #ffcdd2;
+    --wrong-border: #c62828;
+    --shadow: rgba(90,60,10,0.10);
+    --card-radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0.6rem 0.7rem 0.8rem;
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(196,122,26,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 90% 80%, rgba(26,106,184,0.06) 0%, transparent 50%);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  header h1 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+    font-weight: 700;
+    text-decoration: underline;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+  }
+  header p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 0.15rem;
+  }
+
+  .score-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.2rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .score-bar span { color: var(--ink); font-size: 1rem; }
+
+  /* Three-column grid */
+  .game-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.8fr 1fr;
+    gap: 0.4rem;
+  }
+
+  .col-header {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 0.35rem 0.4rem;
+    border-radius: 6px 6px 0 0;
+    margin-bottom: 0.2rem;
+  }
+  .col-header.terms  { background: var(--term-border);  color: var(--term-accent); }
+  .col-header.defs   { background: var(--def-border);   color: var(--def-accent); }
+  .col-header.visuals{ background: var(--vis-border);   color: var(--vis-accent); }
+
+  .col { display: flex; flex-direction: column; gap: 0.28rem; }
+
+  /* Cards */
+  .card {
+    border-radius: var(--card-radius);
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.12s, box-shadow 0.12s, background 0.15s, border-color 0.15s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0.32rem 0.4rem;
+    border: 2px solid;
+    box-shadow: 2px 2px 0 var(--shadow);
+    min-height: 52px;
+  }
+  .card:hover:not(.matched):not(.wrong-flash) {
+    transform: translateY(-1px);
+    box-shadow: 3px 4px 0 var(--shadow);
+  }
+  .card:active:not(.matched) { transform: scale(0.97); }
+
+  /* Term cards */
+  .card.term {
+    background: var(--term-bg);
+    border-color: var(--term-border);
+    font-weight: 800;
+    font-size: 0.72rem;
+    color: var(--term-accent);
+  }
+  /* Definition cards */
+  .card.def {
+    background: var(--def-bg);
+    border-color: var(--def-border);
+    font-size: 0.67rem;
+    line-height: 1.4;
+    color: #1a3a5c;
+    font-weight: 600;
+  }
+  /* Visual cards */
+  .card.vis {
+    background: var(--vis-bg);
+    border-color: var(--vis-border);
+  }
+  .card.vis svg {
+    width: 100%;
+    height: 44px;
+  }
+
+  /* States */
+  .card.selected {
+    background: var(--selected) !important;
+    border-color: var(--selected-border) !important;
+    transform: translateY(-2px);
+    box-shadow: 3px 5px 0 rgba(249,168,37,0.3);
+  }
+  .card.matched {
+    background: var(--matched-term) !important;
+    border-color: var(--matched-border) !important;
+    cursor: default;
+    opacity: 0.85;
+    box-shadow: none;
+  }
+  .card.wrong-flash {
+    background: var(--wrong) !important;
+    border-color: var(--wrong-border) !important;
+    animation: shake 0.35s ease;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-5px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  .matched-check {
+    position: absolute;
+    top: 3px; right: 5px;
+    font-size: 0.65rem;
+    color: var(--matched-border);
+  }
+
+  /* Win banner */
+  .win-banner {
+    display: none;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, #fff9c4, #c8f7d8);
+    border: 2px solid #2e7d32;
+    border-radius: 10px;
+    margin-top: 0.5rem;
+    font-weight: 800;
+    font-size: 1rem;
+    color: #1a5c30;
+  }
+  .win-banner.show { display: block; }
+
+  .btn-reset {
+    display: block;
+    margin: 0.5rem auto 0;
+    padding: 0.45rem 1.4rem;
+    border: none; border-radius: 6px;
+    background: var(--term-accent); color: white;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.82rem;
+    cursor: pointer;
+    box-shadow: 2px 3px 0 rgba(150,80,0,0.3);
+    transition: filter 0.15s, transform 0.1s;
+  }
+  .btn-reset:hover { filter: brightness(1.15); }
+  .btn-reset:active { transform: scale(0.96); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>All About Angles</h1>
+  <p>Match the term, definition, and visual — click one from each column.</p>
+</header>
+
+<div class="score-bar">
+  Matched: <span id="scoreNum">0</span> / 10 &nbsp;|&nbsp; Attempts: <span id="attNum">0</span>
+</div>
+
+<div class="game-grid">
+  <!-- Terms column -->
+  <div class="col" id="colTerms">
+    <div class="col-header terms">Term</div>
+  </div>
+  <!-- Definitions column -->
+  <div class="col" id="colDefs">
+    <div class="col-header defs">Definition</div>
+  </div>
+  <!-- Visuals column -->
+  <div class="col" id="colVis">
+    <div class="col-header visuals">Visual</div>
+  </div>
+</div>
+
+<div class="win-banner" id="winBanner">🎉 All matched! Well done!</div>
+<button class="btn-reset" onclick="initGame()">Reset / Shuffle</button>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────
+const DATA = [
+  {
+    id: 'acute',
+    term: 'Acute Angle',
+    def: 'Angle with a measure less than 90°',
+    svg: `<svg viewBox="0 0 80 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="10" y1="40" x2="70" y2="30" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr)"/>
+      <line x1="10" y1="40" x2="50" y2="10" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr)"/>
+      <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker></defs>
+    </svg>`
+  },
+  {
+    id: 'obtuse',
+    term: 'Obtuse Angle',
+    def: 'Angle with a measure greater than 90° but less than 180°',
+    svg: `<svg viewBox="0 0 90 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="45" y1="42" x2="85" y2="42" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr2)"/>
+      <line x1="45" y1="42" x2="8" y2="12" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr2)"/>
+      <defs><marker id="arr2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker></defs>
+    </svg>`
+  },
+  {
+    id: 'right',
+    term: 'Right Angle',
+    def: 'Angle that measures exactly 90°',
+    svg: `<svg viewBox="0 0 80 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="15" y1="45" x2="15" y2="10" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr3)"/>
+      <line x1="15" y1="45" x2="65" y2="45" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr3)"/>
+      <rect x="15" y="34" width="10" height="10" stroke="#1a1208" stroke-width="1.5" fill="none"/>
+      <defs><marker id="arr3" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker></defs>
+    </svg>`
+  },
+  {
+    id: 'comp',
+    term: 'Complementary Angle',
+    def: 'Two angles whose measures add up to 90°',
+    svg: `<svg viewBox="0 0 80 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="15" y1="45" x2="15" y2="10" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr4)"/>
+      <line x1="15" y1="45" x2="65" y2="45" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr4)"/>
+      <line x1="15" y1="45" x2="55" y2="15" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr4)"/>
+      <rect x="15" y="34" width="10" height="10" stroke="#1a1208" stroke-width="1.5" fill="none"/>
+      <defs><marker id="arr4" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker></defs>
+    </svg>`
+  },
+  {
+    id: 'supp',
+    term: 'Supplementary Angle',
+    def: 'Two angles whose measures add up to 180°',
+    svg: `<svg viewBox="0 0 90 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="5" y1="28" x2="85" y2="28" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr5)"/>
+      <line x1="5" y1="28" x2="85" y2="28" stroke="#1a1208" stroke-width="1.8"/>
+      <line x1="45" y1="28" x2="65" y2="8" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr5)"/>
+      <line x1="45" y1="28" x2="25" y2="8" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr5)"/>
+      <defs><marker id="arr5" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker></defs>
+    </svg>`
+  },
+  {
+    id: 'linear',
+    term: 'Linear Pair',
+    def: 'Two angles that form a straight line: two adjacent supplementary angles',
+    svg: `<svg viewBox="0 0 90 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="5" y1="30" x2="85" y2="30" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr6a)" marker-start="url(#arr6b)"/>
+      <line x1="45" y1="30" x2="70" y2="8" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr6a)"/>
+      <defs>
+        <marker id="arr6a" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker>
+        <marker id="arr6b" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker>
+      </defs>
+    </svg>`
+  },
+  {
+    id: 'adj',
+    term: 'Adjacent Angles',
+    def: 'Angles that share a vertex and a side',
+    svg: `<svg viewBox="0 0 90 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="45" y1="42" x2="82" y2="42" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr7)"/>
+      <line x1="45" y1="42" x2="68" y2="10" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr7)"/>
+      <line x1="45" y1="42" x2="10" y2="20" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr7)"/>
+      <text x="66" y="38" font-size="9" fill="#1a1208" font-family="serif">α</text>
+      <text x="50" y="24" font-size="9" fill="#1a1208" font-family="serif">β</text>
+      <defs>
+        <marker id="arr7" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker>
+      </defs>
+    </svg>`
+  },
+  {
+    id: 'cong',
+    term: 'Congruent',
+    def: 'Same measure',
+    svg: `<svg viewBox="0 0 90 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="5" y1="38" x2="38" y2="20" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr8)"/>
+      <line x1="5" y1="38" x2="40" y2="38" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr8)"/>
+      <line x1="50" y1="38" x2="83" y2="20" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr8)"/>
+      <line x1="50" y1="38" x2="85" y2="38" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr8)"/>
+      <defs><marker id="arr8" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker></defs>
+    </svg>`
+  },
+  {
+    id: 'vertex',
+    term: 'Vertex',
+    def: 'The point where two lines intersect or meet',
+    svg: `<svg viewBox="0 0 90 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="10" y1="40" x2="80" y2="25" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr9a)" marker-start="url(#arr9b)"/>
+      <line x1="10" y1="15" x2="80" y2="42" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr9a)" marker-start="url(#arr9b)"/>
+      <circle cx="44" cy="29" r="4" fill="#1a1208"/>
+      <defs>
+        <marker id="arr9a" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker>
+        <marker id="arr9b" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker>
+      </defs>
+    </svg>`
+  },
+  {
+    id: 'parallel',
+    term: 'Parallel Lines',
+    def: 'Lines that never intersect',
+    svg: `<svg viewBox="0 0 90 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="5" y1="18" x2="85" y2="18" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr10a)" marker-start="url(#arr10b)"/>
+      <line x1="5" y1="34" x2="85" y2="34" stroke="#1a1208" stroke-width="1.8" marker-end="url(#arr10a)" marker-start="url(#arr10b)"/>
+      <defs>
+        <marker id="arr10a" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker>
+        <marker id="arr10b" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z" fill="#1a1208"/></marker>
+      </defs>
+    </svg>`
+  }
+];
+
+// ── State ─────────────────────────────────────────────────────
+let selected = { term: null, def: null, vis: null };
+let matched = new Set();
+let attempts = 0;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function initGame() {
+  selected = { term: null, def: null, vis: null };
+  matched.clear();
+  attempts = 0;
+  updateScore();
+  document.getElementById('winBanner').classList.remove('show');
+
+  const termOrder = shuffle(DATA);
+  const defOrder  = shuffle(DATA);
+  const visOrder  = shuffle(DATA);
+
+  renderCol('colTerms',  termOrder, 'term');
+  renderCol('colDefs',   defOrder,  'def');
+  renderCol('colVis',    visOrder,  'vis');
+}
+
+function renderCol(colId, items, type) {
+  const col = document.getElementById(colId);
+  // Keep header, remove old cards
+  while (col.children.length > 1) col.removeChild(col.lastChild);
+
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = `card ${type}`;
+    card.dataset.id   = item.id;
+    card.dataset.type = type;
+
+    if (type === 'term') {
+      card.textContent = item.term;
+    } else if (type === 'def') {
+      card.textContent = item.def;
+    } else {
+      card.innerHTML = item.svg;
+    }
+
+    card.addEventListener('click', () => onCardClick(card));
+    col.appendChild(card);
+  });
+}
+
+function onCardClick(card) {
+  if (card.classList.contains('matched')) return;
+  const type = card.dataset.type;
+  const id   = card.dataset.id;
+
+  // Deselect if clicking same card
+  if (selected[type] === card) {
+    card.classList.remove('selected');
+    selected[type] = null;
+    return;
+  }
+
+  // Deselect previous in same column
+  if (selected[type]) {
+    selected[type].classList.remove('selected');
+  }
+
+  card.classList.add('selected');
+  selected[type] = card;
+
+  // Check if all three selected
+  if (selected.term && selected.def && selected.vis) {
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  const tId = selected.term.dataset.id;
+  const dId = selected.def.dataset.id;
+  const vId = selected.vis.dataset.id;
+
+  attempts++;
+  updateScore();
+
+  if (tId === dId && dId === vId) {
+    // Correct!
+    ['term','def','vis'].forEach(t => {
+      const c = selected[t];
+      c.classList.remove('selected');
+      c.classList.add('matched');
+      const check = document.createElement('span');
+      check.className = 'matched-check';
+      check.textContent = '✓';
+      c.appendChild(check);
+    });
+    matched.add(tId);
+    selected = { term: null, def: null, vis: null };
+
+    if (matched.size === DATA.length) {
+      document.getElementById('winBanner').classList.add('show');
+    }
+  } else {
+    // Wrong — flash red, then clear selection
+    ['term','def','vis'].forEach(t => {
+      const c = selected[t];
+      c.classList.remove('selected');
+      c.classList.add('wrong-flash');
+      setTimeout(() => c.classList.remove('wrong-flash'), 400);
+    });
+    selected = { term: null, def: null, vis: null };
+  }
+  updateScore();
+}
+
+function updateScore() {
+  document.getElementById('scoreNum').textContent = matched.size;
+  document.getElementById('attNum').textContent   = attempts;
+}
+
+initGame();
+</script>
+</body>
+</html>
